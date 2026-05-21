@@ -1,0 +1,28 @@
+# Python #
+
+*pyc
+__pycache__/
+
+# Virtual Enviroments #
+
+backend/.venv/
+.venv/
+
+# Datasbase #
+
+backend/*.db
+*.sqlite3
+
+# Environment Variables #
+
+.env
+backend/.env
+
+# VSCode #
+
+.vscode/
+
+# Junk #
+
+.DS_Store
+Thumbs.db
