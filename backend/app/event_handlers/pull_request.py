@@ -1,4 +1,4 @@
-def handle_pull_request_event(payload: dict) -> dict:
+def handle_pull_request_event(payload: dict):
     pr = payload.get("pull_request", {})
     repository = payload.get("repository", {})
     sender = payload.get("sender", {})

@@ -53,7 +53,7 @@ async def github_webhook(
     return {
         "success": True,
         "event": x_github_event,
-        "saved_event_id": save_event.id,
+        "saved_event_id": saved_event.id,
         "result": event_data,
     }
 

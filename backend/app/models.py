@@ -15,4 +15,4 @@ class GitHubEvent(Base):
     conclusion = Column(String, nullable=True)
     commit_sha = Column(String, nullable=True)
     html_url = Column(String, nullable=True)
-    created_at = Column(DateTime, default=datetime.now(UTC))
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC))

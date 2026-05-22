@@ -1,4 +1,4 @@
-def handle_issues_event(payload: dict) -> dict:
+def handle_issues_event(payload: dict):
     issue = payload.get("issue", {})
     repository = payload.get("repository", {})
     sender = payload.get("sender", {})

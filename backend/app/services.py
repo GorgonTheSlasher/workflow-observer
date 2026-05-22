@@ -45,4 +45,4 @@ def save_event(db, event_type: str, data: dict):
     db.commit()
     db.refresh(event)    
 
-    return
+    return event

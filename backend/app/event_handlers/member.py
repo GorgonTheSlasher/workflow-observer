@@ -1,4 +1,4 @@
-def handle_member_event(payload: dict) -> dict:
+def handle_member_event(payload: dict):
     member = payload.get("member") or {}
     repository = payload.get("repository", {})
     sender = payload.get("sender", {})
