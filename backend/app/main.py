@@ -1,10 +1,8 @@
-import json
-from fastapi import FastAPI, Request, Header, Depends, HTTPException
+from fastapi import FastAPI, Request, Header, Depends
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.event_handlers import EVENT_HANDLERS
-from app.services import verify_signature, save_event
+from app.event_dispatcher import dispatch_github_webhook
 from app.models import GitHubEvent
 
 app = FastAPI(title="GitHub Workflow Observer")
@@ -22,40 +20,13 @@ async def github_webhook(
     x_hub_signature_256: str = Header(None),
     db: Session = Depends(get_db)
 ):
-    body = await request.body()
 
-    verify_signature(body, x_hub_signature_256)
-
-    payload = json.loads(body)
-
-    # Debug- console event dump
-    print(f"\nEVENT Type: {x_github_event}")
-    print(json.dumps(payload, indent=2))
-    print(payload.keys())
-    ###---###
-
-    handler = EVENT_HANDLERS.get(x_github_event)
-
-    if not handler:
-        return {
-            "success": False,
-            "message": f"No handler for event: {x_github_event}"
-        }
-    
-    event_data = handler(payload)
-
-    saved_event = save_event(
-        db=db,
-        event_type=x_github_event,
-        data=event_data,
+    return await dispatch_github_webhook(
+        request=request,
+        x_github_event=x_github_event,
+        x_hub_signature_256=x_hub_signature_256,
+        db=db
     )
-
-    return {
-        "success": True,
-        "event": x_github_event,
-        "saved_event_id": saved_event.id,
-        "result": event_data,
-    }
 
 # Shows log of events
 @app.get("/events")
