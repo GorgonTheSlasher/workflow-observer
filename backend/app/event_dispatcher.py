@@ -2,8 +2,6 @@ import json
 from app.event_handlers import EVENT_HANDLERS
 from fastapi import Request
 from sqlalchemy.orm import Session
-
-from app.database import get_db
 from app.services import verify_signature, save_event
 
 
