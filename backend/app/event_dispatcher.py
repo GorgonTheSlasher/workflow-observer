@@ -18,9 +18,9 @@ async def dispatch_github_webhook(
     payload = json.loads(body)
 
     # Debug- console event dump
-    print(f"\nEVENT Type: {x_github_event}")
-    print(json.dumps(payload, indent=2))
-    print(payload.keys())
+    # print(f"\nEVENT Type: {x_github_event}")
+    # print(json.dumps(payload, indent=2))
+    # print(payload.keys())
     ###---###
 
     handler = EVENT_HANDLERS.get(x_github_event)

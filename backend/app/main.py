@@ -1,12 +1,27 @@
 from fastapi import FastAPI, Request, Header, Depends
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
-from app.database import get_db
+from app.database import get_db, Base, engine
 from app.event_dispatcher import dispatch_github_webhook
 from app.models import GitHubEvent
 from app.services import get_filtered_events
 
+Base.metadata.create_all(bind=engine)
+
 app = FastAPI(title="GitHub Workflow Observer")
+
+# Makes it so browser wont block frontend requests
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Check that FastAPI server is initialize
 @app.get("/")
@@ -47,7 +62,7 @@ def get_events(
     )
 
 # Shows failed workflows
-@app.get("/workflow-runs/failures")
+@app.get("/events/workflow-runs/failures")
 def get_failed_workflow_runs(db: Session = Depends(get_db)):
 
     return (

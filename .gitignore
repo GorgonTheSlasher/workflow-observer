@@ -10,13 +10,18 @@ backend/.venv/
 
 # Datasbase #
 
-backend/*.db
+*.db
 *.sqlite3
 
 # Environment Variables #
 
 .env
 backend/.env
+frontend/.env
+
+# Frontend #
+
+
 
 # VSCode #
 
