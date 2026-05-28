@@ -3,7 +3,9 @@ from app.config import settings
 import hmac
 import hashlib
 import os
-from fastapi import FastAPI, Request, Header, HTTPException
+from fastapi import FastAPI, Request, Header, HTTPException, Depends
+from sqlalchemy.orm import Session
+from app.database import get_db
 
 from app.models import GitHubEvent
 
@@ -46,3 +48,26 @@ def save_event(db, event_type: str, data: dict):
     db.refresh(event)    
 
     return event
+
+def get_filtered_events(
+    event_type: str | None = None,
+    repo_name: str | None = None,
+    actor: str | None = None,
+    conclusion: str | None = None,
+    db: Session = Depends(get_db),
+):
+    query = db.query(GitHubEvent)
+
+    if event_type:
+        query = query.filter(GitHubEvent.event_type == event_type)
+
+    if repo_name:
+        query = query.filter(GitHubEvent.repo_name == repo_name)
+
+    if actor:
+        query = query.filter(GitHubEvent.actor == actor)
+
+    if conclusion:
+        query = query.filter(GitHubEvent.conclusion == conclusion)
+
+    return query.order_by(GitHubEvent.created_at.desc()).all()
