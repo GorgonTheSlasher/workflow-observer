@@ -1,31 +1,187 @@
 import { useEffect, useState } from "react";
-import { getRecentEvents } from "./api";
+import { getEvents, getFailedWorkflowRuns } from "./api";
 import type { GitHubEvent } from "./types";
-import RecentEventsTable from "./components/RecentEventsTable";
-import FailedWorkflowsTable from "./components/FailedWorkflowRunsTable";
 import SummaryCards from "./components/SummaryCards";
 import "./App.css";
 
+type EventTypeFilter =
+  | ""
+  | "push"
+  | "pull_request"
+  | "workflow_run"
+  | "issues"
+  | "member";
+
 function App() {
-  const [recentEvents, setRecentEvents] = useState<GitHubEvent[]>([]);
+  const [events, setEvents] = useState<GitHubEvent[]>([]);
+  const [failedWorkflows, setFailedWorkflows] = useState<GitHubEvent[]>([]);
+  const [eventType, setEventType] = useState<EventTypeFilter>("");
   const [error, setError] = useState<string | null>(null);
+  const [isLoadingEvents, setIsLoadingEvents] = useState(false);
+  const [isLoadingFailures, setIsLoadingFailures] = useState(false);
 
   useEffect(() => {
-    getRecentEvents(50)
-      .then(setRecentEvents)
-      .catch((err: Error) => setError(err.message));
+    setIsLoadingEvents(true);
+    setError(null);
+
+    getEvents({
+      event_type: eventType,
+    })
+      .then((data) => {
+        setEvents(data);
+      })
+      .catch((err: Error) => {
+        setError(err.message);
+      })
+      .finally(() => {
+        setIsLoadingEvents(false);
+      });
+  }, [eventType]);
+
+  useEffect(() => {
+    setIsLoadingFailures(true);
+
+    getFailedWorkflowRuns()
+      .then((data) => {
+        setFailedWorkflows(data);
+      })
+      .catch((err: Error) => {
+        setError(err.message);
+      })
+      .finally(() => {
+        setIsLoadingFailures(false);
+      });
   }, []);
 
   return (
     <main>
-      <h1>Workflow Observer</h1>
-      <p>GitHub webhook activity and workflow health dashboard.</p>
+      <header>
+        <h1>Workflow Observer</h1>
+        <p>GitHub webhook activity and workflow health dashboard.</p>
+      </header>
 
-      {error && <p>Error loading summary data: {error}</p>}
+      <section>
+        <h2>Filters</h2>
 
-      <SummaryCards events={recentEvents} />
-      <FailedWorkflowsTable />
-      <RecentEventsTable />
+        <label htmlFor="event-type-filter">Event Type: </label>
+
+        <select
+          id="event-type-filter"
+          value={eventType}
+          onChange={(event) =>
+            setEventType(event.target.value as EventTypeFilter)
+          }
+        >
+          <option value="">All Events</option>
+          <option value="push">Push</option>
+          <option value="pull_request">Pull Request</option>
+          <option value="workflow_run">Workflow Run</option>
+          <option value="issues">Issues</option>
+          <option value="member">Member</option>
+        </select>
+      </section>
+
+      {error && <p className="error">Error: {error}</p>}
+
+      <SummaryCards events={events} />
+
+      <section>
+        <h2>Failed Workflows</h2>
+
+        {isLoadingFailures ? (
+          <p>Loading failed workflows...</p>
+        ) : failedWorkflows.length === 0 ? (
+          <p>No failed workflows found.</p>
+        ) : (
+          <table>
+            <thead>
+              <tr>
+                <th>Repo</th>
+                <th>Actor</th>
+                <th>Branch</th>
+                <th>Commit</th>
+                <th>Link</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {failedWorkflows.map((workflow) => (
+                <tr key={workflow.id}>
+                  <td>{workflow.repo_name}</td>
+                  <td>{workflow.actor ?? "-"}</td>
+                  <td>{workflow.branch ?? "-"}</td>
+                  <td>{workflow.commit_sha?.slice(0, 7) ?? "-"}</td>
+                  <td>
+                    {workflow.html_url ? (
+                      <a
+                        href={workflow.html_url}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        View
+                      </a>
+                    ) : (
+                      "-"
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </section>
+
+      <section>
+        <h2>Events</h2>
+
+        {isLoadingEvents ? (
+          <p>Loading events...</p>
+        ) : events.length === 0 ? (
+          <p>No events found.</p>
+        ) : (
+          <table>
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>Action</th>
+                <th>Repo</th>
+                <th>Actor</th>
+                <th>Branch</th>
+                <th>Status</th>
+                <th>Conclusion</th>
+                <th>Link</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {events.map((event) => (
+                <tr key={event.id}>
+                  <td>{event.event_type}</td>
+                  <td>{event.action ?? "-"}</td>
+                  <td>{event.repo_name}</td>
+                  <td>{event.actor ?? "-"}</td>
+                  <td>{event.branch ?? "-"}</td>
+                  <td>{event.status ?? "-"}</td>
+                  <td>{event.conclusion ?? "-"}</td>
+                  <td>
+                    {event.html_url ? (
+                      <a
+                        href={event.html_url}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        View
+                      </a>
+                    ) : (
+                      "-"
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </section>
     </main>
   );
 }
