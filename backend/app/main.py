@@ -7,6 +7,8 @@ from app.event_dispatcher import dispatch_github_webhook
 from app.models import GitHubEvent
 from app.services import get_filtered_events
 
+from app.alerts import send_slack_alert
+
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="GitHub Workflow Observer")
@@ -129,3 +131,9 @@ def get_actor_activity(
     )
 
     return events
+
+# Route for debugging without having to push to test repo
+@app.post("/test-alert")
+def test_alert():
+    send_slack_alert("Test alert from Workflow Observer")
+    return {"success": True}

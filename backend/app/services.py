@@ -1,12 +1,12 @@
-from app.config import settings
-
 import hmac
 import hashlib
 import os
+
 from fastapi import FastAPI, Request, Header, HTTPException, Depends
 from sqlalchemy.orm import Session
-from app.database import get_db
 
+from app.config import settings
+from app.database import get_db
 from app.models import GitHubEvent
 
 secret = settings.GITHUB_WEBHOOK_SECRET
