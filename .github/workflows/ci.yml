@@ -33,6 +33,9 @@ jobs:
         run: |
           python -c "from app.main import app; print('Backend imported successfully')"
 
+      - name: Run backend tests
+        run: pytest
+
   frontend:
     name: Frontend Checks
     runs-on: ubuntu-latest
