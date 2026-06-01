@@ -1,57 +1,29 @@
-import { useEffect, useState } from "react";
-import { getEvents, getFailedWorkflowRuns } from "./api";
-import type { GitHubEvent } from "./types";
+import { useMemo, useState } from "react";
 import SummaryCards from "./components/SummaryCards";
+import {
+  useEvents,
+  type EventTypeFilter,
+} from "./hooks/useEvents";
+import { useFailedWorkflowRuns } from "./hooks/useFailedWorkflowRuns";
 import "./App.css";
 
-type EventTypeFilter =
-  | ""
-  | "push"
-  | "pull_request"
-  | "workflow_run"
-  | "issues"
-  | "member";
-
 function App() {
-  const [events, setEvents] = useState<GitHubEvent[]>([]);
-  const [failedWorkflows, setFailedWorkflows] = useState<GitHubEvent[]>([]);
   const [eventType, setEventType] = useState<EventTypeFilter>("");
-  const [error, setError] = useState<string | null>(null);
-  const [isLoadingEvents, setIsLoadingEvents] = useState(false);
-  const [isLoadingFailures, setIsLoadingFailures] = useState(false);
+  const {
+    events,
+    isLoading: isLoadingEvents,
+    error: eventsError,
+  } = useEvents(eventType);
+  const {
+    failedWorkflows,
+    isLoading: isLoadingFailures,
+    error: failedWorkflowsError,
+  } = useFailedWorkflowRuns();
 
-  useEffect(() => {
-    setIsLoadingEvents(true);
-    setError(null);
-
-    getEvents({
-      event_type: eventType,
-    })
-      .then((data) => {
-        setEvents(data);
-      })
-      .catch((err: Error) => {
-        setError(err.message);
-      })
-      .finally(() => {
-        setIsLoadingEvents(false);
-      });
-  }, [eventType]);
-
-  useEffect(() => {
-    setIsLoadingFailures(true);
-
-    getFailedWorkflowRuns()
-      .then((data) => {
-        setFailedWorkflows(data);
-      })
-      .catch((err: Error) => {
-        setError(err.message);
-      })
-      .finally(() => {
-        setIsLoadingFailures(false);
-      });
-  }, []);
+  const error = useMemo(
+    () => eventsError ?? failedWorkflowsError,
+    [eventsError, failedWorkflowsError]
+  );
 
   return (
     <main>

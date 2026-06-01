@@ -33,6 +33,9 @@ jobs:
         run: |
           python -c "from app.main import app; print('Backend imported successfully')"
 
+      - name: Run Ruff
+        run: ruff check .
+
       - name: Run backend tests
         run: pytest
 
@@ -57,6 +60,9 @@ jobs:
 
       - name: Install frontend dependencies
         run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint
 
       - name: TypeScript check and build
         run: npm run build

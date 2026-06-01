@@ -1,22 +1,24 @@
-import os
 import requests
-from dotenv import load_dotenv
+from app.config import settings
 
-load_dotenv()
-
-SLACK_WEBHOOK_URL = os.getenv("SLACK_WEBHOOK_URL")
-
+SLACK_WEBHOOK_URL = settings.SLACK_WEBHOOK_URL
 
 def send_slack_alert(message: str) -> None:
     if not SLACK_WEBHOOK_URL:
         print("SLACK_WEBHOOK_URL not configured. Skipping alert.")
         return
+    
+    try:
+        response = requests.post(
+            SLACK_WEBHOOK_URL,
+            json={"text": message},
+            timeout=10,
+        )
 
-    response = requests.post(
-        SLACK_WEBHOOK_URL,
-        json={"text": message},
-        timeout=10,
-    )
+    except requests.RequestException:
+        print("Unable to reach Slack server")
+        return
+        
 
     if response.status_code >= 400:
         print(f"Slack alert failed: {response.status_code} {response.text}")
@@ -40,11 +42,11 @@ def format_workflow_failure_alert(event_data: dict) -> str:
     url = event_data.get("html_url", "")
 
     return (
-        "**Workflow Failed**\n"
-        f"**Repo:** {repo}\n"
-        f"**Workflow:** {workflow}\n"
-        f"**Branch:** {branch}\n"
-        f"**Actor:** {actor}\n"
-        f"**Commit:** `{short_sha}`\n"
-        f"**Run:** {url}"
+        "*Workflow Failed*\n"
+        f"*Repo:* {repo}\n"
+        f"*Workflow:* {workflow}\n"
+        f"*Branch:* {branch}\n"
+        f"*Actor:* {actor}\n"
+        f"*Commit:* `{short_sha}`\n"
+        f"*Run:* {url}"
     )

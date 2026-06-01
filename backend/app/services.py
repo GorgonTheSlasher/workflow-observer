@@ -1,8 +1,7 @@
 import hmac
 import hashlib
-import os
 
-from fastapi import FastAPI, Request, Header, HTTPException, Depends
+from fastapi import HTTPException, Depends
 from sqlalchemy.orm import Session
 
 from app.config import settings
@@ -11,10 +10,13 @@ from app.models import GitHubEvent
 
 secret = settings.GITHUB_WEBHOOK_SECRET
 
-def verify_signature(payload_body: bytes, signature_header: str):
+def verify_signature(payload_body: bytes, signature_header: str) -> None:
 
     '''Checks if there is a signature header (encoded webhook secret from github webhook) and 
     compares it to an encoded version of the webhook secret stored in .env accesses via settings import'''
+
+    if secret is None:
+        raise HTTPException(status_code=500, detail="Secret for webhook cannot be None")
 
     if not signature_header:
         raise HTTPException(status_code=403, detail="Missing signature")
@@ -28,7 +30,7 @@ def verify_signature(payload_body: bytes, signature_header: str):
     if not hmac.compare_digest(expected_signature, signature_header):
         raise HTTPException(status_code=403, detail="Invalid signature")
     
-def save_event(db, event_type: str, data: dict):
+def save_event(db: Session, event_type: str, data: dict[str, object]) -> GitHubEvent:
 
     '''Filters data from github event to match db model and saves it to the database'''
 
@@ -55,7 +57,7 @@ def get_filtered_events(
     actor: str | None = None,
     conclusion: str | None = None,
     db: Session = Depends(get_db),
-):
+) -> list[GitHubEvent]:
     query = db.query(GitHubEvent)
 
     if event_type:
