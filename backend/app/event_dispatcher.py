@@ -20,12 +20,6 @@ async def dispatch_github_webhook(
 
     payload = json.loads(body)
 
-    # Debug- console event dump
-    # print(f"\nEVENT Type: {x_github_event}")
-    # print(json.dumps(payload, indent=2))
-    # print(payload.keys())
-    ###---###
-
     handler = EVENT_HANDLERS.get(x_github_event)
 
     if not handler:
@@ -42,10 +36,16 @@ async def dispatch_github_webhook(
         data=event_data,
     )
 
+    print("EVENT TYPE:", x_github_event)
+    print("WORKFLOW STATUS:", event_data.get("status"))
+    print("WORKFLOW CONCLUSION:", event_data.get("conclusion"))
+
     should_alert = should_alert_on_event(
         x_github_event,
         event_data,
     )
+
+    print("SHOULD ALERT:", should_alert)
 
     if should_alert:
         message = format_workflow_failure_alert(event_data)
