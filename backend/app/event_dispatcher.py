@@ -36,16 +36,10 @@ async def dispatch_github_webhook(
         data=event_data,
     )
 
-    print("EVENT TYPE:", x_github_event)
-    print("WORKFLOW STATUS:", event_data.get("status"))
-    print("WORKFLOW CONCLUSION:", event_data.get("conclusion"))
-
     should_alert = should_alert_on_event(
         x_github_event,
         event_data,
     )
-
-    print("SHOULD ALERT:", should_alert)
 
     if should_alert:
         message = format_workflow_failure_alert(event_data)
