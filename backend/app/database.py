@@ -1,13 +1,19 @@
+import os
+from app.config import settings
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
-# SQLite uses /// for relative path
-DATABASE_URL = "sqlite:///./workflow_observer.db"
+DATABASE_URL = settings.DATABASE_URL
 
-# SQLite has threading restrictions. FastAPI uses async. This lets them play together. 
+connect_args = {}
+
+# SQLite has threading restrictions. FastAPI uses async. This lets them play together.
+if DATABASE_URL.startswith("sqlite"):
+    connect_args = {"check_same_thread": False}
+ 
 engine = create_engine(
     DATABASE_URL,
-    connect_args={"check_same_thread": False}
+    connect_args=connect_args
 )
 
 # Creates DB session factory
