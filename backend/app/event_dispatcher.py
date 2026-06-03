@@ -42,7 +42,12 @@ async def dispatch_github_webhook(
         data=event_data,
     )
 
-    if should_alert_on_event(x_github_event, event_data):
+    should_alert = should_alert_on_event(
+        x_github_event,
+        event_data,
+    )
+
+    if should_alert:
         message = format_workflow_failure_alert(event_data)
         send_slack_alert(message)
 
