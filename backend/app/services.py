@@ -42,7 +42,8 @@ def save_event(db: Session, event_type: str, data: dict[str, object]) -> GitHubE
         status=data.get("status"),
         conclusion=data.get("conclusion"),
         commit_sha=data.get("commit_sha"),
-        html_url=data.get("html_url")
+        html_url=data.get("html_url"),
+        details_json=data.get("details_json"),
     )
 
     db.add(event)
