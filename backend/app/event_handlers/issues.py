@@ -1,29 +1,17 @@
 def handle_issues_event(payload: dict):
-    issue = payload.get("issue", {})
-    repository = payload.get("repository", {})
+    event_object = payload.get("event_object", {})
+    repo = payload.get("repository", {})
     sender = payload.get("sender", {})
-    labels = issue.get("labels", [])
-    assignees = issue.get("assignees", [])
 
     return {
-        "event_type": "issues",
+        # base columns (needs confirmation)
+        "event_type": event_object.get("event_type"),
         "action": payload.get("action"),
-
-        "repo_name": repository.get("full_name"),
-        "repo_id": repository.get("id"),
-
-        "issue_number": issue.get("number"),
-        "issue_title": issue.get("title"),
-        "issue_state": issue.get("state"),
-        "issue_author": issue.get("user", {}).get("login"),
-
-        "labels": [label.get("name") for label in labels],
-        "assignees": [user.get("login") for user in assignees],
-
+        "repo_name": repo.get("full_name"),
         "actor": sender.get("login"),
-        "html_url": issue.get("html_url"),
-
-        "created_at": issue.get("created_at"),
-        "updated_at": issue.get("updated_at"),
-        "closed_at": issue.get("closed_at"),
+        "branch": repo.get("branch"),
+        "status": event_object.get("status"),
+        "conclusion": event_object.get("conclusion"),
+        "commit_sha": event_object.get("commit_sha"),
+        "html_url": repo.get("html_url"),
     }
