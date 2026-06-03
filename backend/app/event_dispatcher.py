@@ -34,6 +34,9 @@ async def dispatch_github_webhook(
 
     payload = json.loads(body)
 
+    # debug
+    debug_payload(payload)
+
     handler = EVENT_HANDLERS.get(x_github_event)
 
     if not handler:
@@ -49,8 +52,6 @@ async def dispatch_github_webhook(
         event_type=x_github_event,
         data=event_data,
     )
-
-    debug_payload(payload)
 
     should_alert = should_alert_on_event(
         x_github_event,
