@@ -12,6 +12,11 @@ from app.services import verify_signature, save_event
 def debug_payload(payload: dict):
     import json
 
+    print("PAYLOAD KEYS:", payload.keys())
+
+    workflow_run = payload.get("workflow_run", {})
+    print("WORKFLOW_RUN KEYS:", workflow_run.keys())
+
     print("=" * 80)
     print(json.dumps(payload, indent=2))
     print("=" * 80)
