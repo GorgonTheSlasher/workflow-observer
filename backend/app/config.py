@@ -14,7 +14,8 @@ class Settings:
         ) # This is the url for the slack webhook. Can be found in .env
 
         self.DATABASE_URL = os.getenv(
-            "DATABASE_URL, sqlite:///./workflow_observer.db"
+            "DATABASE_URL",
+            "sqlite:///./workflow_observer.db"
         ) # This is the url for the database. Can be found in .env
 
 settings = Settings()
