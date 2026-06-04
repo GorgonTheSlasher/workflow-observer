@@ -1,13 +1,19 @@
 def handle_push_event(payload: dict):
+    commits = payload.get("commits")
+    # pusher = payload.get("pusher", {})
     repo = payload.get("repository", {})
-    pusher = payload.get("pusher", {})
     sender = payload.get("sender", {})
 
     return {
-        "event_type": "push",
+        "event_type": "issues",
+        "action": payload.get("action"),
         "repo_name": repo.get("full_name"),
-        "branch": payload.get("ref", "").replace("refs/heads/", ""),
-        "actor": sender.get("login") or pusher.get("name"),
-        "commit_sha": payload.get("after"),
-        "commit_count": len(payload.get("commits", [])),
+        "actor": sender.get("login"),
+        "branch": repo.get("head_branch"),
+        "status": commits.get("status"),
+        "conclusion": commits.get("conclusion"),
+        "commit_sha": commits.get("head_sha"),
+        "html_url": repo.get("html_url"),
+
+        "details_json": payload
     }

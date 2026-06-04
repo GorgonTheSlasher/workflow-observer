@@ -1,38 +1,19 @@
 def handle_pull_request_event(payload: dict):
-    pr = payload.get("pull_request", {})
-    repository = payload.get("repository", {})
+    action = payload.get("action")
+    pull_request = payload.get("pull_request", {})
+    repo = payload.get("repository", {})
     sender = payload.get("sender", {})
-    head = pr.get("head", {})
-    base = pr.get("base", {})
 
     return {
-        "event_type": "pull_request",
-        "action": payload.get("action"),
-
-        "repo_name": repository.get("full_name"),
-        "repo_id": repository.get("id"),
-
-        "pr_number": pr.get("number") or payload.get("number"),
-        "pr_title": pr.get("title"),
-        "pr_state": pr.get("state"),
-        "is_draft": pr.get("draft"),
-        "merged": pr.get("merged"),
-
-        "author": pr.get("user", {}).get("login"),
+        "event_type": "issues",
+        "action": action,
+        "repo_name": repo.get("full_name"),
         "actor": sender.get("login"),
+        "branch": repo.get("head_branch"),
+        "status": pull_request.get("status"),
+        "conclusion": pull_request.get("conclusion"),
+        "commit_sha": pull_request.get("head_sha"),
+        "html_url": repo.get("html_url"),
 
-        "source_branch": head.get("ref"),
-        "target_branch": base.get("ref"),
-
-        "commits": pr.get("commits"),
-        "additions": pr.get("additions"),
-        "deletions": pr.get("deletions"),
-        "changed_files": pr.get("changed_files"),
-
-        "html_url": pr.get("html_url"),
-
-        "created_at": pr.get("created_at"),
-        "updated_at": pr.get("updated_at"),
-        "closed_at": pr.get("closed_at"),
-        "merged_at": pr.get("merged_at"),
+        "details_json": payload
     }

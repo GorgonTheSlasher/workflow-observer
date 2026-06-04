@@ -1,21 +1,19 @@
 def handle_member_event(payload: dict):
-    member = payload.get("member") or {}
-    repository = payload.get("repository", {})
+    action = payload.get("action")
+    member = payload.get("member", {})
+    repo = payload.get("repository", {})
     sender = payload.get("sender", {})
 
     return {
-        "event_type": "member",
-        "action": payload.get("action"),
-
-        "repo_name": repository.get("full_name"),
-        "repo_id": repository.get("id"),
-
-        "member_login": member.get("login"),
-        "member_id": member.get("id"),
-        "member_url": member.get("html_url"),
-
+        "event_type": "issues",
+        "action": action,
+        "repo_name": repo.get("full_name"),
         "actor": sender.get("login"),
-        "actor_id": sender.get("id"),
+        "branch": repo.get("head_branch"),
+        "status": member.get("status"),
+        "conclusion": member.get("conclusion"),
+        "commit_sha": member.get("head_sha"),
+        "html_url": repo.get("html_url"),
 
-        "html_url": repository.get("html_url"),
+        "details_json": payload,
     }
