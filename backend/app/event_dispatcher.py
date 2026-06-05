@@ -35,7 +35,7 @@ async def dispatch_github_webhook(
     payload = json.loads(body)
 
     # debug
-    debug_payload(payload)
+    # debug_payload(payload)
 
     handler = EVENT_HANDLERS.get(x_github_event)
 

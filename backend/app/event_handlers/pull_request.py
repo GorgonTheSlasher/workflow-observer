@@ -5,7 +5,7 @@ def handle_pull_request_event(payload: dict):
     sender = payload.get("sender", {})
 
     return {
-        "event_type": "issues",
+        "event_type": "pull_request",
         "action": action,
         "repo_name": repo.get("full_name"),
         "actor": sender.get("login"),
