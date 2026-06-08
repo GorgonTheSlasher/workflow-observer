@@ -60,14 +60,24 @@ def summarize_db(db: Session = Depends(get_db)):
 
     query = db.query(GitHubEvent)
 
+    unique_actors_count = (
+    db.query(GitHubEvent.actor)
+    .filter(GitHubEvent.actor.isnot(None))
+    .distinct()
+    .count()
+)
+
+
+
     return {
-        "total events": query.count(),
-        "total repositories": query.filter("repo_name").count(),
-        "total members": query.filter(GitHubEvent.event_type == "actor").count(),
-        "total issues": query.filter(GitHubEvent.event_type == "issue").count(),
-        "total pull requests": query.filter(GitHubEvent.event_type == "pull_request").count(),
-        "total pushes": query.filter(GitHubEvent.event_type == "push").count(),
-        "total workflows": query.filter(GitHubEvent.event_type == "workflow_run").count(),
+        "total_events": query.count(),
+        "total_repositories": db.query(GitHubEvent.repo_name).distinct().count(),
+        "total_unique_actors": unique_actors_count,
+        "total_members": query.filter(GitHubEvent.event_type == "member").count(),
+        "total_issues": query.filter(GitHubEvent.event_type == "issues").count(),
+        "total_pull requests": query.filter(GitHubEvent.event_type == "pull_request").count(),
+        "total_pushes": query.filter(GitHubEvent.event_type == "push").count(),
+        "total_workflows": query.filter(GitHubEvent.event_type == "workflow_run").count(),
     }
     
 # Shows queriable log of events 
