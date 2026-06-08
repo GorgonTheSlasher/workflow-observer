@@ -1,5 +1,5 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request, Header, Depends
+from fastapi import FastAPI, Request, Header, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
@@ -54,8 +54,24 @@ async def github_webhook(
         db=db
     )
 
+# Summarize all of the database
+@app.get("/summary")
+def summarize_db(db: Session = Depends(get_db)):
+
+    query = db.query(GitHubEvent)
+
+    return {
+        "total events": query.count(),
+        "total repositories": query.filter("repo_name").count(),
+        "total members": query.filter(GitHubEvent.event_type == "actor").count(),
+        "total issues": query.filter(GitHubEvent.event_type == "issue").count(),
+        "total pull requests": query.filter(GitHubEvent.event_type == "pull_request").count(),
+        "total pushes": query.filter(GitHubEvent.event_type == "push").count(),
+        "total workflows": query.filter(GitHubEvent.event_type == "workflow_run").count(),
+    }
+    
 # Shows queriable log of events 
-@app.get("/events")
+@app.get("/summary/events")
 def get_events(
     event_type: str | None = None,
     repo_name: str | None = None,
@@ -71,20 +87,56 @@ def get_events(
         conclusion=conclusion,
     )
 
-# Shows failed workflows
-@app.get("/events/workflow-runs/failures")
-def get_failed_workflow_runs(db: Session = Depends(get_db)):
+# Summarizes workflow runs for a repository by result
+@app.get("/summary/events/workflow-runs")
+def get_workflow_runs(
+    repo_name: str,
+    result: str,
+    db: Session = Depends(get_db)
+):
+    if result not in {"success", "failure"}:
+        raise HTTPException(
+            status_code=400,
+            detail="result must be 'success' or 'failure'",
+        )
+    
+    base_query = db.query(GitHubEvent).filter(
+        GitHubEvent.event_type == "workflow_run",
+        GitHubEvent.repo_name == repo_name,
+    )
 
-    return (
-        db.query(GitHubEvent)
-        .filter(GitHubEvent.event_type == "workflow_run")
-        .filter(GitHubEvent.conclusion == "failure")
+    total_workflows = base_query.count()
+
+    successful_workflows_count = base_query.filter(
+        GitHubEvent.conclusion == "success"
+    ).count()
+
+    success_rate = (
+        successful_workflows_count / total_workflows * 100
+        if total_workflows > 0
+        else 0
+    )
+
+    success_rate = round(success_rate, 2)
+
+    workflows = (
+        base_query
+        .filter(GitHubEvent.conclusion == result)
         .order_by(GitHubEvent.created_at.desc())
         .all()
     )
 
+    return {
+        "repo_name": repo_name,
+        "result": result,
+        "total_workflows": total_workflows,
+        "success_rate": success_rate,
+        "count": len(workflows),
+        "workflows": workflows,
+    }
+
 # Shows a limited amout of recent events
-@app.get("/events/recent")
+@app.get("/summary/events/recent")
 def get_recent_events(
     limit: int = 10,
     db: Session = Depends(get_db),
@@ -97,7 +149,7 @@ def get_recent_events(
     )
 
 # Summarizes all events show success/failures
-@app.get("/repository-summary")
+@app.get("/summary/repository")
 def get_repository_summary(
     repo_name: str,
     db: Session = Depends(get_db),
@@ -125,8 +177,8 @@ def get_repository_summary(
         "successful_workflows": successful_workflows,
     }
 
-# Look up actor activity
-@app.get("/actors/{actor}/activity")
+# Look up user activity
+@app.get("/summary/{actor}")
 def get_actor_activity(
     actor: str,
     db: Session = Depends(get_db),
@@ -145,3 +197,4 @@ def get_actor_activity(
 def test_alert():
     send_slack_alert("Test alert from Workflow Observer")
     return {"success": True}
+

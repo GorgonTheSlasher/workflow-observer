@@ -8,6 +8,7 @@ from app.event_handlers import EVENT_HANDLERS
 from app.services import verify_signature, save_event
 
 # debug function for payload info
+#=======================================================#
 
 def debug_payload(payload: dict):
     import json
@@ -21,6 +22,7 @@ def debug_payload(payload: dict):
     print(json.dumps(payload, indent=2))
     print("=" * 80)
 
+#========================================================#
 
 async def dispatch_github_webhook(
     request: Request,
