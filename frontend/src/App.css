@@ -15,10 +15,11 @@ section {
 
 .section-heading-row {
   display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
+  align-items: center;
+  justify-content: center;
   gap: 1rem;
   margin-bottom: 1rem;
+  text-align: center;
 }
 
 .section-heading-row h2 {
@@ -33,7 +34,7 @@ section {
 
 .summary-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 1rem;
 }
 
@@ -113,7 +114,17 @@ th {
     padding: 1rem;
   }
 
+  .summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .summary-card__value {
     font-size: 1.65rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .summary-grid {
+    grid-template-columns: 1fr;
   }
 }
