@@ -157,7 +157,7 @@ def get_recent_events(
         .all()
     )
 
-# Summarizes all events show success/failures
+# Summarizes all events by repo and show success/failures
 @app.get("/summary/repository")
 def get_repository_summary(
     repo_name: str,
