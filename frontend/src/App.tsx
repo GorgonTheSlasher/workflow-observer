@@ -6,6 +6,7 @@ import {
 } from "./hooks/useEvents";
 import { useFailedWorkflowRuns } from "./hooks/useFailedWorkflowRuns";
 import { useRepositories } from "./hooks/useRepositories";
+import { useSummary } from "./hooks/useSummary";
 import "./App.css";
 
 function App() {
@@ -27,10 +28,15 @@ function App() {
     isLoading: isLoadingFailures,
     error: failedWorkflowsError,
   } = useFailedWorkflowRuns(repoName);
+  const {
+    summary,
+    isLoading: isLoadingSummary,
+    error: summaryError,
+  } = useSummary();
 
   const error = useMemo(
-    () => repositoriesError ?? eventsError ?? failedWorkflowsError,
-    [repositoriesError, eventsError, failedWorkflowsError]
+    () => repositoriesError ?? summaryError ?? eventsError ?? failedWorkflowsError,
+    [repositoriesError, summaryError, eventsError, failedWorkflowsError]
   );
 
   return (
@@ -84,7 +90,7 @@ function App() {
 
       {error && <p className="error">Error: {error}</p>}
 
-      <SummaryCards events={events} />
+      <SummaryCards summary={summary} isLoading={isLoadingSummary} />
 
       <section>
         <h2>Failed Workflows</h2>
