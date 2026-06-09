@@ -2,15 +2,19 @@ import { useEffect, useState } from "react";
 import { getFailedWorkflowRuns } from "../api";
 import type { GitHubEvent } from "../types";
 
-export default function FailedWorkflowsTable() {
+type FailedWorkflowsTableProps = {
+  repoName: string;
+};
+
+export default function FailedWorkflowsTable({ repoName }: FailedWorkflowsTableProps) {
   const [workflows, setWorkflows] = useState<GitHubEvent[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    getFailedWorkflowRuns()
+    getFailedWorkflowRuns(repoName)
       .then(setWorkflows)
       .catch((err: Error) => setError(err.message));
-  }, []);
+  }, [repoName]);
 
   if (error) {
     return <p>Error: {error}</p>;

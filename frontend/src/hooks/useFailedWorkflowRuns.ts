@@ -8,7 +8,7 @@ type UseFailedWorkflowRunsResult = {
   error: string | null;
 };
 
-export function useFailedWorkflowRuns(): UseFailedWorkflowRunsResult {
+export function useFailedWorkflowRuns(repoName: string): UseFailedWorkflowRunsResult {
   const [failedWorkflows, setFailedWorkflows] = useState<GitHubEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -17,8 +17,14 @@ export function useFailedWorkflowRuns(): UseFailedWorkflowRunsResult {
     let cancelled = false;
 
     async function loadFailedWorkflowRuns() {
+      if (!repoName) {
+        setFailedWorkflows([]);
+        setIsLoading(false);
+        return;
+      }
+
       try {
-        const data = await getFailedWorkflowRuns();
+        const data = await getFailedWorkflowRuns(repoName);
 
         if (!cancelled) {
           setFailedWorkflows(data);
@@ -39,7 +45,7 @@ export function useFailedWorkflowRuns(): UseFailedWorkflowRunsResult {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [repoName]);
 
   return { failedWorkflows, isLoading, error };
 }

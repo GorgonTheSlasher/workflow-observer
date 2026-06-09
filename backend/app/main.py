@@ -74,10 +74,23 @@ def summarize_db(db: Session = Depends(get_db)):
         "total_unique_actors": unique_actors_count,
         "total_members": query.filter(GitHubEvent.event_type == "member").count(),
         "total_issues": query.filter(GitHubEvent.event_type == "issues").count(),
-        "total_pull requests": query.filter(GitHubEvent.event_type == "pull_request").count(),
+        "total_pull_requests": query.filter(GitHubEvent.event_type == "pull_request").count(),
         "total_pushes": query.filter(GitHubEvent.event_type == "push").count(),
         "total_workflows": query.filter(GitHubEvent.event_type == "workflow_run").count(),
     }
+
+# Lists repositories that have stored events
+@app.get("/summary/repositories")
+def get_repositories(db: Session = Depends(get_db)):
+    rows = (
+        db.query(GitHubEvent.repo_name)
+        .filter(GitHubEvent.repo_name.isnot(None))
+        .distinct()
+        .order_by(GitHubEvent.repo_name)
+        .all()
+    )
+
+    return [repo_name for (repo_name,) in rows]
     
 # Shows queriable log of events 
 @app.get("/summary/events")
@@ -206,4 +219,5 @@ def get_actor_activity(
 def test_alert():
     send_slack_alert("Test alert from Workflow Observer")
     return {"success": True}
+
 

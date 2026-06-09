@@ -5,24 +5,32 @@ import {
   type EventTypeFilter,
 } from "./hooks/useEvents";
 import { useFailedWorkflowRuns } from "./hooks/useFailedWorkflowRuns";
+import { useRepositories } from "./hooks/useRepositories";
 import "./App.css";
 
 function App() {
   const [eventType, setEventType] = useState<EventTypeFilter>("");
+  const [selectedRepoName, setSelectedRepoName] = useState("");
+  const {
+    repositories,
+    isLoading: isLoadingRepositories,
+    error: repositoriesError,
+  } = useRepositories();
+  const repoName = selectedRepoName || repositories[0] || "";
   const {
     events,
     isLoading: isLoadingEvents,
     error: eventsError,
-  } = useEvents(eventType);
+  } = useEvents(eventType, repoName);
   const {
     failedWorkflows,
     isLoading: isLoadingFailures,
     error: failedWorkflowsError,
-  } = useFailedWorkflowRuns();
+  } = useFailedWorkflowRuns(repoName);
 
   const error = useMemo(
-    () => eventsError ?? failedWorkflowsError,
-    [eventsError, failedWorkflowsError]
+    () => repositoriesError ?? eventsError ?? failedWorkflowsError,
+    [repositoriesError, eventsError, failedWorkflowsError]
   );
 
   return (
@@ -34,6 +42,27 @@ function App() {
 
       <section>
         <h2>Filters</h2>
+
+        <label htmlFor="repo-filter">Repository: </label>
+
+        <select
+          id="repo-filter"
+          value={repoName}
+          disabled={isLoadingRepositories || repositories.length === 0}
+          onChange={(event) => setSelectedRepoName(event.target.value)}
+        >
+          {repositories.length === 0 ? (
+            <option value="">No repositories found</option>
+          ) : (
+            repositories.map((repository) => (
+              <option key={repository} value={repository}>
+                {repository}
+              </option>
+            ))
+          )}
+        </select>
+
+        {" "}
 
         <label htmlFor="event-type-filter">Event Type: </label>
 

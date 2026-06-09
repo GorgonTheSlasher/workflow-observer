@@ -16,7 +16,10 @@ type UseEventsResult = {
   error: string | null;
 };
 
-export function useEvents(eventType: EventTypeFilter): UseEventsResult {
+export function useEvents(
+  eventType: EventTypeFilter,
+  repoName = ""
+): UseEventsResult {
   const [events, setEvents] = useState<GitHubEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -28,7 +31,10 @@ export function useEvents(eventType: EventTypeFilter): UseEventsResult {
       setError(null);
 
       try {
-        const data = await getEvents({ event_type: eventType });
+        const data = await getEvents({
+          event_type: eventType,
+          repo_name: repoName,
+        });
 
         if (!cancelled) {
           setEvents(data);
@@ -49,7 +55,7 @@ export function useEvents(eventType: EventTypeFilter): UseEventsResult {
     return () => {
       cancelled = true;
     };
-  }, [eventType]);
+  }, [eventType, repoName]);
 
   return { events, isLoading, error };
 }
