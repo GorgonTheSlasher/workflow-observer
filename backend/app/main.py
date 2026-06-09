@@ -67,8 +67,6 @@ def summarize_db(db: Session = Depends(get_db)):
     .count()
 )
 
-
-
     return {
         "total_events": query.count(),
         "total_repositories": db.query(GitHubEvent.repo_name).distinct().count(),
