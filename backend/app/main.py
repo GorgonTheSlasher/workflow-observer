@@ -186,7 +186,7 @@ def get_repository_summary(
         "successful_workflows": successful_workflows,
     }
 
-# Look up user activity
+# Summary of events triggered by specific user
 @app.get("/summary/{actor}")
 def get_actor_activity(
     actor: str,
