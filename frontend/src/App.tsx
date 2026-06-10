@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import SummaryCharts from "./components/SummaryCharts";
 import SummaryCards from "./components/SummaryCards";
 import {
   useEvents,
@@ -7,6 +8,7 @@ import {
 import { useFailedWorkflowRuns } from "./hooks/useFailedWorkflowRuns";
 import { useRepositories } from "./hooks/useRepositories";
 import { useSummary } from "./hooks/useSummary";
+import { useWorkflowRunBreakdown } from "./hooks/useWorkflowRunBreakdown";
 import "./App.css";
 
 function App() {
@@ -33,10 +35,26 @@ function App() {
     isLoading: isLoadingSummary,
     error: summaryError,
   } = useSummary();
+  const {
+    workflowRunBreakdown,
+    isLoading: isLoadingWorkflowRunBreakdown,
+    error: workflowRunBreakdownError,
+  } = useWorkflowRunBreakdown(repoName);
 
   const error = useMemo(
-    () => repositoriesError ?? summaryError ?? eventsError ?? failedWorkflowsError,
-    [repositoriesError, summaryError, eventsError, failedWorkflowsError]
+    () =>
+      repositoriesError ??
+      summaryError ??
+      workflowRunBreakdownError ??
+      eventsError ??
+      failedWorkflowsError,
+    [
+      repositoriesError,
+      summaryError,
+      workflowRunBreakdownError,
+      eventsError,
+      failedWorkflowsError,
+    ]
   );
 
   return (
@@ -91,6 +109,12 @@ function App() {
       {error && <p className="error">Error: {error}</p>}
 
       <SummaryCards summary={summary} isLoading={isLoadingSummary} />
+
+      <SummaryCharts
+        summary={summary}
+        workflowRunBreakdown={workflowRunBreakdown}
+        isLoading={isLoadingSummary || isLoadingWorkflowRunBreakdown}
+      />
 
       <section>
         <h2>Failed Workflows</h2>

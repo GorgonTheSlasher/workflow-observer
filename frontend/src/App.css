@@ -93,6 +93,42 @@ section {
   background: #f6f8fa;
 }
 
+.charts-section {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.chart-card {
+  border: 1px solid #ddd;
+  border-radius: 14px;
+  padding: 1rem;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.chart-card__header {
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+
+.chart-card__header h2 {
+  margin: 0;
+}
+
+.chart-card__header p {
+  margin: 0.25rem 0 0;
+  color: #666;
+  font-size: 0.95rem;
+}
+
+.chart-card--loading,
+.chart-empty {
+  color: #57606a;
+  text-align: center;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
@@ -116,6 +152,10 @@ th {
 
   .summary-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .charts-section {
+    grid-template-columns: 1fr;
   }
 
   .summary-card__value {
