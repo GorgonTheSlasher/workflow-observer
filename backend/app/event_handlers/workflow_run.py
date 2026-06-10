@@ -9,11 +9,11 @@ def handle_workflow_run_event(payload: dict):
         "action": action,
         "repo_name": repo.get("full_name"),
         "actor": sender.get("login"),
-        "branch": repo.get("head_branch"),
+        "branch": workflow_run.get("head_branch"),
         "status": workflow_run.get("status"),
         "conclusion": workflow_run.get("conclusion"),
         "commit_sha": workflow_run.get("head_sha"),
-        "html_url": repo.get("html_url"),
+        "html_url": workflow_run.get("html_url"),
 
         "details_json": payload,
     }

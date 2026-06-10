@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import RecentWorkflowFailuresWidget from "./components/RecentWorkflowFailuresWidget";
 import SummaryCharts from "./components/SummaryCharts";
 import SummaryCards from "./components/SummaryCards";
 import {
@@ -116,51 +117,10 @@ function App() {
         isLoading={isLoadingSummary || isLoadingWorkflowRunBreakdown}
       />
 
-      <section>
-        <h2>Failed Workflows</h2>
-
-        {isLoadingFailures ? (
-          <p>Loading failed workflows...</p>
-        ) : failedWorkflows.length === 0 ? (
-          <p>No failed workflows found.</p>
-        ) : (
-          <table>
-            <thead>
-              <tr>
-                <th>Repo</th>
-                <th>Actor</th>
-                <th>Branch</th>
-                <th>Commit</th>
-                <th>Link</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {failedWorkflows.map((workflow) => (
-                <tr key={workflow.id}>
-                  <td>{workflow.repo_name}</td>
-                  <td>{workflow.actor ?? "-"}</td>
-                  <td>{workflow.branch ?? "-"}</td>
-                  <td>{workflow.commit_sha?.slice(0, 7) ?? "-"}</td>
-                  <td>
-                    {workflow.html_url ? (
-                      <a
-                        href={workflow.html_url}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        View
-                      </a>
-                    ) : (
-                      "-"
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </section>
+      <RecentWorkflowFailuresWidget
+        failures={failedWorkflows}
+        isLoading={isLoadingFailures}
+      />
 
       <section>
         <h2>Events</h2>

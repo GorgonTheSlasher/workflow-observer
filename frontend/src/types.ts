@@ -10,4 +10,5 @@ export type GitHubEvent = {
   conclusion?: string | null;
   html_url?: string | null;
   created_at: string;
+  workflow_name?: string | null;
 };

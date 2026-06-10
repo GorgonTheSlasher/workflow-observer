@@ -17,6 +17,9 @@ export function useFailedWorkflowRuns(repoName: string): UseFailedWorkflowRunsRe
     let cancelled = false;
 
     async function loadFailedWorkflowRuns() {
+      setIsLoading(true);
+      setError(null);
+
       if (!repoName) {
         setFailedWorkflows([]);
         setIsLoading(false);
@@ -31,6 +34,7 @@ export function useFailedWorkflowRuns(repoName: string): UseFailedWorkflowRunsRe
         }
       } catch (err) {
         if (!cancelled) {
+          setFailedWorkflows([]);
           setError((err as Error).message);
         }
       } finally {

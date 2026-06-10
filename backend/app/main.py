@@ -112,8 +112,8 @@ def get_events(
 # Summarizes workflow runs for a repository by result
 @app.get("/summary/events/workflow-runs")
 def get_workflow_runs(
-    repo_name: str,
-    result: str,
+    repo_name: str | None = None,
+    result: str | None = None,
     db: Session = Depends(get_db)
 ):
     if result not in {"success", "failure"}:
@@ -148,13 +148,35 @@ def get_workflow_runs(
         .all()
     )
 
+    workflow_items = []
+
+    for workflow in workflows:
+        details_json = workflow.details_json or {}
+        workflow_run = details_json.get("workflow_run", {})
+
+        workflow_items.append({
+            "id": workflow.id,
+            "event_type": workflow.event_type,
+            "action": workflow.action,
+            "repo_name": workflow.repo_name,
+            "actor": workflow.actor,
+            "branch": workflow.branch,
+            "status": workflow.status,
+            "conclusion": workflow.conclusion,
+            "commit_sha": workflow.commit_sha,
+            "html_url": workflow.html_url,
+            "created_at": workflow.created_at,
+            "workflow_name": workflow_run.get("name"),
+        })
+
+
     return {
         "repo_name": repo_name,
         "result": result,
         "total_workflows": total_workflows,
         "success_rate": success_rate,
         "count": len(workflows),
-        "workflows": workflows,
+        "workflows": workflow_items,
     }
 
 # Shows a limited amout of recent events
@@ -219,5 +241,6 @@ def get_actor_activity(
 def test_alert():
     send_slack_alert("Test alert from Workflow Observer")
     return {"success": True}
+
 
 
