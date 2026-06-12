@@ -122,12 +122,19 @@ export type EventFilters = {
   actor?: string;
   conclusion?: string;
   search?: string;
+  since_days?: number;
   limit?: number;
+  offset?: number;
+};
+
+export type EventsPage = {
+  total: number;
+  events: GitHubEvent[];
 };
 
 export async function getEvents(
   filters: EventFilters = {}
-): Promise<GitHubEvent[]> {
+): Promise<EventsPage> {
   const params = new URLSearchParams();
 
   Object.entries(filters).forEach(([key, value]) => {

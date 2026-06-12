@@ -13,13 +13,23 @@ import { useSummary } from "./hooks/useSummary";
 import { useWorkflowRunBreakdown } from "./hooks/useWorkflowRunBreakdown";
 import "./App.css";
 
+const DATE_OPTIONS = [
+  { label: "All time", value: null },
+  { label: "Today", value: 1 },
+  { label: "7 days", value: 7 },
+  { label: "30 days", value: 30 },
+  { label: "90 days", value: 90 },
+] as const;
+
 function App() {
   const [eventType, setEventType] = useState<EventTypeFilter>("");
   const [selectedRepoName, setSelectedRepoName] = useState("");
   const [actor, setActor] = useState("");
   const [conclusion, setConclusion] = useState<ConclusionFilter>("");
   const [search, setSearch] = useState("");
+  const [sinceDays, setSinceDays] = useState<number | null>(null);
   const [limit, setLimit] = useState(50);
+  const [page, setPage] = useState(0);
   const {
     repositories,
     isLoading: isLoadingRepositories,
@@ -33,12 +43,15 @@ function App() {
       actor,
       conclusion,
       search,
+      since_days: sinceDays ?? undefined,
       limit,
+      offset: page * limit,
     }),
-    [eventType, repoName, actor, conclusion, search, limit]
+    [eventType, repoName, actor, conclusion, search, sinceDays, limit, page]
   );
   const {
     events,
+    total,
     isLoading: isLoadingEvents,
     error: eventsError,
   } = useEvents(eventFilters);
@@ -90,7 +103,7 @@ function App() {
           id="repo-filter"
           value={repoName}
           disabled={isLoadingRepositories || repositories.length === 0}
-          onChange={(event) => setSelectedRepoName(event.target.value)}
+          onChange={(event) => { setSelectedRepoName(event.target.value); setPage(0); }}
         >
           {repositories.length === 0 ? (
             <option value="">No repositories found</option>
@@ -110,9 +123,7 @@ function App() {
         <select
           id="event-type-filter"
           value={eventType}
-          onChange={(event) =>
-            setEventType(event.target.value as EventTypeFilter)
-          }
+          onChange={(event) => { setEventType(event.target.value as EventTypeFilter); setPage(0); }}
         >
           <option value="">All Events</option>
           <option value="push">Push</option>
@@ -131,7 +142,7 @@ function App() {
           type="text"
           value={actor}
           placeholder="Exact actor"
-          onChange={(event) => setActor(event.target.value)}
+          onChange={(event) => { setActor(event.target.value); setPage(0); }}
         />
 
         {" "}
@@ -141,9 +152,7 @@ function App() {
         <select
           id="conclusion-filter"
           value={conclusion}
-          onChange={(event) =>
-            setConclusion(event.target.value as ConclusionFilter)
-          }
+          onChange={(event) => { setConclusion(event.target.value as ConclusionFilter); setPage(0); }}
         >
           <option value="">All Conclusions</option>
           <option value="success">Success</option>
@@ -161,12 +170,32 @@ function App() {
           type="search"
           value={search}
           placeholder="Repo, actor, branch, SHA"
-          onChange={(event) => setSearch(event.target.value)}
+          onChange={(event) => { setSearch(event.target.value); setPage(0); }}
         />
 
         {" "}
 
-        <label htmlFor="limit-filter">Limit: </label>
+        <label htmlFor="since-filter">Date Range: </label>
+
+        <select
+          id="since-filter"
+          value={sinceDays ?? ""}
+          onChange={(event) => {
+            const raw = event.target.value;
+            setSinceDays(raw === "" ? null : Number(raw));
+            setPage(0);
+          }}
+        >
+          {DATE_OPTIONS.map((opt) => (
+            <option key={opt.label} value={opt.value ?? ""}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+
+        {" "}
+
+        <label htmlFor="limit-filter">Per page: </label>
 
         <input
           id="limit-filter"
@@ -174,7 +203,7 @@ function App() {
           min="1"
           max="500"
           value={limit}
-          onChange={(event) => setLimit(Number(event.target.value) || 50)}
+          onChange={(event) => { setLimit(Number(event.target.value) || 50); setPage(0); }}
         />
       </section>
 
@@ -195,6 +224,27 @@ function App() {
 
       <section>
         <h2>Events</h2>
+
+        {!isLoadingEvents && (
+          <div>
+            <span>
+              {total === 0
+                ? "No events found"
+                : `Showing ${page * limit + 1}–${Math.min((page + 1) * limit, total)} of ${total}`}
+            </span>
+            {" "}
+            <button onClick={() => setPage((p) => p - 1)} disabled={page === 0}>
+              Previous
+            </button>
+            {" "}
+            <button
+              onClick={() => setPage((p) => p + 1)}
+              disabled={(page + 1) * limit >= total}
+            >
+              Next
+            </button>
+          </div>
+        )}
 
         {isLoadingEvents ? (
           <p>Loading events...</p>

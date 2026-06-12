@@ -1,5 +1,6 @@
 import hmac
 import hashlib
+from datetime import datetime, UTC, timedelta
 
 from fastapi import HTTPException, Depends
 from sqlalchemy import or_
@@ -37,6 +38,7 @@ def save_event(db: Session, event_type: str, data: dict[str, object]) -> GitHubE
 
     event = GitHubEvent(
         event_type=event_type,
+        action=data.get("action"),
         repo_name=data.get("repo_name"),
         branch=data.get("branch"),
         actor=data.get("actor") or data.get("author"),
@@ -59,10 +61,12 @@ def get_filtered_events(
     actor: str | None = None,
     conclusion: str | None = None,
     search: str | None = None,
+    since_days: int | None = None,
     limit: int = 100,
+    offset: int = 0,
     db: Session = Depends(get_db),
-) -> list[GitHubEvent]:
-    
+) -> dict:
+
     query = db.query(GitHubEvent)
 
     if event_type:
@@ -88,9 +92,18 @@ def get_filtered_events(
             )
         )
 
-    return (
+    if since_days is not None:
+        cutoff = datetime.now(UTC) - timedelta(days=since_days)
+        query = query.filter(GitHubEvent.created_at >= cutoff)
+
+    total = query.count()
+
+    events = (
         query
         .order_by(GitHubEvent.created_at.desc())
+        .offset(offset)
         .limit(limit)
         .all()
     )
+
+    return {"total": total, "events": events}

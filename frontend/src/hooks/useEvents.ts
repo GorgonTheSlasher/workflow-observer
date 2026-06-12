@@ -19,12 +19,14 @@ export type ConclusionFilter =
 
 type UseEventsResult = {
   events: GitHubEvent[];
+  total: number;
   isLoading: boolean;
   error: string | null;
 };
 
 export function useEvents(filters: EventFilters = {}): UseEventsResult {
   const [events, setEvents] = useState<GitHubEvent[]>([]);
+  const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -39,7 +41,8 @@ export function useEvents(filters: EventFilters = {}): UseEventsResult {
         const data = await getEvents(filters);
 
         if (!cancelled) {
-          setEvents(data);
+          setEvents(data.events);
+          setTotal(data.total);
         }
       } catch (err) {
         if (!cancelled) {
@@ -59,5 +62,5 @@ export function useEvents(filters: EventFilters = {}): UseEventsResult {
     };
   }, [filters]);
 
-  return { events, isLoading, error };
+  return { events, total, isLoading, error };
 }
