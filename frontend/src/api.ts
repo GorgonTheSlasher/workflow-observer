@@ -121,6 +121,8 @@ export type EventFilters = {
   repo_name?: string;
   actor?: string;
   conclusion?: string;
+  search?: string;
+  limit?: number;
 };
 
 export async function getEvents(
@@ -130,7 +132,7 @@ export async function getEvents(
 
   Object.entries(filters).forEach(([key, value]) => {
     if (value) {
-      params.append(key, value);
+      params.append(key, String(value));
     }
   });
 

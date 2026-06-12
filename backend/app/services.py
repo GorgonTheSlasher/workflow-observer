@@ -2,6 +2,7 @@ import hmac
 import hashlib
 
 from fastapi import HTTPException, Depends
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.config import settings
@@ -57,8 +58,11 @@ def get_filtered_events(
     repo_name: str | None = None,
     actor: str | None = None,
     conclusion: str | None = None,
+    search: str | None = None,
+    limit: int = 100,
     db: Session = Depends(get_db),
 ) -> list[GitHubEvent]:
+    
     query = db.query(GitHubEvent)
 
     if event_type:
@@ -73,4 +77,20 @@ def get_filtered_events(
     if conclusion:
         query = query.filter(GitHubEvent.conclusion == conclusion)
 
-    return query.order_by(GitHubEvent.created_at.desc()).all()
+    if search:
+        pattern = f"%{search}%"
+        query = query.filter(
+            or_(
+                GitHubEvent.repo_name.ilike(pattern),
+                GitHubEvent.actor.ilike(pattern),
+                GitHubEvent.branch.ilike(pattern),
+                GitHubEvent.commit_sha.ilike(pattern),
+            )
+        )
+
+    return (
+        query
+        .order_by(GitHubEvent.created_at.desc())
+        .limit(limit)
+        .all()
+    )

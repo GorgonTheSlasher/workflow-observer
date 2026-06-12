@@ -99,6 +99,8 @@ def get_events(
     repo_name: str | None = None,
     actor: str | None = None,
     conclusion: str | None = None,
+    search: str | None = None,
+    limit: int = 50,
     db: Session = Depends(get_db),
 ):
     return get_filtered_events(
@@ -107,6 +109,8 @@ def get_events(
         repo_name=repo_name,
         actor=actor,
         conclusion=conclusion,
+        search=search,
+        limit=limit,
     )
 
 # Summarizes workflow runs for a repository by result

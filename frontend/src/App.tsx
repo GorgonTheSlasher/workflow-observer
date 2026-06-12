@@ -4,6 +4,7 @@ import SummaryCharts from "./components/SummaryCharts";
 import SummaryCards from "./components/SummaryCards";
 import {
   useEvents,
+  type ConclusionFilter,
   type EventTypeFilter,
 } from "./hooks/useEvents";
 import { useFailedWorkflowRuns } from "./hooks/useFailedWorkflowRuns";
@@ -15,17 +16,32 @@ import "./App.css";
 function App() {
   const [eventType, setEventType] = useState<EventTypeFilter>("");
   const [selectedRepoName, setSelectedRepoName] = useState("");
+  const [actor, setActor] = useState("");
+  const [conclusion, setConclusion] = useState<ConclusionFilter>("");
+  const [search, setSearch] = useState("");
+  const [limit, setLimit] = useState(50);
   const {
     repositories,
     isLoading: isLoadingRepositories,
     error: repositoriesError,
   } = useRepositories();
   const repoName = selectedRepoName || repositories[0] || "";
+  const eventFilters = useMemo(
+    () => ({
+      event_type: eventType,
+      repo_name: repoName,
+      actor,
+      conclusion,
+      search,
+      limit,
+    }),
+    [eventType, repoName, actor, conclusion, search, limit]
+  );
   const {
     events,
     isLoading: isLoadingEvents,
     error: eventsError,
-  } = useEvents(eventType, repoName);
+  } = useEvents(eventFilters);
   const {
     failedWorkflows,
     isLoading: isLoadingFailures,
@@ -105,6 +121,61 @@ function App() {
           <option value="issues">Issues</option>
           <option value="member">Member</option>
         </select>
+
+        {" "}
+
+        <label htmlFor="actor-filter">Actor: </label>
+
+        <input
+          id="actor-filter"
+          type="text"
+          value={actor}
+          placeholder="Exact actor"
+          onChange={(event) => setActor(event.target.value)}
+        />
+
+        {" "}
+
+        <label htmlFor="conclusion-filter">Conclusion: </label>
+
+        <select
+          id="conclusion-filter"
+          value={conclusion}
+          onChange={(event) =>
+            setConclusion(event.target.value as ConclusionFilter)
+          }
+        >
+          <option value="">All Conclusions</option>
+          <option value="success">Success</option>
+          <option value="failure">Failure</option>
+          <option value="cancelled">Cancelled</option>
+          <option value="skipped">Skipped</option>
+        </select>
+
+        {" "}
+
+        <label htmlFor="search-filter">Search: </label>
+
+        <input
+          id="search-filter"
+          type="search"
+          value={search}
+          placeholder="Repo, actor, branch, SHA"
+          onChange={(event) => setSearch(event.target.value)}
+        />
+
+        {" "}
+
+        <label htmlFor="limit-filter">Limit: </label>
+
+        <input
+          id="limit-filter"
+          type="number"
+          min="1"
+          max="500"
+          value={limit}
+          onChange={(event) => setLimit(Number(event.target.value) || 50)}
+        />
       </section>
 
       {error && <p className="error">Error: {error}</p>}

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getEvents } from "../api";
+import { getEvents, type EventFilters } from "../api";
 import type { GitHubEvent } from "../types";
 
 export type EventTypeFilter =
@@ -10,16 +10,20 @@ export type EventTypeFilter =
   | "issues"
   | "member";
 
+export type ConclusionFilter =
+  | ""
+  | "success"
+  | "failure"
+  | "cancelled"
+  | "skipped";
+
 type UseEventsResult = {
   events: GitHubEvent[];
   isLoading: boolean;
   error: string | null;
 };
 
-export function useEvents(
-  eventType: EventTypeFilter,
-  repoName = ""
-): UseEventsResult {
+export function useEvents(filters: EventFilters = {}): UseEventsResult {
   const [events, setEvents] = useState<GitHubEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -28,13 +32,11 @@ export function useEvents(
     let cancelled = false;
 
     async function loadEvents() {
+      setIsLoading(true);
       setError(null);
 
       try {
-        const data = await getEvents({
-          event_type: eventType,
-          repo_name: repoName,
-        });
+        const data = await getEvents(filters);
 
         if (!cancelled) {
           setEvents(data);
@@ -55,7 +57,7 @@ export function useEvents(
     return () => {
       cancelled = true;
     };
-  }, [eventType, repoName]);
+  }, [filters]);
 
   return { events, isLoading, error };
 }
