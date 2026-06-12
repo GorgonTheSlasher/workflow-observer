@@ -94,6 +94,21 @@ function App() {
         <p>GitHub webhook activity and workflow health dashboard.</p>
       </header>
 
+      {error && <p className="error">Error: {error}</p>}
+
+      <SummaryCards summary={summary} isLoading={isLoadingSummary} />
+
+      <SummaryCharts
+        summary={summary}
+        workflowRunBreakdown={workflowRunBreakdown}
+        isLoading={isLoadingSummary || isLoadingWorkflowRunBreakdown}
+      />
+
+      <RecentWorkflowFailuresWidget
+        failures={failedWorkflows}
+        isLoading={isLoadingFailures}
+      />
+
       <section>
         <h2>Filters</h2>
 
@@ -206,21 +221,6 @@ function App() {
           onChange={(event) => { setLimit(Number(event.target.value) || 50); setPage(0); }}
         />
       </section>
-
-      {error && <p className="error">Error: {error}</p>}
-
-      <SummaryCards summary={summary} isLoading={isLoadingSummary} />
-
-      <SummaryCharts
-        summary={summary}
-        workflowRunBreakdown={workflowRunBreakdown}
-        isLoading={isLoadingSummary || isLoadingWorkflowRunBreakdown}
-      />
-
-      <RecentWorkflowFailuresWidget
-        failures={failedWorkflows}
-        isLoading={isLoadingFailures}
-      />
 
       <section>
         <h2>Events</h2>
