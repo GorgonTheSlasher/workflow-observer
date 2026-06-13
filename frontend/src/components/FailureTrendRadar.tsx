@@ -75,7 +75,7 @@ export default function FailureTrendRadar({
                 tickFormatter={(v) => `${v}%`}
               />
               <Tooltip
-                formatter={(value: number) => [`${value}%`]}
+                formatter={(value) => [`${value ?? 0}%`]}
                 contentStyle={{
                   background: CHART_THEME.tooltip.background,
                   border: `1px solid ${CHART_THEME.tooltip.border}`,
