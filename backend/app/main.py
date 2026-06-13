@@ -7,7 +7,7 @@ from app.database import get_db
 from app.event_dispatcher import dispatch_github_webhook
 from app.init_db import init_db
 from app.models import GitHubEvent
-from app.services import get_filtered_events
+from app.services import get_filtered_events, get_timeline
 
 from app.alerts import send_slack_alert
 
@@ -243,6 +243,15 @@ def get_actor_activity(
     )
 
     return events
+
+@app.get("/summary/timeline")
+def get_event_timeline(
+    repo_name: str | None = None,
+    since_days: int | None = None,
+    db: Session = Depends(get_db),
+):
+    return get_timeline(db=db, repo_name=repo_name, since_days=since_days)
+
 
 # Route for debugging without having to push to test repo
 @app.post("/test-alert")

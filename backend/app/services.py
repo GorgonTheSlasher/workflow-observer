@@ -1,9 +1,10 @@
 import hmac
 import hashlib
+from collections import defaultdict
 from datetime import datetime, UTC, timedelta
 
 from fastapi import HTTPException, Depends
-from sqlalchemy import or_
+from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
 from app.config import settings
@@ -107,3 +108,39 @@ def get_filtered_events(
     )
 
     return {"total": total, "events": events}
+
+
+_TIMELINE_EVENT_TYPES = ["push", "pull_request", "workflow_run", "issues", "member"]
+
+def get_timeline(
+    repo_name: str | None = None,
+    since_days: int | None = None,
+    db: Session = Depends(get_db),
+) -> list[dict]:
+    date_col = func.strftime('%Y-%m-%d', GitHubEvent.created_at).label('date')
+
+    query = db.query(date_col, GitHubEvent.event_type, func.count().label('count'))
+
+    if repo_name:
+        query = query.filter(GitHubEvent.repo_name == repo_name)
+
+    if since_days is not None:
+        cutoff = datetime.now(UTC) - timedelta(days=since_days)
+        query = query.filter(GitHubEvent.created_at >= cutoff)
+
+    rows = (
+        query
+        .group_by(date_col, GitHubEvent.event_type)
+        .order_by(date_col)
+        .all()
+    )
+
+    pivot: dict[str, dict[str, int]] = defaultdict(
+        lambda: {et: 0 for et in _TIMELINE_EVENT_TYPES}
+    )
+
+    for date, event_type, count in rows:
+        if event_type in _TIMELINE_EVENT_TYPES:
+            pivot[date][event_type] = count
+
+    return [{"date": date, **counts} for date, counts in sorted(pivot.items())]

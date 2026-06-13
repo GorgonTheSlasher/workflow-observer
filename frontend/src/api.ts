@@ -116,6 +116,27 @@ export async function getActorActivity(actor: string): Promise<GitHubEvent[]> {
   return response.json();
 }
 
+export type TimelineEntry = {
+  date: string;
+  push: number;
+  pull_request: number;
+  workflow_run: number;
+  issues: number;
+  member: number;
+};
+
+export async function getTimeline(
+  repoName: string,
+  sinceDays?: number | null,
+): Promise<TimelineEntry[]> {
+  const params = new URLSearchParams({ repo_name: repoName });
+  if (sinceDays != null) params.append("since_days", String(sinceDays));
+
+  const response = await fetch(`${API_BASE_URL}/summary/timeline?${params}`);
+  if (!response.ok) throw new Error("Failed to fetch timeline");
+  return response.json();
+}
+
 export type EventFilters = {
   event_type?: string;
   repo_name?: string;
