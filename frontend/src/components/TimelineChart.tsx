@@ -26,8 +26,9 @@ type TimelineChartProps = {
   isLoading?: boolean;
 };
 
-function formatXAxisDate(dateStr: string): string {
-  const [, month, day] = dateStr.split("-");
+function formatXAxisDate(label: unknown): string {
+  if (typeof label !== "string") return String(label ?? "");
+  const [, month, day] = label.split("-");
   const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
   return `${monthNames[Number(month) - 1]} ${Number(day)}`;
 }
