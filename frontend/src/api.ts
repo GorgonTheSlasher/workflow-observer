@@ -105,9 +105,8 @@ export async function getRepositorySummary(
 }
 
 export async function getActorActivity(actor: string): Promise<GitHubEvent[]> {
-  const response = await fetch(
-    `${API_BASE_URL}/summary/${encodeURIComponent(actor)}`
-  );
+  const params = new URLSearchParams({ actor });
+  const response = await fetch(`${API_BASE_URL}/summary/actor?${params}`);
 
   if (!response.ok) {
     throw new Error("Failed to fetch actor activity");

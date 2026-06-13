@@ -229,8 +229,16 @@ def get_repository_summary(
         "successful_workflows": successful_workflows,
     }
 
-# Summary of events triggered by specific user actions
-@app.get("/summary/{actor}")
+@app.get("/summary/timeline")
+def get_event_timeline(
+    repo_name: str | None = None,
+    since_days: int | None = None,
+    db: Session = Depends(get_db),
+):
+    return get_timeline(db=db, repo_name=repo_name, since_days=since_days)
+
+# actor is a query param (/summary/actor?actor=...) to avoid colliding with fixed paths above
+@app.get("/summary/actor")
 def get_actor_activity(
     actor: str,
     db: Session = Depends(get_db),
@@ -243,14 +251,6 @@ def get_actor_activity(
     )
 
     return events
-
-@app.get("/summary/timeline")
-def get_event_timeline(
-    repo_name: str | None = None,
-    since_days: int | None = None,
-    db: Session = Depends(get_db),
-):
-    return get_timeline(db=db, repo_name=repo_name, since_days=since_days)
 
 
 # Route for debugging without having to push to test repo
