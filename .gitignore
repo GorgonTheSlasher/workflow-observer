@@ -35,3 +35,7 @@ frontend/nodes_modules/
 
 .DS_Store
 Thumbs.db
+
+# Testing Tools #
+
+seed.py

@@ -32,6 +32,7 @@ function App() {
   const [sinceDays, setSinceDays] = useState<number | null>(null);
   const [limit, setLimit] = useState(50);
   const [page, setPage] = useState(0);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const {
     repositories,
     isLoading: isLoadingRepositories,
@@ -97,215 +98,222 @@ function App() {
   );
 
   return (
-    <main>
-      <header>
-        <h1>Workflow Observer</h1>
-        <p>GitHub webhook activity and workflow health dashboard.</p>
-      </header>
-
-      {error && <p className="error">Error: {error}</p>}
-
-      <SummaryCards summary={summary} isLoading={isLoadingSummary} />
-
-      <SummaryCharts
-        summary={summary}
-        workflowRunBreakdown={workflowRunBreakdown}
-        isLoading={isLoadingSummary || isLoadingWorkflowRunBreakdown}
-      />
-
-      <TimelineChart data={timeline} isLoading={isLoadingTimeline} />
-
-      <RecentWorkflowFailuresWidget
-        failures={failedWorkflows}
-        isLoading={isLoadingFailures}
-      />
-
-      <section>
-        <h2>Filters</h2>
-
-        <label htmlFor="repo-filter">Repository: </label>
-
-        <select
-          id="repo-filter"
-          value={repoName}
-          disabled={isLoadingRepositories || repositories.length === 0}
-          onChange={(event) => { setSelectedRepoName(event.target.value); setPage(0); }}
+    <div className="page">
+      <aside className={`sidebar${sidebarOpen ? "" : " sidebar--closed"}`}>
+        <button
+          className="sidebar__toggle"
+          onClick={() => setSidebarOpen((o) => !o)}
+          aria-label={sidebarOpen ? "Collapse filters" : "Expand filters"}
         >
-          {repositories.length === 0 ? (
-            <option value="">No repositories found</option>
-          ) : (
-            repositories.map((repository) => (
-              <option key={repository} value={repository}>
-                {repository}
-              </option>
-            ))
-          )}
-        </select>
+          {sidebarOpen ? "◀" : "▶"}
+        </button>
 
-        {" "}
+        {sidebarOpen && (
+          <div className="sidebar__content">
+            <p className="sidebar__heading">Filters</p>
 
-        <label htmlFor="event-type-filter">Event Type: </label>
+            <div className="sidebar__field">
+              <label className="sidebar__label" htmlFor="repo-filter">Repository</label>
+              <select
+                className="sidebar__select"
+                id="repo-filter"
+                value={repoName}
+                disabled={isLoadingRepositories || repositories.length === 0}
+                onChange={(e) => { setSelectedRepoName(e.target.value); setPage(0); }}
+              >
+                {repositories.length === 0 ? (
+                  <option value="">No repositories found</option>
+                ) : (
+                  repositories.map((r) => (
+                    <option key={r} value={r}>{r}</option>
+                  ))
+                )}
+              </select>
+            </div>
 
-        <select
-          id="event-type-filter"
-          value={eventType}
-          onChange={(event) => { setEventType(event.target.value as EventTypeFilter); setPage(0); }}
-        >
-          <option value="">All Events</option>
-          <option value="push">Push</option>
-          <option value="pull_request">Pull Request</option>
-          <option value="workflow_run">Workflow Run</option>
-          <option value="issues">Issues</option>
-          <option value="member">Member</option>
-        </select>
+            <div className="sidebar__field">
+              <label className="sidebar__label" htmlFor="event-type-filter">Event Type</label>
+              <select
+                className="sidebar__select"
+                id="event-type-filter"
+                value={eventType}
+                onChange={(e) => { setEventType(e.target.value as EventTypeFilter); setPage(0); }}
+              >
+                <option value="">All Events</option>
+                <option value="push">Push</option>
+                <option value="pull_request">Pull Request</option>
+                <option value="workflow_run">Workflow Run</option>
+                <option value="issues">Issues</option>
+                <option value="member">Member</option>
+              </select>
+            </div>
 
-        {" "}
+            <div className="sidebar__field">
+              <label className="sidebar__label" htmlFor="actor-filter">Actor</label>
+              <input
+                className="sidebar__input"
+                id="actor-filter"
+                type="text"
+                value={actor}
+                placeholder="Exact actor"
+                onChange={(e) => { setActor(e.target.value); setPage(0); }}
+              />
+            </div>
 
-        <label htmlFor="actor-filter">Actor: </label>
+            <div className="sidebar__field">
+              <label className="sidebar__label" htmlFor="conclusion-filter">Conclusion</label>
+              <select
+                className="sidebar__select"
+                id="conclusion-filter"
+                value={conclusion}
+                onChange={(e) => { setConclusion(e.target.value as ConclusionFilter); setPage(0); }}
+              >
+                <option value="">All Conclusions</option>
+                <option value="success">Success</option>
+                <option value="failure">Failure</option>
+                <option value="cancelled">Cancelled</option>
+                <option value="skipped">Skipped</option>
+              </select>
+            </div>
 
-        <input
-          id="actor-filter"
-          type="text"
-          value={actor}
-          placeholder="Exact actor"
-          onChange={(event) => { setActor(event.target.value); setPage(0); }}
-        />
+            <div className="sidebar__field">
+              <label className="sidebar__label" htmlFor="search-filter">Search</label>
+              <input
+                className="sidebar__input"
+                id="search-filter"
+                type="search"
+                value={search}
+                placeholder="Repo, actor, branch, SHA"
+                onChange={(e) => { setSearch(e.target.value); setPage(0); }}
+              />
+            </div>
 
-        {" "}
+            <div className="sidebar__field">
+              <label className="sidebar__label" htmlFor="since-filter">Date Range</label>
+              <select
+                className="sidebar__select"
+                id="since-filter"
+                value={sinceDays ?? ""}
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  setSinceDays(raw === "" ? null : Number(raw));
+                  setPage(0);
+                }}
+              >
+                {DATE_OPTIONS.map((opt) => (
+                  <option key={opt.label} value={opt.value ?? ""}>{opt.label}</option>
+                ))}
+              </select>
+            </div>
 
-        <label htmlFor="conclusion-filter">Conclusion: </label>
-
-        <select
-          id="conclusion-filter"
-          value={conclusion}
-          onChange={(event) => { setConclusion(event.target.value as ConclusionFilter); setPage(0); }}
-        >
-          <option value="">All Conclusions</option>
-          <option value="success">Success</option>
-          <option value="failure">Failure</option>
-          <option value="cancelled">Cancelled</option>
-          <option value="skipped">Skipped</option>
-        </select>
-
-        {" "}
-
-        <label htmlFor="search-filter">Search: </label>
-
-        <input
-          id="search-filter"
-          type="search"
-          value={search}
-          placeholder="Repo, actor, branch, SHA"
-          onChange={(event) => { setSearch(event.target.value); setPage(0); }}
-        />
-
-        {" "}
-
-        <label htmlFor="since-filter">Date Range: </label>
-
-        <select
-          id="since-filter"
-          value={sinceDays ?? ""}
-          onChange={(event) => {
-            const raw = event.target.value;
-            setSinceDays(raw === "" ? null : Number(raw));
-            setPage(0);
-          }}
-        >
-          {DATE_OPTIONS.map((opt) => (
-            <option key={opt.label} value={opt.value ?? ""}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-
-        {" "}
-
-        <label htmlFor="limit-filter">Per page: </label>
-
-        <input
-          id="limit-filter"
-          type="number"
-          min="1"
-          max="500"
-          value={limit}
-          onChange={(event) => { setLimit(Number(event.target.value) || 50); setPage(0); }}
-        />
-      </section>
-
-      <section>
-        <h2>Events</h2>
-
-        {!isLoadingEvents && (
-          <div>
-            <span>
-              {total === 0
-                ? "No events found"
-                : `Showing ${page * limit + 1}–${Math.min((page + 1) * limit, total)} of ${total}`}
-            </span>
-            {" "}
-            <button onClick={() => setPage((p) => p - 1)} disabled={page === 0}>
-              Previous
-            </button>
-            {" "}
-            <button
-              onClick={() => setPage((p) => p + 1)}
-              disabled={(page + 1) * limit >= total}
-            >
-              Next
-            </button>
+            <div className="sidebar__field">
+              <label className="sidebar__label" htmlFor="limit-filter">Per page</label>
+              <input
+                className="sidebar__input"
+                id="limit-filter"
+                type="number"
+                min="1"
+                max="500"
+                value={limit}
+                onChange={(e) => { setLimit(Number(e.target.value) || 50); setPage(0); }}
+              />
+            </div>
           </div>
         )}
+      </aside>
 
-        {isLoadingEvents ? (
-          <p>Loading events...</p>
-        ) : events.length === 0 ? (
-          <p>No events found.</p>
-        ) : (
-          <table>
-            <thead>
-              <tr>
-                <th>Type</th>
-                <th>Action</th>
-                <th>Repo</th>
-                <th>Actor</th>
-                <th>Branch</th>
-                <th>Status</th>
-                <th>Conclusion</th>
-                <th>Link</th>
-              </tr>
-            </thead>
+      <main>
+        <header>
+          <h1>Workflow Observer</h1>
+          <p>GitHub webhook activity and workflow health dashboard.</p>
+        </header>
 
-            <tbody>
-              {events.map((event) => (
-                <tr key={event.id}>
-                  <td>{event.event_type}</td>
-                  <td>{event.action ?? "-"}</td>
-                  <td>{event.repo_name}</td>
-                  <td>{event.actor ?? "-"}</td>
-                  <td>{event.branch ?? "-"}</td>
-                  <td>{event.status ?? "-"}</td>
-                  <td>{event.conclusion ?? "-"}</td>
-                  <td>
-                    {event.html_url ? (
-                      <a
-                        href={event.html_url}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        View
-                      </a>
-                    ) : (
-                      "-"
-                    )}
-                  </td>
+        {error && <p className="error">Error: {error}</p>}
+
+        <SummaryCards summary={summary} isLoading={isLoadingSummary} />
+
+        <SummaryCharts
+          summary={summary}
+          workflowRunBreakdown={workflowRunBreakdown}
+          isLoading={isLoadingSummary || isLoadingWorkflowRunBreakdown}
+        />
+
+        <TimelineChart data={timeline} isLoading={isLoadingTimeline} />
+
+        <RecentWorkflowFailuresWidget
+          failures={failedWorkflows}
+          isLoading={isLoadingFailures}
+        />
+
+        <section>
+          <h2>Events</h2>
+
+          {!isLoadingEvents && (
+            <div>
+              <span>
+                {total === 0
+                  ? "No events found"
+                  : `Showing ${page * limit + 1}–${Math.min((page + 1) * limit, total)} of ${total}`}
+              </span>
+              {" "}
+              <button onClick={() => setPage((p) => p - 1)} disabled={page === 0}>
+                Previous
+              </button>
+              {" "}
+              <button
+                onClick={() => setPage((p) => p + 1)}
+                disabled={(page + 1) * limit >= total}
+              >
+                Next
+              </button>
+            </div>
+          )}
+
+          {isLoadingEvents ? (
+            <p>Loading events...</p>
+          ) : events.length === 0 ? (
+            <p>No events found.</p>
+          ) : (
+            <table>
+              <thead>
+                <tr>
+                  <th>Type</th>
+                  <th>Action</th>
+                  <th>Repo</th>
+                  <th>Actor</th>
+                  <th>Branch</th>
+                  <th>Status</th>
+                  <th>Conclusion</th>
+                  <th>Link</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </section>
-    </main>
+              </thead>
+              <tbody>
+                {events.map((event) => (
+                  <tr key={event.id}>
+                    <td>{event.event_type}</td>
+                    <td>{event.action ?? "-"}</td>
+                    <td>{event.repo_name}</td>
+                    <td>{event.actor ?? "-"}</td>
+                    <td>{event.branch ?? "-"}</td>
+                    <td>{event.status ?? "-"}</td>
+                    <td>{event.conclusion ?? "-"}</td>
+                    <td>
+                      {event.html_url ? (
+                        <a href={event.html_url} target="_blank" rel="noreferrer">
+                          View
+                        </a>
+                      ) : (
+                        "-"
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </section>
+      </main>
+    </div>
   );
 }
 

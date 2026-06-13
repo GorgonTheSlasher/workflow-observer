@@ -1,8 +1,97 @@
-main {
-  max-width: 1100px;
+.page {
+  display: flex;
+  align-items: flex-start;
+  max-width: 1440px;
   margin: 0 auto;
-  padding: 2rem;
+  min-height: 100vh;
   font-family: system-ui, sans-serif;
+}
+
+/* ── Sidebar ─────────────────────────────────────────────────────────────── */
+
+.sidebar {
+  position: sticky;
+  top: 0;
+  flex: 0 0 220px;
+  min-height: 100vh;
+  padding: 1.5rem 1rem;
+  border-right: 1px solid #d0d7de;
+  background: #f6f8fa;
+  transition: flex-basis 0.2s ease;
+}
+
+.sidebar--closed {
+  flex-basis: 2.5rem;
+  padding: 1rem 0.4rem;
+}
+
+.sidebar__toggle {
+  display: block;
+  width: 100%;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 0.85rem;
+  text-align: center;
+  color: #57606a;
+}
+
+.sidebar__toggle:hover {
+  background: #eaeef2;
+}
+
+.sidebar__content {
+  margin-top: 1rem;
+}
+
+.sidebar__heading {
+  margin: 0 0 1rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #57606a;
+}
+
+.sidebar__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+}
+
+.sidebar__label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #24292f;
+}
+
+.sidebar__select,
+.sidebar__input {
+  width: 100%;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 0.85rem;
+  color: #24292f;
+  box-sizing: border-box;
+}
+
+.sidebar__select:focus,
+.sidebar__input:focus {
+  outline: 2px solid #0969da;
+  outline-offset: -1px;
+}
+
+/* ── Main content ────────────────────────────────────────────────────────── */
+
+main {
+  flex: 1;
+  min-width: 0;
+  padding: 2rem;
 }
 
 section {
@@ -235,6 +324,19 @@ th {
 }
 
 @media (max-width: 700px) {
+  .page {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    position: static;
+    flex: none;
+    width: 100%;
+    min-height: unset;
+    border-right: none;
+    border-bottom: 1px solid #d0d7de;
+  }
+
   main {
     padding: 1rem;
   }
