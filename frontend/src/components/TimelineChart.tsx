@@ -12,12 +12,18 @@ import {
 import type { TimelineEntry } from "../api";
 
 const SERIES = [
-  { key: "workflow_run", label: "Workflow Runs", color: "#cf222e" },
-  { key: "push",         label: "Pushes",        color: "#0969da" },
-  { key: "pull_request", label: "Pull Requests",  color: "#8250df" },
-  { key: "issues",       label: "Issues",         color: "#1a7f37" },
-  { key: "member",       label: "Members",        color: "#bf8700" },
+  { key: "workflow_run", label: "Workflow Runs", color: "#e05c6a" },
+  { key: "push",         label: "Pushes",        color: "#5b9bd5" },
+  { key: "pull_request", label: "Pull Requests",  color: "#a78bfa" },
+  { key: "issues",       label: "Issues",         color: "#34d399" },
+  { key: "member",       label: "Members",        color: "#fbbf24" },
 ] as const;
+
+const CHART_THEME = {
+  text:    "#D1E3DD",
+  grid:    "rgba(209, 227, 221, 0.1)",
+  tooltip: { background: "#32292F", border: "rgba(209, 227, 221, 0.15)" },
+};
 
 type SeriesKey = (typeof SERIES)[number]["key"];
 
@@ -72,19 +78,36 @@ export default function TimelineChart({
         ) : (
           <ResponsiveContainer width="100%" height={300}>
             <AreaChart data={data} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" />
+              <CartesianGrid strokeDasharray="3 3" stroke={CHART_THEME.grid} />
               <XAxis
                 dataKey="date"
                 tickFormatter={formatXAxisDate}
-                tick={{ fontSize: 12 }}
+                tick={{ fontSize: 12, fill: CHART_THEME.text }}
+                axisLine={{ stroke: CHART_THEME.grid }}
+                tickLine={{ stroke: CHART_THEME.grid }}
                 minTickGap={50}
               />
-              <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
-              <Tooltip labelFormatter={formatXAxisDate} />
+              <YAxis
+                allowDecimals={false}
+                tick={{ fontSize: 12, fill: CHART_THEME.text }}
+                axisLine={{ stroke: CHART_THEME.grid }}
+                tickLine={{ stroke: CHART_THEME.grid }}
+              />
+              <Tooltip
+                labelFormatter={formatXAxisDate}
+                contentStyle={{
+                  background: CHART_THEME.tooltip.background,
+                  border: `1px solid ${CHART_THEME.tooltip.border}`,
+                  borderRadius: 8,
+                  color: CHART_THEME.text,
+                }}
+                labelStyle={{ color: CHART_THEME.text }}
+              />
               <Legend
                 onClick={(e) => toggleSeries(e.dataKey as SeriesKey)}
+                wrapperStyle={{ color: CHART_THEME.text }}
                 formatter={(value, entry) => (
-                  <span style={{ opacity: hidden.has(entry.dataKey as SeriesKey) ? 0.35 : 1 }}>
+                  <span style={{ opacity: hidden.has(entry.dataKey as SeriesKey) ? 0.35 : 1, color: CHART_THEME.text }}>
                     {value}
                   </span>
                 )}
@@ -98,7 +121,7 @@ export default function TimelineChart({
                   stackId="a"
                   stroke={color}
                   fill={color}
-                  fillOpacity={0.6}
+                  fillOpacity={0.55}
                   hide={hidden.has(key)}
                 />
               ))}

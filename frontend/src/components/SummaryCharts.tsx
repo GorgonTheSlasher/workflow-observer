@@ -18,6 +18,11 @@ type SummaryChartsProps = {
   isLoading?: boolean;
 };
 
+const CHART_THEME = {
+  text:    "#D1E3DD",
+  tooltip: { background: "#32292F", border: "rgba(209, 227, 221, 0.15)" },
+};
+
 function formatTooltipValue(value: unknown, name: unknown) {
   const numericValue = typeof value === "number" ? value : Number(value ?? 0);
   return [numericValue.toLocaleString(), String(name)];
@@ -46,24 +51,16 @@ export default function SummaryCharts({
   }
 
   const eventTypeData = [
-    { name: "Pushes", value: summary.total_pushes, fill: "#0969da" },
-    {
-      name: "Pull Requests",
-      value: summary.total_pull_requests ?? 0,
-      fill: "#8250df",
-    },
-    { name: "Issues", value: summary.total_issues, fill: "#1a7f37" },
-    { name: "Members", value: summary.total_members, fill: "#bf8700" },
-    {
-      name: "Workflow Runs",
-      value: summary.total_workflows,
-      fill: "#cf222e",
-    },
+    { name: "Pushes",         value: summary.total_pushes,           fill: "#5b9bd5" },
+    { name: "Pull Requests",  value: summary.total_pull_requests ?? 0, fill: "#a78bfa" },
+    { name: "Issues",         value: summary.total_issues,           fill: "#34d399" },
+    { name: "Members",        value: summary.total_members,          fill: "#fbbf24" },
+    { name: "Workflow Runs",  value: summary.total_workflows,        fill: "#e05c6a" },
   ].filter((item) => item.value > 0);
 
   const workflowData = [
-    { name: "Success", value: workflowRunBreakdown.success, fill: "#1a7f37" },
-    { name: "Failure", value: workflowRunBreakdown.failure, fill: "#cf222e" },
+    { name: "Success", value: workflowRunBreakdown.success, fill: "#34d399" },
+    { name: "Failure", value: workflowRunBreakdown.failure, fill: "#e05c6a" },
   ].filter((item) => item.value > 0);
 
   return (
@@ -86,10 +83,18 @@ export default function SummaryCharts({
                 cx="50%"
                 cy="50%"
                 outerRadius={95}
-                label
+                label={{ fill: CHART_THEME.text, fontSize: 12 }}
               />
-              <Tooltip formatter={formatTooltipValue} />
-              <Legend />
+              <Tooltip
+                formatter={formatTooltipValue}
+                contentStyle={{
+                  background: CHART_THEME.tooltip.background,
+                  border: `1px solid ${CHART_THEME.tooltip.border}`,
+                  borderRadius: 8,
+                  color: CHART_THEME.text,
+                }}
+              />
+              <Legend wrapperStyle={{ color: CHART_THEME.text }} />
             </PieChart>
           </ResponsiveContainer>
         )}
@@ -113,10 +118,18 @@ export default function SummaryCharts({
                 cx="50%"
                 cy="50%"
                 outerRadius={95}
-                label
+                label={{ fill: CHART_THEME.text, fontSize: 12 }}
               />
-              <Tooltip formatter={formatTooltipValue} />
-              <Legend />
+              <Tooltip
+                formatter={formatTooltipValue}
+                contentStyle={{
+                  background: CHART_THEME.tooltip.background,
+                  border: `1px solid ${CHART_THEME.tooltip.border}`,
+                  borderRadius: 8,
+                  color: CHART_THEME.text,
+                }}
+              />
+              <Legend wrapperStyle={{ color: CHART_THEME.text }} />
             </PieChart>
           </ResponsiveContainer>
         )}
