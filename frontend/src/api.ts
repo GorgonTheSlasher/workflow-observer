@@ -136,6 +136,19 @@ export async function getTimeline(
   return response.json();
 }
 
+export type FailureTrendEntry = {
+  conclusion: string;
+  current: number;
+  prior: number;
+};
+
+export async function getFailureTrend(repoName: string): Promise<FailureTrendEntry[]> {
+  const params = new URLSearchParams({ repo_name: repoName });
+  const response = await fetch(`${API_BASE_URL}/summary/failure-trend?${params}`);
+  if (!response.ok) throw new Error("Failed to fetch failure trend");
+  return response.json();
+}
+
 export type EventFilters = {
   event_type?: string;
   repo_name?: string;

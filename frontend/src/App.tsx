@@ -3,6 +3,7 @@ import RecentWorkflowFailuresWidget from "./components/RecentWorkflowFailuresWid
 import SummaryCharts from "./components/SummaryCharts";
 import SummaryCards from "./components/SummaryCards";
 import TimelineChart from "./components/TimelineChart";
+import FailureTrendRadar from "./components/FailureTrendRadar";
 import {
   useEvents,
   type ConclusionFilter,
@@ -13,6 +14,7 @@ import { useRepositories } from "./hooks/useRepositories";
 import { useSummary } from "./hooks/useSummary";
 import { useWorkflowRunBreakdown } from "./hooks/useWorkflowRunBreakdown";
 import { useTimeline } from "./hooks/useTimeline";
+import { useFailureTrend } from "./hooks/useFailureTrend";
 import "./App.css";
 
 const DATE_OPTIONS = [
@@ -78,6 +80,11 @@ function App() {
     isLoading: isLoadingTimeline,
     error: timelineError,
   } = useTimeline(repoName, sinceDays);
+  const {
+    failureTrend,
+    isLoading: isLoadingFailureTrend,
+    error: failureTrendError,
+  } = useFailureTrend(repoName);
 
   const error = useMemo(
     () =>
@@ -85,6 +92,7 @@ function App() {
       summaryError ??
       workflowRunBreakdownError ??
       timelineError ??
+      failureTrendError ??
       eventsError ??
       failedWorkflowsError,
     [
@@ -92,6 +100,7 @@ function App() {
       summaryError,
       workflowRunBreakdownError,
       timelineError,
+      failureTrendError,
       eventsError,
       failedWorkflowsError,
     ]
@@ -239,6 +248,8 @@ function App() {
         />
 
         <TimelineChart data={timeline} isLoading={isLoadingTimeline} />
+
+        <FailureTrendRadar data={failureTrend} isLoading={isLoadingFailureTrend} />
 
         <RecentWorkflowFailuresWidget
           failures={failedWorkflows}

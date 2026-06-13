@@ -112,6 +112,46 @@ def get_filtered_events(
 
 _TIMELINE_EVENT_TYPES = ["push", "pull_request", "workflow_run", "issues", "member"]
 
+_WORKFLOW_CONCLUSIONS = ["success", "failure", "cancelled", "skipped"]
+
+def get_failure_trend(
+    repo_name: str | None = None,
+    db: Session = Depends(get_db),
+) -> list[dict]:
+    now = datetime.now(UTC)
+    current_start = now - timedelta(days=14)
+    prior_start = now - timedelta(days=28)
+
+    def count_conclusions(start: datetime, end: datetime) -> dict[str, int]:
+        query = db.query(GitHubEvent.conclusion).filter(
+            GitHubEvent.event_type == "workflow_run",
+            GitHubEvent.conclusion.isnot(None),
+            GitHubEvent.created_at >= start,
+            GitHubEvent.created_at < end,
+        )
+        if repo_name:
+            query = query.filter(GitHubEvent.repo_name == repo_name)
+        counts = {c: 0 for c in _WORKFLOW_CONCLUSIONS}
+        for (conclusion,) in query.all():
+            if conclusion in counts:
+                counts[conclusion] += 1
+        return counts
+
+    current_counts = count_conclusions(current_start, now)
+    prior_counts = count_conclusions(prior_start, current_start)
+
+    current_total = sum(current_counts.values()) or 1
+    prior_total = sum(prior_counts.values()) or 1
+
+    return [
+        {
+            "conclusion": c,
+            "current": round(current_counts[c] / current_total * 100, 1),
+            "prior": round(prior_counts[c] / prior_total * 100, 1),
+        }
+        for c in _WORKFLOW_CONCLUSIONS
+    ]
+
 def get_timeline(
     repo_name: str | None = None,
     since_days: int | None = None,
