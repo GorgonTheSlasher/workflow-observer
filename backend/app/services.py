@@ -4,7 +4,7 @@ from collections import defaultdict
 from datetime import datetime, UTC, timedelta
 
 from fastapi import HTTPException, Depends
-from sqlalchemy import func, or_
+from sqlalchemy import String, cast, func, or_
 from sqlalchemy.orm import Session
 
 from app.config import settings
@@ -117,7 +117,7 @@ def get_timeline(
     since_days: int | None = None,
     db: Session = Depends(get_db),
 ) -> list[dict]:
-    date_col = func.strftime('%Y-%m-%d', GitHubEvent.created_at).label('date')
+    date_col = func.substr(cast(GitHubEvent.created_at, String), 1, 10).label('date')
 
     query = db.query(date_col, GitHubEvent.event_type, func.count().label('count'))
 
