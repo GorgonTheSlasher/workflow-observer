@@ -12,10 +12,13 @@ type WorkflowRunBreakdown = {
   failure: number;
 };
 
+type SummaryChartsMode = "both" | "event-types" | "workflow-outcomes";
+
 type SummaryChartsProps = {
   summary: Summary | null;
   workflowRunBreakdown: WorkflowRunBreakdown;
   isLoading?: boolean;
+  mode?: SummaryChartsMode;
 };
 
 const CHART_THEME = {
@@ -32,19 +35,24 @@ export default function SummaryCharts({
   summary,
   workflowRunBreakdown,
   isLoading = false,
+  mode = "both",
 }: SummaryChartsProps) {
+  const showEventTypes = mode === "both" || mode === "event-types";
+  const showWorkflowOutcomes = mode === "both" || mode === "workflow-outcomes";
+  const isSingle = mode !== "both";
+
   if (isLoading) {
     return (
-      <section className="charts-section">
+      <section className={isSingle ? "chart-section-single" : "charts-section"}>
         <div className="chart-card chart-card--loading">Loading charts...</div>
-        <div className="chart-card chart-card--loading">Loading charts...</div>
+        {!isSingle && <div className="chart-card chart-card--loading">Loading charts...</div>}
       </section>
     );
   }
 
   if (!summary) {
     return (
-      <section className="charts-section">
+      <section className={isSingle ? "chart-section-single" : "charts-section"}>
         <div className="chart-empty">No chart data available.</div>
       </section>
     );
@@ -64,76 +72,80 @@ export default function SummaryCharts({
   ].filter((item) => item.value > 0);
 
   return (
-    <section className="charts-section" aria-label="Activity charts">
-      <article className="chart-card">
-        <div className="chart-card__header">
-          <h2>Events by Type</h2>
-          <p>Distribution of stored GitHub webhook event types.</p>
-        </div>
+    <section className={isSingle ? "chart-section-single" : "charts-section"} aria-label="Activity charts">
+      {showEventTypes && (
+        <article className="chart-card">
+          <div className="chart-card__header">
+            <h2>Events by Type</h2>
+            <p>Distribution of stored GitHub webhook event types.</p>
+          </div>
 
-        {eventTypeData.length === 0 ? (
-          <p className="chart-empty">No event data available.</p>
-        ) : (
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={eventTypeData}
-                dataKey="value"
-                nameKey="name"
-                cx="50%"
-                cy="50%"
-                outerRadius={95}
-                label={{ fill: CHART_THEME.text, fontSize: 12 }}
-              />
-              <Tooltip
-                formatter={formatTooltipValue}
-                contentStyle={{
-                  background: CHART_THEME.tooltip.background,
-                  border: `1px solid ${CHART_THEME.tooltip.border}`,
-                  borderRadius: 8,
-                  color: CHART_THEME.text,
-                }}
-              />
-              <Legend wrapperStyle={{ color: CHART_THEME.text }} />
-            </PieChart>
-          </ResponsiveContainer>
-        )}
-      </article>
+          {eventTypeData.length === 0 ? (
+            <p className="chart-empty">No event data available.</p>
+          ) : (
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={eventTypeData}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={95}
+                  label={{ fill: CHART_THEME.text, fontSize: 12 }}
+                />
+                <Tooltip
+                  formatter={formatTooltipValue}
+                  contentStyle={{
+                    background: CHART_THEME.tooltip.background,
+                    border: `1px solid ${CHART_THEME.tooltip.border}`,
+                    borderRadius: 8,
+                    color: CHART_THEME.text,
+                  }}
+                />
+                <Legend wrapperStyle={{ color: CHART_THEME.text }} />
+              </PieChart>
+            </ResponsiveContainer>
+          )}
+        </article>
+      )}
 
-      <article className="chart-card">
-        <div className="chart-card__header">
-          <h2>Workflow Outcomes</h2>
-          <p>Successful vs failed workflow runs for the selected repository.</p>
-        </div>
+      {showWorkflowOutcomes && (
+        <article className="chart-card">
+          <div className="chart-card__header">
+            <h2>Workflow Outcomes</h2>
+            <p>Successful vs failed workflow runs for the selected repository.</p>
+          </div>
 
-        {workflowData.length === 0 ? (
-          <p className="chart-empty">No workflow outcome data available.</p>
-        ) : (
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={workflowData}
-                dataKey="value"
-                nameKey="name"
-                cx="50%"
-                cy="50%"
-                outerRadius={95}
-                label={{ fill: CHART_THEME.text, fontSize: 12 }}
-              />
-              <Tooltip
-                formatter={formatTooltipValue}
-                contentStyle={{
-                  background: CHART_THEME.tooltip.background,
-                  border: `1px solid ${CHART_THEME.tooltip.border}`,
-                  borderRadius: 8,
-                  color: CHART_THEME.text,
-                }}
-              />
-              <Legend wrapperStyle={{ color: CHART_THEME.text }} />
-            </PieChart>
-          </ResponsiveContainer>
-        )}
-      </article>
+          {workflowData.length === 0 ? (
+            <p className="chart-empty">No workflow outcome data available.</p>
+          ) : (
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={workflowData}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={95}
+                  label={{ fill: CHART_THEME.text, fontSize: 12 }}
+                />
+                <Tooltip
+                  formatter={formatTooltipValue}
+                  contentStyle={{
+                    background: CHART_THEME.tooltip.background,
+                    border: `1px solid ${CHART_THEME.tooltip.border}`,
+                    borderRadius: 8,
+                    color: CHART_THEME.text,
+                  }}
+                />
+                <Legend wrapperStyle={{ color: CHART_THEME.text }} />
+              </PieChart>
+            </ResponsiveContainer>
+          )}
+        </article>
+      )}
     </section>
   );
 }
