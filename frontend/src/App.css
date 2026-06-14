@@ -109,30 +109,36 @@ section {
   margin-top: 2rem;
 }
 
-/* ── Summary cards ───────────────────────────────────────────────────────── */
-
 .summary-section {
-  margin-top: 2rem;
+  margin-top: 0;
 }
 
-.section-heading-row {
+/* ── Header ──────────────────────────────────────────────────────────────── */
+
+.app-header {
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: baseline;
   gap: 1rem;
-  margin-bottom: 1rem;
-  text-align: center;
+  height: 64px;
+  padding: 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 1.5rem;
 }
 
-.section-heading-row h2 {
+.app-header__title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.app-header__subtitle {
+  font-size: 0.85rem;
+  color: rgba(209, 227, 221, 0.55);
   margin: 0;
 }
 
-.section-subtitle {
-  margin: 0.25rem 0 0;
-  color: rgba(209, 227, 221, 0.65);
-  font-size: 0.9rem;
-}
+/* ── Summary cards ───────────────────────────────────────────────────────── */
 
 .summary-grid {
   display: grid;

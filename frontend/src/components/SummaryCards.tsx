@@ -15,14 +15,14 @@ export default function SummaryCards({
 }: SummaryCardsProps) {
   if (isLoading) {
     return (
-      <section className="summary-grid" aria-label="Loading summary statistics">
+      <div className="summary-grid" aria-label="Loading summary statistics">
         {Array.from({ length: 8 }).map((_, index) => (
           <div className="summary-card summary-card--loading" key={index}>
             <span className="summary-card__label">Loading</span>
             <span className="summary-card__value">—</span>
           </div>
         ))}
-      </section>
+      </div>
     );
   }
 
@@ -86,30 +86,19 @@ export default function SummaryCards({
   ];
 
   return (
-    <section className="summary-section" aria-labelledby="summary-heading">
-      <div className="section-heading-row">
-        <div>
-          <h2 id="summary-heading">Project Summary</h2>
-          <p className="section-subtitle">
-            High-level activity captured from GitHub webhooks.
-          </p>
-        </div>
-      </div>
-
-      <div className="summary-grid">
-        {cards.map((card) => (
-          <article
-            className={`summary-card summary-card--${card.variant}`}
-            key={card.label}
-          >
-            <span className="summary-card__label">{card.label}</span>
-            <span className="summary-card__value">
-              {formatNumber(card.value)}
-            </span>
-            <span className="summary-card__helper">{card.helper}</span>
-          </article>
-        ))}
-      </div>
-    </section>
+    <div className="summary-grid" aria-label="Summary statistics">
+      {cards.map((card) => (
+        <article
+          className={`summary-card summary-card--${card.variant}`}
+          key={card.label}
+        >
+          <span className="summary-card__label">{card.label}</span>
+          <span className="summary-card__value">
+            {formatNumber(card.value)}
+          </span>
+          <span className="summary-card__helper">{card.helper}</span>
+        </article>
+      ))}
+    </div>
   );
 }

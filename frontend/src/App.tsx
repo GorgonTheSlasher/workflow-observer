@@ -112,9 +112,9 @@ function App() {
         <button
           className="sidebar__toggle"
           onClick={() => setSidebarOpen((o) => !o)}
-          aria-label={sidebarOpen ? "Collapse filters" : "Expand filters"}
+          aria-label={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
         >
-          {sidebarOpen ? "◀" : "▶"}
+          ☰
         </button>
 
         {sidebarOpen && (
@@ -232,14 +232,16 @@ function App() {
       </aside>
 
       <main>
-        <header>
-          <h1>Workflow Observer</h1>
-          <p>GitHub webhook activity and workflow health dashboard.</p>
+        <header className="app-header">
+          <h1 className="app-header__title">Workflow Observer</h1>
+          <p className="app-header__subtitle">GitHub webhook activity and workflow health dashboard.</p>
         </header>
 
         {error && <p className="error">Error: {error}</p>}
 
-        <SummaryCards summary={summary} isLoading={isLoadingSummary} />
+        <div className="summary-section">
+          <SummaryCards summary={summary} isLoading={isLoadingSummary} />
+        </div>
 
         <SummaryCharts
           summary={summary}
