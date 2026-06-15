@@ -5,6 +5,7 @@ import SummaryCards from "./components/SummaryCards";
 import TimelineChart from "./components/TimelineChart";
 import FailureTrendRadar from "./components/FailureTrendRadar";
 import WorkflowHealthDonut from "./components/WorkflowHealthDonut";
+import TopActorsChart from "./components/TopActorsChart";
 import { useEvents, type EventTypeFilter } from "./hooks/useEvents";
 import { useFailedWorkflowRuns } from "./hooks/useFailedWorkflowRuns";
 import { useRepositories } from "./hooks/useRepositories";
@@ -12,6 +13,7 @@ import { useSummary } from "./hooks/useSummary";
 import { useWorkflowRunBreakdown } from "./hooks/useWorkflowRunBreakdown";
 import { useTimeline } from "./hooks/useTimeline";
 import { useFailureTrend } from "./hooks/useFailureTrend";
+import { useTopActors } from "./hooks/useTopActors";
 import "./App.css";
 
 type ActiveView = "summary" | "events" | "workflows";
@@ -124,6 +126,11 @@ function App() {
     isLoading: isLoadingFailureTrend,
     error: failureTrendError,
   } = useFailureTrend(repoName);
+  const {
+    topActors,
+    isLoading: isLoadingTopActors,
+    error: topActorsError,
+  } = useTopActors(repoName);
 
   const error = useMemo(
     () =>
@@ -132,6 +139,7 @@ function App() {
       workflowRunBreakdownError ??
       timelineError ??
       failureTrendError ??
+      topActorsError ??
       eventsError ??
       failedWorkflowsError,
     [
@@ -140,6 +148,7 @@ function App() {
       workflowRunBreakdownError,
       timelineError,
       failureTrendError,
+      topActorsError,
       eventsError,
       failedWorkflowsError,
     ]
@@ -263,18 +272,19 @@ function App() {
         {error && <p className="error">Error: {error}</p>}
 
         {activeView === "summary" && (
-          <>
+          <div className="summary-view">
             <div className="summary-section">
               <SummaryCards summary={summary} isLoading={isLoadingSummary} />
             </div>
             <div className="summary-charts-row">
+              <TimelineChart data={timeline} isLoading={isLoadingTimeline} />
               <WorkflowHealthDonut
                 workflowRunBreakdown={workflowRunBreakdown}
                 isLoading={isLoadingWorkflowRunBreakdown}
               />
+              <TopActorsChart data={topActors} isLoading={isLoadingTopActors} />
             </div>
-            <TimelineChart data={timeline} isLoading={isLoadingTimeline} />
-          </>
+          </div>
         )}
 
         {activeView === "events" && (

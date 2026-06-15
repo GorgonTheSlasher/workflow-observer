@@ -48,49 +48,51 @@ export default function WorkflowHealthDonut({
           <p className="chart-empty">No workflow run data available.</p>
         ) : (
           <div className="donut-wrapper">
-            <ResponsiveContainer width="100%" height={280}>
-              <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
-                <Pie
-                  data={pieData}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={85}
-                  outerRadius={120}
-                  strokeWidth={0}
-                  startAngle={90}
-                  endAngle={-270}
-                />
-                <Tooltip
-                  contentStyle={{
-                    background: CHART_THEME.tooltip.background,
-                    border: `1px solid ${CHART_THEME.tooltip.border}`,
-                    borderRadius: 8,
-                    color: CHART_THEME.text,
-                  }}
-                  formatter={(value, name) => [
-                    `${value} (${Math.round((Number(value) / total) * 100)}%)`,
-                    name,
-                  ]}
-                />
-              </PieChart>
-            </ResponsiveContainer>
+            <div className="donut-chart-area">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
+                  <Pie
+                    data={pieData}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    innerRadius="40%"
+                    outerRadius="60%"
+                    strokeWidth={0}
+                    startAngle={90}
+                    endAngle={-270}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      background: CHART_THEME.tooltip.background,
+                      border: `1px solid ${CHART_THEME.tooltip.border}`,
+                      borderRadius: 8,
+                      color: CHART_THEME.text,
+                    }}
+                    formatter={(value, name) => [
+                      `${value} (${Math.round((Number(value) / total) * 100)}%)`,
+                      name,
+                    ]}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
 
-            {successRate !== null && (
-              <div className="donut-center" aria-label={`${successRate}% success rate`}>
-                <span className="donut-center__rate">{successRate}%</span>
-                <span className="donut-center__label">Success Rate</span>
-              </div>
-            )}
+              {successRate !== null && (
+                <div className="donut-center" aria-label={`${successRate}% success rate`}>
+                  <span className="donut-center__rate">{successRate}%</span>
+                  <span className="donut-center__label">Success Rate</span>
+                </div>
+              )}
+            </div>
 
             <div className="donut-legend">
               <span className="donut-legend__item">
-                <span className="donut-legend__swatch" style={{ background: "#34d399" }} />
+                <span className="donut-legend__swatch" style={{ background: "#00F6ED" }} />
                 Success ({success})
               </span>
               <span className="donut-legend__item">
-                <span className="donut-legend__swatch" style={{ background: "#e05c6a" }} />
+                <span className="donut-legend__swatch" style={{ background: "#FFB800" }} />
                 Failure ({failure})
               </span>
             </div>

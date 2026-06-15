@@ -76,7 +76,7 @@ export default function TimelineChart({
         {data.length === 0 ? (
           <p className="chart-empty">No timeline data available.</p>
         ) : (
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={data} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke={CHART_THEME.grid} />
               <XAxis

@@ -136,6 +136,22 @@ export async function getTimeline(
   return response.json();
 }
 
+export type TopActorEntry = {
+  actor: string;
+  count: number;
+};
+
+export async function getTopActors(
+  repoName: string,
+  limit = 5,
+): Promise<TopActorEntry[]> {
+  const params = new URLSearchParams({ limit: String(limit) });
+  if (repoName) params.append("repo_name", repoName);
+  const response = await fetch(`${API_BASE_URL}/summary/top-actors?${params}`);
+  if (!response.ok) throw new Error("Failed to fetch top actors");
+  return response.json();
+}
+
 export type FailureTrendEntry = {
   conclusion: string;
   current: number;
