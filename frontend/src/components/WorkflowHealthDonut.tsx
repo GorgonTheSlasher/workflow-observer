@@ -69,8 +69,8 @@ export default function WorkflowHealthDonut({
                     borderRadius: 8,
                     color: CHART_THEME.text,
                   }}
-                  formatter={(value: number, name: string) => [
-                    `${value} (${Math.round((value / total) * 100)}%)`,
+                  formatter={(value, name) => [
+                    `${value} (${Math.round((Number(value) / total) * 100)}%)`,
                     name,
                   ]}
                 />
