@@ -7,7 +7,7 @@ from app.database import get_db
 from app.event_dispatcher import dispatch_github_webhook
 from app.init_db import init_db
 from app.models import GitHubEvent
-from app.services import get_filtered_events, get_failure_trend, get_timeline
+from app.services import get_filtered_events, get_failure_trend, get_timeline, get_top_actors
 
 from app.alerts import send_slack_alert
 
@@ -228,6 +228,14 @@ def get_repository_summary(
         "failed_workflows": failed_workflows,
         "successful_workflows": successful_workflows,
     }
+
+@app.get("/summary/top-actors")
+def get_top_actors_summary(
+    repo_name: str | None = None,
+    limit: int = 5,
+    db: Session = Depends(get_db),
+):
+    return get_top_actors(db=db, repo_name=repo_name, limit=limit)
 
 @app.get("/summary/failure-trend")
 def get_workflow_failure_trend(

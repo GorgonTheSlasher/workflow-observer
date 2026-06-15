@@ -4,7 +4,7 @@ from collections import defaultdict
 from datetime import datetime, UTC, timedelta
 
 from fastapi import HTTPException, Depends
-from sqlalchemy import or_
+from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
 from app.config import settings
@@ -151,6 +151,29 @@ def get_failure_trend(
         }
         for c in _WORKFLOW_CONCLUSIONS
     ]
+
+def get_top_actors(
+    repo_name: str | None = None,
+    limit: int = 5,
+    db: Session = Depends(get_db),
+) -> list[dict]:
+    query = db.query(
+        GitHubEvent.actor,
+        func.count(GitHubEvent.id).label("count"),
+    ).filter(GitHubEvent.actor.isnot(None))
+
+    if repo_name:
+        query = query.filter(GitHubEvent.repo_name == repo_name)
+
+    rows = (
+        query
+        .group_by(GitHubEvent.actor)
+        .order_by(func.count(GitHubEvent.id).desc())
+        .limit(limit)
+        .all()
+    )
+
+    return [{"actor": actor, "count": count} for actor, count in rows]
 
 def get_timeline(
     repo_name: str | None = None,
