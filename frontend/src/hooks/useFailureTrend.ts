@@ -13,7 +13,6 @@ export function useFailureTrend(repoName: string): UseFailureTrendResult {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!repoName) return;
 
     let cancelled = false;
 

@@ -27,12 +27,6 @@ export function useWorkflowRunBreakdown(
     let cancelled = false;
 
     async function loadWorkflowRunBreakdown() {
-      if (!repoName) {
-        setWorkflowRunBreakdown({ success: 0, failure: 0 });
-        setIsLoading(false);
-        return;
-      }
-
       setIsLoading(true);
       setError(null);
 

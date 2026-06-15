@@ -20,12 +20,6 @@ export function useFailedWorkflowRuns(repoName: string): UseFailedWorkflowRunsRe
       setIsLoading(true);
       setError(null);
 
-      if (!repoName) {
-        setFailedWorkflows([]);
-        setIsLoading(false);
-        return;
-      }
-
       try {
         const data = await getFailedWorkflowRuns(repoName);
 

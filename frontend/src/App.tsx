@@ -4,6 +4,7 @@ import SummaryCharts from "./components/SummaryCharts";
 import SummaryCards from "./components/SummaryCards";
 import TimelineChart from "./components/TimelineChart";
 import FailureTrendRadar from "./components/FailureTrendRadar";
+import WorkflowHealthDonut from "./components/WorkflowHealthDonut";
 import { useEvents, type EventTypeFilter } from "./hooks/useEvents";
 import { useFailedWorkflowRuns } from "./hooks/useFailedWorkflowRuns";
 import { useRepositories } from "./hooks/useRepositories";
@@ -72,7 +73,7 @@ function App() {
     error: repositoriesError,
   } = useRepositories();
 
-  const repoName = selectedRepoName || repositories[0] || "";
+  const repoName = selectedRepoName;
 
   const eventFilters = useMemo(
     () => ({
@@ -191,6 +192,8 @@ function App() {
       <main>
         <header className="app-header">
           <div className="app-header__left">
+            <span className="app-header__brand">Workflow Observer</span>
+
             <select
               className="app-header__select"
               value={repoName}
@@ -254,7 +257,6 @@ function App() {
               ))}
             </select>
 
-            <span className="app-header__brand">Workflow Observer</span>
           </div>
         </header>
 
@@ -264,6 +266,12 @@ function App() {
           <>
             <div className="summary-section">
               <SummaryCards summary={summary} isLoading={isLoadingSummary} />
+            </div>
+            <div className="summary-charts-row">
+              <WorkflowHealthDonut
+                workflowRunBreakdown={workflowRunBreakdown}
+                isLoading={isLoadingWorkflowRunBreakdown}
+              />
             </div>
             <TimelineChart data={timeline} isLoading={isLoadingTimeline} />
           </>
