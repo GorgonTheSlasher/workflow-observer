@@ -275,16 +275,16 @@ function App() {
           <div className="summary-view">
             <div className="summary-section">
               <SummaryCards summary={summary} isLoading={isLoadingSummary} />
-              <div className="summary-section__donut">
-                <WorkflowHealthDonut
-                  workflowRunBreakdown={workflowRunBreakdown}
-                  isLoading={isLoadingWorkflowRunBreakdown}
-                />
+              <div className="summary-section__chart">
+                <TopActorsChart data={topActors} isLoading={isLoadingTopActors} />
               </div>
             </div>
             <div className="summary-charts-row">
               <TimelineChart data={timeline} isLoading={isLoadingTimeline} />
-              <TopActorsChart data={topActors} isLoading={isLoadingTopActors} />
+              <WorkflowHealthDonut
+                workflowRunBreakdown={workflowRunBreakdown}
+                isLoading={isLoadingWorkflowRunBreakdown}
+              />
             </div>
           </div>
         )}

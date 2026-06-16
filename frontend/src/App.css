@@ -117,17 +117,21 @@ section {
   margin-top: 0;
 }
 
-.summary-section__donut {
-  flex: 0 0 220px;
+.summary-section__chart {
+  flex: 1;
   display: flex;
   flex-direction: column;
 }
 
-.summary-section__donut section,
-.summary-section__donut .chart-card {
+.summary-section__chart section,
+.summary-section__chart .chart-card {
   flex: 1;
   display: flex;
   flex-direction: column;
+}
+
+.summary-section__chart .chart-body {
+  min-height: 140px;
 }
 
 .summary-charts-row {
@@ -233,23 +237,25 @@ section {
 /* ── Summary cards ───────────────────────────────────────────────────────── */
 
 .summary-grid {
-  flex: 1;
+  flex: 0 0 40%;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 1rem;
+  gap: 0.5rem;
   align-content: start;
 }
 
 .summary-card {
   border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 1rem;
+  border-radius: 10px;
+  padding: 0.5rem 0.4rem;
   background: var(--surface);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
-  aspect-ratio: 1.4;
+  aspect-ratio: 1;
   display: flex;
   flex-direction: column;
+  align-items: center;
   justify-content: center;
+  text-align: center;
 }
 
 .summary-card--primary {
@@ -263,17 +269,17 @@ section {
 .summary-card__label {
   display: block;
   color: rgba(209, 227, 221, 0.65);
-  font-size: 0.75rem;
+  font-size: 0.65rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
 }
 
 .summary-card__value {
   display: block;
-  margin-top: 0.35rem;
+  margin-top: 0.2rem;
   color: var(--accent);
-  font-size: 2rem;
+  font-size: 1.5rem;
   font-weight: 800;
   line-height: 1;
 }
