@@ -172,6 +172,10 @@ section {
   max-width: 160px;
 }
 
+.app-header__select--repo {
+  max-width: 240px;
+}
+
 .app-header__select option {
   background: var(--input-bg);
   color: var(--text);

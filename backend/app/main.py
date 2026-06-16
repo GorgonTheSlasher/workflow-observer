@@ -132,8 +132,9 @@ def get_workflow_runs(
     
     base_query = db.query(GitHubEvent).filter(
         GitHubEvent.event_type == "workflow_run",
-        GitHubEvent.repo_name == repo_name,
     )
+    if repo_name:
+        base_query = base_query.filter(GitHubEvent.repo_name == repo_name)
 
     total_workflows = base_query.count()
 

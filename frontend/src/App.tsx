@@ -204,7 +204,7 @@ function App() {
             <span className="app-header__brand">Workflow Observer</span>
 
             <select
-              className="app-header__select"
+              className="app-header__select app-header__select--repo"
               value={repoName}
               disabled={isLoadingRepositories || repositories.length === 0}
               onChange={(e) => { setSelectedRepoName(e.target.value); setPage(0); }}

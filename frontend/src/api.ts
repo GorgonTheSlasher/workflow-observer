@@ -67,10 +67,8 @@ export async function getWorkflowRuns(
   repoName: string,
   result: WorkflowRunResult
 ): Promise<WorkflowRunsSummary> {
-  const params = new URLSearchParams({
-    repo_name: repoName,
-    result,
-  });
+  const params = new URLSearchParams({ result });
+  if (repoName) params.append("repo_name", repoName);
 
   const response = await fetch(
     `${API_BASE_URL}/summary/events/workflow-runs?${params}`

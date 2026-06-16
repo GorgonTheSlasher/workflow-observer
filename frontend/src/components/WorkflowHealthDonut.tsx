@@ -24,8 +24,8 @@ export default function WorkflowHealthDonut({
   const successRate = total > 0 ? Math.round((success / total) * 100) : null;
 
   const pieData = [
-    { name: "Success", value: success, fill: "#34d399" },
-    { name: "Failure", value: failure, fill: "#e05c6a" },
+    { name: "Success", value: success, fill: "#00F6ED" },
+    { name: "Failure", value: failure, fill: "#FFB800" },
   ].filter((d) => d.value > 0);
 
   if (isLoading) {
