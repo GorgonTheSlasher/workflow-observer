@@ -21,14 +21,13 @@ const CHART_THEME = {
   bar:     "#00F6ED",
 };
 
-function truncateActor(actor: string, max = 22): string {
-  return actor.length > max ? actor.slice(0, max - 1) + "…" : actor;
-}
-
 export default function TopActorsChart({
   data,
   isLoading = false,
 }: TopActorsChartProps) {
+  const yAxisWidth = data.length
+    ? Math.min(Math.max(...data.map((d) => d.actor.length)) * 7 + 16, 220)
+    : 100;
   if (isLoading) {
     return (
       <section>
@@ -65,8 +64,7 @@ export default function TopActorsChart({
                 <YAxis
                   type="category"
                   dataKey="actor"
-                  width={160}
-                  tickFormatter={truncateActor}
+                  width={yAxisWidth}
                   tick={{ fill: CHART_THEME.text, fontSize: 12 }}
                   axisLine={false}
                   tickLine={false}
