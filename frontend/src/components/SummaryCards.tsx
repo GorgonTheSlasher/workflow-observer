@@ -35,54 +35,14 @@ export default function SummaryCards({
   }
 
   const cards = [
-    {
-      label: "Total Events",
-      value: summary.total_events,
-      helper: "All webhook events stored",
-      variant: "primary",
-    },
-    {
-      label: "Repositories",
-      value: summary.total_repositories,
-      helper: "Unique repositories observed",
-      variant: "default",
-    },
-    {
-      label: "Actors",
-      value: summary.total_unique_actors,
-      helper: "Unique users, apps, and bots",
-      variant: "default",
-    },
-    {
-      label: "Workflow Runs",
-      value: summary.total_workflows,
-      helper: "GitHub Actions runs",
-      variant: "workflow",
-    },
-    {
-      label: "Pull Requests",
-      value: summary.total_pull_requests,
-      helper: "Pull request webhook events",
-      variant: "default",
-    },
-    {
-      label: "Pushes",
-      value: summary.total_pushes,
-      helper: "Push webhook events",
-      variant: "default",
-    },
-    {
-      label: "Issues",
-      value: summary.total_issues,
-      helper: "Issue webhook events",
-      variant: "default",
-    },
-    {
-      label: "Members",
-      value: summary.total_members,
-      helper: "Member webhook events",
-      variant: "default",
-    },
+    { label: "Total Events",   value: summary.total_events,         variant: "primary"  },
+    { label: "Repositories",   value: summary.total_repositories,   variant: "default"  },
+    { label: "Actors",         value: summary.total_unique_actors,  variant: "default"  },
+    { label: "Workflow Runs",  value: summary.total_workflows,      variant: "workflow" },
+    { label: "Pull Requests",  value: summary.total_pull_requests,  variant: "default"  },
+    { label: "Pushes",         value: summary.total_pushes,         variant: "default"  },
+    { label: "Issues",         value: summary.total_issues,         variant: "default"  },
+    { label: "Members",        value: summary.total_members,        variant: "default"  },
   ];
 
   return (
@@ -96,7 +56,6 @@ export default function SummaryCards({
           <span className="summary-card__value">
             {formatNumber(card.value)}
           </span>
-          <span className="summary-card__helper">{card.helper}</span>
         </article>
       ))}
     </div>
