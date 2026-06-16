@@ -254,7 +254,6 @@ section {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   text-align: center;
 }
 
@@ -276,10 +275,11 @@ section {
 }
 
 .summary-card__value {
-  display: block;
-  margin-top: 0.2rem;
+  flex: 1;
+  display: flex;
+  align-items: center;
   color: var(--accent);
-  font-size: 1.5rem;
+  font-size: 3rem;
   font-weight: 800;
   line-height: 1;
 }

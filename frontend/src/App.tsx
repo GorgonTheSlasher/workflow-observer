@@ -61,7 +61,7 @@ function WorkflowsIcon() {
 
 function App() {
   const [activeView, setActiveView] = useState<ActiveView>("summary");
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedRepoName, setSelectedRepoName] = useState("");
   const [eventType, setEventType] = useState<EventTypeFilter>("");
   const [actor, setActor] = useState("");

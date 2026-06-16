@@ -21,7 +21,7 @@ const CHART_THEME = {
   bar:     "#00F6ED",
 };
 
-function truncateActor(actor: string, max = 16): string {
+function truncateActor(actor: string, max = 22): string {
   return actor.length > max ? actor.slice(0, max - 1) + "…" : actor;
 }
 
@@ -65,9 +65,9 @@ export default function TopActorsChart({
                 <YAxis
                   type="category"
                   dataKey="actor"
-                  width={90}
+                  width={160}
                   tickFormatter={truncateActor}
-                  tick={{ fill: CHART_THEME.text, fontSize: 11 }}
+                  tick={{ fill: CHART_THEME.text, fontSize: 12 }}
                   axisLine={false}
                   tickLine={false}
                 />
