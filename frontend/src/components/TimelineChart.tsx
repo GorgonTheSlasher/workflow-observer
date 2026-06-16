@@ -76,57 +76,59 @@ export default function TimelineChart({
         {data.length === 0 ? (
           <p className="chart-empty">No timeline data available.</p>
         ) : (
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={data} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke={CHART_THEME.grid} />
-              <XAxis
-                dataKey="date"
-                tickFormatter={formatXAxisDate}
-                tick={{ fontSize: 12, fill: CHART_THEME.text }}
-                axisLine={{ stroke: CHART_THEME.grid }}
-                tickLine={{ stroke: CHART_THEME.grid }}
-                minTickGap={50}
-              />
-              <YAxis
-                allowDecimals={false}
-                tick={{ fontSize: 12, fill: CHART_THEME.text }}
-                axisLine={{ stroke: CHART_THEME.grid }}
-                tickLine={{ stroke: CHART_THEME.grid }}
-              />
-              <Tooltip
-                labelFormatter={formatXAxisDate}
-                contentStyle={{
-                  background: CHART_THEME.tooltip.background,
-                  border: `1px solid ${CHART_THEME.tooltip.border}`,
-                  borderRadius: 8,
-                  color: CHART_THEME.text,
-                }}
-                labelStyle={{ color: CHART_THEME.text }}
-              />
-              <Legend
-                onClick={(e) => toggleSeries(e.dataKey as SeriesKey)}
-                wrapperStyle={{ color: CHART_THEME.text }}
-                formatter={(value, entry) => (
-                  <span style={{ opacity: hidden.has(entry.dataKey as SeriesKey) ? 0.35 : 1, color: CHART_THEME.text }}>
-                    {value}
-                  </span>
-                )}
-              />
-              {SERIES.map(({ key, label, color }) => (
-                <Area
-                  key={key}
-                  type="monotone"
-                  dataKey={key}
-                  name={label}
-                  stackId="a"
-                  stroke={color}
-                  fill={color}
-                  fillOpacity={0.55}
-                  hide={hidden.has(key)}
+          <div className="chart-body">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={data} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={CHART_THEME.grid} />
+                <XAxis
+                  dataKey="date"
+                  tickFormatter={formatXAxisDate}
+                  tick={{ fontSize: 12, fill: CHART_THEME.text }}
+                  axisLine={{ stroke: CHART_THEME.grid }}
+                  tickLine={{ stroke: CHART_THEME.grid }}
+                  minTickGap={50}
                 />
-              ))}
-            </AreaChart>
-          </ResponsiveContainer>
+                <YAxis
+                  allowDecimals={false}
+                  tick={{ fontSize: 12, fill: CHART_THEME.text }}
+                  axisLine={{ stroke: CHART_THEME.grid }}
+                  tickLine={{ stroke: CHART_THEME.grid }}
+                />
+                <Tooltip
+                  labelFormatter={formatXAxisDate}
+                  contentStyle={{
+                    background: CHART_THEME.tooltip.background,
+                    border: `1px solid ${CHART_THEME.tooltip.border}`,
+                    borderRadius: 8,
+                    color: CHART_THEME.text,
+                  }}
+                  labelStyle={{ color: CHART_THEME.text }}
+                />
+                <Legend
+                  onClick={(e) => toggleSeries(e.dataKey as SeriesKey)}
+                  wrapperStyle={{ color: CHART_THEME.text }}
+                  formatter={(value, entry) => (
+                    <span style={{ opacity: hidden.has(entry.dataKey as SeriesKey) ? 0.35 : 1, color: CHART_THEME.text }}>
+                      {value}
+                    </span>
+                  )}
+                />
+                {SERIES.map(({ key, label, color }) => (
+                  <Area
+                    key={key}
+                    type="monotone"
+                    dataKey={key}
+                    name={label}
+                    stackId="a"
+                    stroke={color}
+                    fill={color}
+                    fillOpacity={0.55}
+                    hide={hidden.has(key)}
+                  />
+                ))}
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
         )}
       </article>
     </section>

@@ -154,7 +154,7 @@ section {
   min-height: 0;
 }
 
-.summary-charts-row .recharts-responsive-container {
+.chart-body {
   flex: 1;
   min-height: 0;
 }
