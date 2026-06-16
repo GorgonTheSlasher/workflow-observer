@@ -60,49 +60,51 @@ export default function FailureTrendRadar({
         {isEmpty ? (
           <p className="chart-empty">No workflow run data available.</p>
         ) : (
-          <ResponsiveContainer width="100%" height={320}>
-            <RadarChart data={displayData} margin={{ top: 8, right: 32, left: 32, bottom: 8 }}>
-              <PolarGrid stroke={CHART_THEME.grid} />
-              <PolarAngleAxis
-                dataKey="conclusion"
-                tick={{ fill: CHART_THEME.text, fontSize: 13, fontWeight: 600 }}
-              />
-              <PolarRadiusAxis
-                angle={90}
-                domain={[0, 100]}
-                tickCount={5}
-                tick={{ fill: CHART_THEME.text, fontSize: 11 }}
-                tickFormatter={(v) => `${v}%`}
-              />
-              <Tooltip
-                formatter={(value) => [`${value ?? 0}%`]}
-                contentStyle={{
-                  background: CHART_THEME.tooltip.background,
-                  border: `1px solid ${CHART_THEME.tooltip.border}`,
-                  borderRadius: 8,
-                  color: CHART_THEME.text,
-                }}
-              />
-              <Legend wrapperStyle={{ color: CHART_THEME.text }} />
-              <Radar
-                name="Prior 14 days"
-                dataKey="prior"
-                stroke="#6E7DAB"
-                fill="#6E7DAB"
-                fillOpacity={0.25}
-                strokeWidth={2}
-                strokeDasharray="5 3"
-              />
-              <Radar
-                name="Current 14 days"
-                dataKey="current"
-                stroke="#5762D5"
-                fill="#5762D5"
-                fillOpacity={0.4}
-                strokeWidth={2}
-              />
-            </RadarChart>
-          </ResponsiveContainer>
+          <div className="chart-body" style={{ minHeight: 320 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <RadarChart data={displayData} margin={{ top: 8, right: 32, left: 32, bottom: 8 }}>
+                <PolarGrid stroke={CHART_THEME.grid} />
+                <PolarAngleAxis
+                  dataKey="conclusion"
+                  tick={{ fill: CHART_THEME.text, fontSize: 13, fontWeight: 600 }}
+                />
+                <PolarRadiusAxis
+                  angle={90}
+                  domain={[0, 100]}
+                  tickCount={5}
+                  tick={{ fill: CHART_THEME.text, fontSize: 11 }}
+                  tickFormatter={(v) => `${v}%`}
+                />
+                <Tooltip
+                  formatter={(value) => [`${value ?? 0}%`]}
+                  contentStyle={{
+                    background: CHART_THEME.tooltip.background,
+                    border: `1px solid ${CHART_THEME.tooltip.border}`,
+                    borderRadius: 8,
+                    color: CHART_THEME.text,
+                  }}
+                />
+                <Legend wrapperStyle={{ color: CHART_THEME.text }} />
+                <Radar
+                  name="Prior 14 days"
+                  dataKey="prior"
+                  stroke="#6E7DAB"
+                  fill="#6E7DAB"
+                  fillOpacity={0.25}
+                  strokeWidth={2}
+                  strokeDasharray="5 3"
+                />
+                <Radar
+                  name="Current 14 days"
+                  dataKey="current"
+                  stroke="#5762D5"
+                  fill="#5762D5"
+                  fillOpacity={0.4}
+                  strokeWidth={2}
+                />
+              </RadarChart>
+            </ResponsiveContainer>
+          </div>
         )}
       </article>
     </section>

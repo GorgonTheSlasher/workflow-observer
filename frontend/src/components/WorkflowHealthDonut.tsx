@@ -48,7 +48,7 @@ export default function WorkflowHealthDonut({
           <p className="chart-empty">No workflow run data available.</p>
         ) : (
           <div className="donut-wrapper">
-            <div className="donut-chart-area">
+            <div className="donut-chart-area" style={{ minHeight: 140 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
                   <Pie

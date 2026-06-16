@@ -83,29 +83,31 @@ export default function SummaryCharts({
           {eventTypeData.length === 0 ? (
             <p className="chart-empty">No event data available.</p>
           ) : (
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={eventTypeData}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={95}
-                  label={{ fill: CHART_THEME.text, fontSize: 12 }}
-                />
-                <Tooltip
-                  formatter={formatTooltipValue}
-                  contentStyle={{
-                    background: CHART_THEME.tooltip.background,
-                    border: `1px solid ${CHART_THEME.tooltip.border}`,
-                    borderRadius: 8,
-                    color: CHART_THEME.text,
-                  }}
-                />
-                <Legend wrapperStyle={{ color: CHART_THEME.text }} />
-              </PieChart>
-            </ResponsiveContainer>
+            <div className="chart-body" style={{ minHeight: 300 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={eventTypeData}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={95}
+                    label={{ fill: CHART_THEME.text, fontSize: 12 }}
+                  />
+                  <Tooltip
+                    formatter={formatTooltipValue}
+                    contentStyle={{
+                      background: CHART_THEME.tooltip.background,
+                      border: `1px solid ${CHART_THEME.tooltip.border}`,
+                      borderRadius: 8,
+                      color: CHART_THEME.text,
+                    }}
+                  />
+                  <Legend wrapperStyle={{ color: CHART_THEME.text }} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
           )}
         </article>
       )}
@@ -120,29 +122,31 @@ export default function SummaryCharts({
           {workflowData.length === 0 ? (
             <p className="chart-empty">No workflow outcome data available.</p>
           ) : (
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={workflowData}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={95}
-                  label={{ fill: CHART_THEME.text, fontSize: 12 }}
-                />
-                <Tooltip
-                  formatter={formatTooltipValue}
-                  contentStyle={{
-                    background: CHART_THEME.tooltip.background,
-                    border: `1px solid ${CHART_THEME.tooltip.border}`,
-                    borderRadius: 8,
-                    color: CHART_THEME.text,
-                  }}
-                />
-                <Legend wrapperStyle={{ color: CHART_THEME.text }} />
-              </PieChart>
-            </ResponsiveContainer>
+            <div className="chart-body" style={{ minHeight: 300 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={workflowData}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={95}
+                    label={{ fill: CHART_THEME.text, fontSize: 12 }}
+                  />
+                  <Tooltip
+                    formatter={formatTooltipValue}
+                    contentStyle={{
+                      background: CHART_THEME.tooltip.background,
+                      border: `1px solid ${CHART_THEME.tooltip.border}`,
+                      borderRadius: 8,
+                      color: CHART_THEME.text,
+                    }}
+                  />
+                  <Legend wrapperStyle={{ color: CHART_THEME.text }} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
           )}
         </article>
       )}
