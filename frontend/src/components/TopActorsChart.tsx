@@ -41,7 +41,6 @@ export default function TopActorsChart({
       <article className="chart-card">
         <div className="chart-card__header">
           <h2>Top Actors</h2>
-          <p>Most active users and bots by event count.</p>
         </div>
 
         {data.length === 0 ? (

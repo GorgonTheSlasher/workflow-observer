@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import RecentWorkflowFailuresWidget from "./components/RecentWorkflowFailuresWidget";
 import SummaryCharts from "./components/SummaryCharts";
-import SummaryCards from "./components/SummaryCards";
+import StatStrip from "./components/StatStrip";
 import TimelineChart from "./components/TimelineChart";
 import FailureTrendRadar from "./components/FailureTrendRadar";
 import WorkflowHealthDonut from "./components/WorkflowHealthDonut";
@@ -273,8 +273,9 @@ function App() {
 
         {activeView === "summary" && (
           <div className="summary-view">
+            <StatStrip summary={summary} isLoading={isLoadingSummary} />
             <div className="summary-section">
-              <SummaryCards summary={summary} isLoading={isLoadingSummary} />
+              <div className="summary-section__left" />
               <div className="summary-section__chart">
                 <TopActorsChart data={topActors} isLoading={isLoadingTopActors} />
               </div>

@@ -110,11 +110,66 @@ section {
   padding-bottom: 1rem;
 }
 
+/* ── Stat strip ──────────────────────────────────────────────────────────── */
+
+.stat-strip {
+  display: flex;
+  align-items: stretch;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-bottom: 1rem;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.stat-strip__item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.6rem 0.5rem;
+  border-right: 1px solid var(--border);
+  text-align: center;
+  gap: 0.2rem;
+}
+
+.stat-strip__item:last-child {
+  border-right: none;
+}
+
+.stat-strip__label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(209, 227, 221, 0.55);
+  white-space: nowrap;
+}
+
+.stat-strip__value {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.stat-strip__value--loading {
+  opacity: 0.4;
+}
+
+/* ── Summary section ─────────────────────────────────────────────────────── */
+
 .summary-section {
   display: flex;
   gap: 1rem;
   align-items: stretch;
   margin-top: 0;
+}
+
+.summary-section__left {
+  flex: 0 0 40%;
 }
 
 .summary-section__chart {
