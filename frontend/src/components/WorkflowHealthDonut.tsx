@@ -41,7 +41,6 @@ export default function WorkflowHealthDonut({
       <article className="chart-card">
         <div className="chart-card__header">
           <h2>Workflow Health</h2>
-          <p>Overall success rate across all workflow runs.</p>
         </div>
 
         {total === 0 ? (
@@ -57,8 +56,8 @@ export default function WorkflowHealthDonut({
                     nameKey="name"
                     cx="50%"
                     cy="50%"
-                    innerRadius="40%"
-                    outerRadius="60%"
+                    innerRadius="52%"
+                    outerRadius="78%"
                     strokeWidth={0}
                     startAngle={90}
                     endAngle={-270}

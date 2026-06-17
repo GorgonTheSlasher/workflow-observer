@@ -70,7 +70,6 @@ export default function TimelineChart({
       <article className="chart-card">
         <div className="chart-card__header">
           <h2>Event Timeline</h2>
-          <p>Activity over time by event type. Click a legend item to show or hide it.</p>
         </div>
 
         {data.length === 0 ? (
