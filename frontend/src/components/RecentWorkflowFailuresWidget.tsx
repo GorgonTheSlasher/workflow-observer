@@ -1,4 +1,5 @@
 import type { GitHubEvent } from "../types";
+import { parseUtcDate } from "../utils/time";
 
 type RecentWorkflowFailuresWidgetProps = {
   failures: GitHubEvent[];
@@ -19,7 +20,7 @@ function formatBranch(branch?: string | null) {
 }
 
 function formatRelativeTime(dateText: string) {
-  const failedAt = new Date(dateText).getTime();
+  const failedAt = parseUtcDate(dateText).getTime();
 
   if (Number.isNaN(failedAt)) {
     return "unknown time ago";

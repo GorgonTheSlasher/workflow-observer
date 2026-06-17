@@ -1,4 +1,5 @@
 import { useRecentEvents } from "../hooks/useRecentEvents";
+import { parseUtcDate } from "../utils/time";
 
 const EVENT_COLORS: Record<string, string> = {
   workflow_run:  "#e05c6a",
@@ -9,7 +10,7 @@ const EVENT_COLORS: Record<string, string> = {
 };
 
 function timeAgo(iso: string): string {
-  const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+  const diff = Math.max(0, Math.floor((Date.now() - parseUtcDate(iso).getTime()) / 1000));
   if (diff < 60)   return `${diff}s ago`;
   if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
   if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;

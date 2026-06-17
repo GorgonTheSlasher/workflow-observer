@@ -85,6 +85,11 @@ export default function WorkflowHealthDonut({
               )}
             </div>
 
+            <div className="donut-total">
+              <span className="donut-total__value">{total.toLocaleString()}</span>
+              <span className="donut-total__label">Total Runs</span>
+            </div>
+
             <div className="donut-legend">
               <span className="donut-legend__item">
                 <span className="donut-legend__swatch" style={{ background: "#00F6ED" }} />
