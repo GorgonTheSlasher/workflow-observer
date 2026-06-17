@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import RecentWorkflowFailuresWidget from "./components/RecentWorkflowFailuresWidget";
+import RecentActivityFeed from "./components/RecentActivityFeed";
 import SummaryCharts from "./components/SummaryCharts";
 import StatStrip from "./components/StatStrip";
 import TimelineChart from "./components/TimelineChart";
@@ -275,7 +276,9 @@ function App() {
           <div className="summary-view">
             <StatStrip summary={summary} isLoading={isLoadingSummary} />
             <div className="summary-section">
-              <div className="summary-section__left" />
+              <div className="summary-section__left">
+                <RecentActivityFeed />
+              </div>
               <div className="summary-section__chart">
                 <TopActorsChart data={topActors} isLoading={isLoadingTopActors} />
               </div>

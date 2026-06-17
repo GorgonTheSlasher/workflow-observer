@@ -170,6 +170,111 @@ section {
 
 .summary-section__left {
   flex: 0 0 40%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* ── Recent activity feed ────────────────────────────────────────────────── */
+
+.activity-feed {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+
+.activity-feed__header {
+  flex-shrink: 0;
+  padding: 0.65rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.activity-feed__header h2 {
+  margin: 0;
+}
+
+.activity-feed__list {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.activity-feed__empty {
+  padding: 1rem;
+  color: rgba(209, 227, 221, 0.45);
+  font-size: 0.85rem;
+  text-align: center;
+  margin: 0;
+}
+
+.activity-feed__item {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.activity-feed__item:last-child {
+  border-bottom: none;
+}
+
+.activity-feed__dot {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.activity-feed__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.activity-feed__type {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text);
+  text-transform: capitalize;
+}
+
+.activity-feed__repo {
+  font-size: 0.7rem;
+  color: rgba(209, 227, 221, 0.5);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.activity-feed__meta {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.1rem;
+}
+
+.activity-feed__actor {
+  font-size: 0.72rem;
+  color: var(--accent);
+  white-space: nowrap;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.activity-feed__time {
+  font-size: 0.65rem;
+  color: rgba(209, 227, 221, 0.4);
 }
 
 .summary-section__chart {
@@ -201,6 +306,7 @@ section {
 
 .summary-charts-row > section {
   margin-top: 0;
+  margin-bottom: 1rem;
   display: flex;
   flex-direction: column;
   min-height: 0;
