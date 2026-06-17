@@ -15,20 +15,13 @@ export type Summary = {
 
 export type WorkflowRunResult = "success" | "failure";
 
-export type WorkflowRunsSummary = {
+type WorkflowRunsSummary = {
   repo_name: string;
   result: WorkflowRunResult;
   total_workflows: number;
   success_rate: number;
   count: number;
   workflows: GitHubEvent[];
-};
-
-export type RepositorySummary = {
-  repo_name: string;
-  total_events: number;
-  failed_workflows: number;
-  successful_workflows: number;
 };
 
 export async function getSummary(): Promise<Summary> {
@@ -88,30 +81,6 @@ export async function getFailedWorkflowRuns(
   return data.workflows;
 }
 
-export async function getRepositorySummary(
-  repoName: string
-): Promise<RepositorySummary> {
-  const params = new URLSearchParams({ repo_name: repoName });
-
-  const response = await fetch(`${API_BASE_URL}/summary/repository?${params}`);
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch repository summary");
-  }
-
-  return response.json();
-}
-
-export async function getActorActivity(actor: string): Promise<GitHubEvent[]> {
-  const params = new URLSearchParams({ actor });
-  const response = await fetch(`${API_BASE_URL}/summary/actor?${params}`);
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch actor activity");
-  }
-
-  return response.json();
-}
 
 export type TimelineEntry = {
   date: string;

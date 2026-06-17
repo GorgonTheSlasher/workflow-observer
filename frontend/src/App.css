@@ -220,7 +220,7 @@ section {
   display: flex;
   align-items: center;
   gap: 0.65rem;
-  padding: 1.60rem 1rem;
+  padding: 1.4rem 1rem;
   border-bottom: 1px solid var(--border);
 }
 
@@ -400,74 +400,6 @@ section {
   border-right: 1px solid var(--border);
 }
 
-/* ── Summary cards ───────────────────────────────────────────────────────── */
-
-.summary-grid {
-  flex: 0 0 40%;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.5rem;
-  align-content: start;
-}
-
-.summary-card {
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 0.5rem 0.4rem;
-  background: var(--surface);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
-  aspect-ratio: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-}
-
-.summary-card--primary {
-  border-color: rgba(87, 98, 213, 0.5);
-}
-
-.summary-card--workflow {
-  border-color: rgba(87, 98, 213, 0.3);
-}
-
-.summary-card__label {
-  display: block;
-  color: rgba(209, 227, 221, 0.65);
-  font-size: 0.85rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.summary-card__value {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  color: var(--accent);
-  font-size: 4rem;
-  font-weight: 800;
-  line-height: 1;
-}
-
-.summary-card__helper {
-  display: block;
-  margin-top: 0.5rem;
-  color: rgba(209, 227, 221, 0.55);
-  font-size: 0.85rem;
-}
-
-.summary-card--loading {
-  opacity: 0.5;
-}
-
-.summary-empty {
-  border: 1px dashed var(--border);
-  border-radius: 12px;
-  padding: 1rem;
-  color: rgba(209, 227, 221, 0.55);
-  background: var(--surface);
-}
 
 /* ── Charts ──────────────────────────────────────────────────────────────── */
 
@@ -500,6 +432,7 @@ section {
   align-items: baseline;
   gap: 0.75rem;
   text-align: left;
+  margin-left: 3.5rem;
 }
 
 .chart-card__header--row p {
