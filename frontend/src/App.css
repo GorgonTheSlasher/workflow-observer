@@ -162,10 +162,12 @@ section {
 /* ── Summary section ─────────────────────────────────────────────────────── */
 
 .summary-section {
+  flex: 0 0 38%;
   display: flex;
   gap: 1rem;
   align-items: stretch;
   margin-top: 0;
+  min-height: 0;
 }
 
 .summary-section__left {
