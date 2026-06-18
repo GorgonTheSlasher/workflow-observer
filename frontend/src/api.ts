@@ -58,10 +58,12 @@ export async function getRecentEvents(limit = 10): Promise<GitHubEvent[]> {
 
 export async function getWorkflowRuns(
   repoName: string,
-  result: WorkflowRunResult
+  result: WorkflowRunResult,
+  sinceDays?: number | null,
 ): Promise<WorkflowRunsSummary> {
   const params = new URLSearchParams({ result });
   if (repoName) params.append("repo_name", repoName);
+  if (sinceDays != null) params.append("since_days", String(sinceDays));
 
   const response = await fetch(
     `${API_BASE_URL}/summary/events/workflow-runs?${params}`
@@ -111,9 +113,11 @@ export type TopActorEntry = {
 export async function getTopActors(
   repoName: string,
   limit = 5,
+  sinceDays?: number | null,
 ): Promise<TopActorEntry[]> {
   const params = new URLSearchParams({ limit: String(limit) });
   if (repoName) params.append("repo_name", repoName);
+  if (sinceDays != null) params.append("since_days", String(sinceDays));
   const response = await fetch(`${API_BASE_URL}/summary/top-actors?${params}`);
   if (!response.ok) throw new Error("Failed to fetch top actors");
   return response.json();

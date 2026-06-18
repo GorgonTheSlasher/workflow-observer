@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+from datetime import datetime, UTC, timedelta
 from fastapi import FastAPI, Request, Header, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
@@ -122,6 +123,7 @@ def get_events(
 def get_workflow_runs(
     repo_name: str | None = None,
     result: str | None = None,
+    since_days: int | None = None,
     db: Session = Depends(get_db)
 ):
     if result not in {"success", "failure"}:
@@ -129,12 +131,15 @@ def get_workflow_runs(
             status_code=400,
             detail="result must be 'success' or 'failure'",
         )
-    
+
     base_query = db.query(GitHubEvent).filter(
         GitHubEvent.event_type == "workflow_run",
     )
     if repo_name:
         base_query = base_query.filter(GitHubEvent.repo_name == repo_name)
+    if since_days is not None:
+        cutoff = datetime.now(UTC) - timedelta(days=since_days)
+        base_query = base_query.filter(GitHubEvent.created_at >= cutoff)
 
     total_workflows = base_query.count()
 
@@ -234,9 +239,10 @@ def get_repository_summary(
 def get_top_actors_summary(
     repo_name: str | None = None,
     limit: int = 5,
+    since_days: int | None = None,
     db: Session = Depends(get_db),
 ):
-    return get_top_actors(db=db, repo_name=repo_name, limit=limit)
+    return get_top_actors(db=db, repo_name=repo_name, limit=limit, since_days=since_days)
 
 @app.get("/summary/failure-trend")
 def get_workflow_failure_trend(

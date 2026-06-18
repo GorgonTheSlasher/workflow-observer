@@ -114,7 +114,7 @@ function App() {
     workflowRunBreakdown,
     isLoading: isLoadingWorkflowRunBreakdown,
     error: workflowRunBreakdownError,
-  } = useWorkflowRunBreakdown(repoName);
+  } = useWorkflowRunBreakdown(repoName, sinceDays);
 
   const {
     timeline,
@@ -131,7 +131,7 @@ function App() {
     topActors,
     isLoading: isLoadingTopActors,
     error: topActorsError,
-  } = useTopActors(repoName);
+  } = useTopActors(repoName, sinceDays);
 
   const error = useMemo(
     () =>

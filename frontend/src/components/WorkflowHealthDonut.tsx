@@ -65,6 +65,8 @@ export default function WorkflowHealthDonut({
                     endAngle={-270}
                   />
                   <Tooltip
+                    position={{ x: 0, y: 0 }}
+                    wrapperStyle={{ pointerEvents: "none", zIndex: 1 }}
                     contentStyle={{
                       background: CHART_THEME.tooltip.background,
                       border: `1px solid ${CHART_THEME.tooltip.border}`,

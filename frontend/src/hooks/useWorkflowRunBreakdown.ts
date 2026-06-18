@@ -14,7 +14,8 @@ type UseWorkflowRunBreakdownResult = {
 };
 
 export function useWorkflowRunBreakdown(
-  repoName: string
+  repoName: string,
+  sinceDays?: number | null,
 ): UseWorkflowRunBreakdownResult {
   const [workflowRunBreakdown, setWorkflowRunBreakdown] =
     useState<WorkflowRunBreakdown>({
@@ -34,8 +35,8 @@ export function useWorkflowRunBreakdown(
 
       try {
         const [successSummary, failureSummary] = await Promise.all([
-          getWorkflowRuns(repoName, "success"),
-          getWorkflowRuns(repoName, "failure"),
+          getWorkflowRuns(repoName, "success", sinceDays),
+          getWorkflowRuns(repoName, "failure", sinceDays),
         ]);
 
         if (!cancelled) {
@@ -61,7 +62,7 @@ export function useWorkflowRunBreakdown(
     return () => {
       cancelled = true;
     };
-  }, [repoName]);
+  }, [repoName, sinceDays]);
 
   return { workflowRunBreakdown, isLoading, error };
 }

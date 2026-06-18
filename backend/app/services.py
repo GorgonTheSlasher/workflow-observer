@@ -155,6 +155,7 @@ def get_failure_trend(
 def get_top_actors(
     repo_name: str | None = None,
     limit: int = 5,
+    since_days: int | None = None,
     db: Session = Depends(get_db),
 ) -> list[dict]:
     query = db.query(
@@ -164,6 +165,10 @@ def get_top_actors(
 
     if repo_name:
         query = query.filter(GitHubEvent.repo_name == repo_name)
+
+    if since_days is not None:
+        cutoff = datetime.now(UTC) - timedelta(days=since_days)
+        query = query.filter(GitHubEvent.created_at >= cutoff)
 
     rows = (
         query
