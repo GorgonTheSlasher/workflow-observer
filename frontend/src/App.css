@@ -403,17 +403,6 @@ section {
 
 /* ── Charts ──────────────────────────────────────────────────────────────── */
 
-.charts-section {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
-  margin-top: 2rem;
-}
-
-.chart-section-single {
-  margin-top: 2rem;
-}
-
 .chart-card {
   border: 1px solid var(--border);
   border-radius: 14px;
@@ -651,6 +640,30 @@ a.failure-widget__message:hover {
   padding-bottom: 1rem;
 }
 
+.events-charts-row {
+  flex: 0 0 280px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+  min-height: 0;
+}
+
+.events-charts-row > section {
+  margin-top: 0;
+  margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.events-charts-row .chart-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
 .events-section {
   flex: 1;
   display: flex;
@@ -749,23 +762,5 @@ button:disabled {
     flex-wrap: wrap;
     height: auto;
     padding: 0.75rem 0;
-  }
-
-  .summary-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .charts-section {
-    grid-template-columns: 1fr;
-  }
-
-  .summary-card__value {
-    font-size: 1.65rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .summary-grid {
-    grid-template-columns: 1fr;
   }
 }

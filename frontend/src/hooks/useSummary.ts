@@ -7,10 +7,7 @@ type UseSummaryResult = {
   error: string | null;
 };
 
-export function useSummary(
-  repoName?: string,
-  sinceDays?: number | null,
-): UseSummaryResult {
+export function useSummary(): UseSummaryResult {
   const [summary, setSummary] = useState<Summary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -20,7 +17,7 @@ export function useSummary(
 
     async function loadSummary() {
       try {
-        const data = await getSummary(repoName, sinceDays);
+        const data = await getSummary();
 
         if (!cancelled) {
           setSummary(data);
@@ -41,7 +38,7 @@ export function useSummary(
     return () => {
       cancelled = true;
     };
-  }, [repoName, sinceDays]);
+  }, []);
 
   return { summary, isLoading, error };
 }

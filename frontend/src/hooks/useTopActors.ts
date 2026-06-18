@@ -10,6 +10,8 @@ type UseTopActorsResult = {
 export function useTopActors(
   repoName: string,
   sinceDays?: number | null,
+  eventType?: string,
+  actor?: string,
 ): UseTopActorsResult {
   const [topActors, setTopActors] = useState<TopActorEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -23,7 +25,7 @@ export function useTopActors(
       setError(null);
 
       try {
-        const data = await getTopActors(repoName, 5, sinceDays);
+        const data = await getTopActors(repoName, 5, sinceDays, eventType, actor);
         if (!cancelled) setTopActors(data);
       } catch (err) {
         if (!cancelled) setError((err as Error).message);
@@ -37,7 +39,7 @@ export function useTopActors(
     return () => {
       cancelled = true;
     };
-  }, [repoName, sinceDays]);
+  }, [repoName, sinceDays, eventType, actor]);
 
   return { topActors, isLoading, error };
 }

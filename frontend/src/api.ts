@@ -24,17 +24,8 @@ type WorkflowRunsSummary = {
   workflows: GitHubEvent[];
 };
 
-export async function getSummary(
-  repoName?: string,
-  sinceDays?: number | null,
-): Promise<Summary> {
-  const params = new URLSearchParams();
-  if (repoName) params.append("repo_name", repoName);
-  if (sinceDays != null) params.append("since_days", String(sinceDays));
-
-  const query = params.toString();
-  const url = query ? `${API_BASE_URL}/summary?${query}` : `${API_BASE_URL}/summary`;
-  const response = await fetch(url);
+export async function getSummary(): Promise<Summary> {
+  const response = await fetch(`${API_BASE_URL}/summary`);
 
   if (!response.ok) {
     throw new Error("Failed to fetch summary");
@@ -123,12 +114,43 @@ export async function getTopActors(
   repoName: string,
   limit = 5,
   sinceDays?: number | null,
+  eventType?: string,
+  actor?: string,
 ): Promise<TopActorEntry[]> {
   const params = new URLSearchParams({ limit: String(limit) });
   if (repoName) params.append("repo_name", repoName);
   if (sinceDays != null) params.append("since_days", String(sinceDays));
+  if (eventType) params.append("event_type", eventType);
+  if (actor) params.append("actor", actor);
   const response = await fetch(`${API_BASE_URL}/summary/top-actors?${params}`);
   if (!response.ok) throw new Error("Failed to fetch top actors");
+  return response.json();
+}
+
+export type EventTypeBreakdownEntry = {
+  event_type: string;
+  count: number;
+};
+
+export async function getEventTypeBreakdown(
+  repoName?: string,
+  eventType?: string,
+  actor?: string,
+  sinceDays?: number | null,
+): Promise<EventTypeBreakdownEntry[]> {
+  const params = new URLSearchParams();
+  if (repoName) params.append("repo_name", repoName);
+  if (eventType) params.append("event_type", eventType);
+  if (actor) params.append("actor", actor);
+  if (sinceDays != null) params.append("since_days", String(sinceDays));
+
+  const query = params.toString();
+  const url = query
+    ? `${API_BASE_URL}/summary/events/by-type?${query}`
+    : `${API_BASE_URL}/summary/events/by-type`;
+
+  const response = await fetch(url);
+  if (!response.ok) throw new Error("Failed to fetch event type breakdown");
   return response.json();
 }
 

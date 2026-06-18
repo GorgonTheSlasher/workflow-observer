@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import RecentWorkflowFailuresWidget from "./components/RecentWorkflowFailuresWidget";
 import RecentActivityFeed from "./components/RecentActivityFeed";
-import SummaryCharts from "./components/SummaryCharts";
+import EventTypeChart from "./components/EventTypeChart";
 import StatStrip from "./components/StatStrip";
 import TimelineChart from "./components/TimelineChart";
 import FailureTrendRadar from "./components/FailureTrendRadar";
@@ -15,6 +15,7 @@ import { useWorkflowRunBreakdown } from "./hooks/useWorkflowRunBreakdown";
 import { useTimeline } from "./hooks/useTimeline";
 import { useFailureTrend } from "./hooks/useFailureTrend";
 import { useTopActors } from "./hooks/useTopActors";
+import { useEventTypeBreakdown } from "./hooks/useEventTypeBreakdown";
 import "./App.css";
 
 type ActiveView = "summary" | "events" | "workflows";
@@ -111,12 +112,6 @@ function App() {
   } = useSummary();
 
   const {
-    summary: filteredSummary,
-    isLoading: isLoadingFilteredSummary,
-    error: filteredSummaryError,
-  } = useSummary(repoName, sinceDays);
-
-  const {
     workflowRunBreakdown,
     isLoading: isLoadingWorkflowRunBreakdown,
     error: workflowRunBreakdownError,
@@ -139,25 +134,39 @@ function App() {
     error: topActorsError,
   } = useTopActors(repoName, sinceDays);
 
+  const {
+    eventTypeBreakdown,
+    isLoading: isLoadingEventTypeBreakdown,
+    error: eventTypeBreakdownError,
+  } = useEventTypeBreakdown(repoName, eventType, actor, sinceDays);
+
+  const {
+    topActors: eventsTopActors,
+    isLoading: isLoadingEventsTopActors,
+    error: eventsTopActorsError,
+  } = useTopActors(repoName, sinceDays, eventType, actor);
+
   const error = useMemo(
     () =>
       repositoriesError ??
       summaryError ??
-      filteredSummaryError ??
       workflowRunBreakdownError ??
       timelineError ??
       failureTrendError ??
       topActorsError ??
+      eventTypeBreakdownError ??
+      eventsTopActorsError ??
       eventsError ??
       failedWorkflowsError,
     [
       repositoriesError,
       summaryError,
-      filteredSummaryError,
       workflowRunBreakdownError,
       timelineError,
       failureTrendError,
       topActorsError,
+      eventTypeBreakdownError,
+      eventsTopActorsError,
       eventsError,
       failedWorkflowsError,
     ]
@@ -303,12 +312,10 @@ function App() {
 
         {activeView === "events" && (
           <div className="events-view">
-            <SummaryCharts
-              mode="event-types"
-              summary={filteredSummary}
-              workflowRunBreakdown={workflowRunBreakdown}
-              isLoading={isLoadingFilteredSummary || isLoadingWorkflowRunBreakdown}
-            />
+            <div className="events-charts-row">
+              <EventTypeChart data={eventTypeBreakdown} isLoading={isLoadingEventTypeBreakdown} />
+              <TopActorsChart data={eventsTopActors} isLoading={isLoadingEventsTopActors} />
+            </div>
 
             <section className="events-section">
               <h2>Events</h2>
@@ -384,12 +391,6 @@ function App() {
 
         {activeView === "workflows" && (
           <>
-            <SummaryCharts
-              mode="workflow-outcomes"
-              summary={summary}
-              workflowRunBreakdown={workflowRunBreakdown}
-              isLoading={isLoadingSummary || isLoadingWorkflowRunBreakdown}
-            />
             <FailureTrendRadar data={failureTrend} isLoading={isLoadingFailureTrend} />
             <RecentWorkflowFailuresWidget
               failures={failedWorkflows}
