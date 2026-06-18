@@ -6,7 +6,7 @@ import {
 } from "recharts";
 
 type WorkflowHealthDonutProps = {
-  workflowRunBreakdown: { success: number; failure: number };
+  workflowRunBreakdown: { success: number; failure: number; other: number };
   isLoading?: boolean;
 };
 
@@ -19,13 +19,15 @@ export default function WorkflowHealthDonut({
   workflowRunBreakdown,
   isLoading = false,
 }: WorkflowHealthDonutProps) {
-  const { success, failure } = workflowRunBreakdown;
-  const total = success + failure;
-  const successRate = total > 0 ? Math.round((success / total) * 100) : null;
+  const { success, failure, other } = workflowRunBreakdown;
+  const completed = success + failure;
+  const total = completed + other;
+  const successRate = completed > 0 ? Math.round((success / completed) * 100) : null;
 
   const pieData = [
     { name: "Success", value: success, fill: "#00F6ED" },
     { name: "Failure", value: failure, fill: "#FFB800" },
+    { name: "Other", value: other, fill: "#8A93A3" },
   ].filter((d) => d.value > 0);
 
   if (isLoading) {
@@ -98,6 +100,10 @@ export default function WorkflowHealthDonut({
               <span className="donut-legend__item">
                 <span className="donut-legend__swatch" style={{ background: "#FFB800" }} />
                 Failure ({failure})
+              </span>
+              <span className="donut-legend__item">
+                <span className="donut-legend__swatch" style={{ background: "#8A93A3" }} />
+                Other ({other})
               </span>
             </div>
           </div>

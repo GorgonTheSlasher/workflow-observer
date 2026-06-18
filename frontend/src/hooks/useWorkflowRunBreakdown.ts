@@ -4,6 +4,7 @@ import { getWorkflowRuns } from "../api";
 type WorkflowRunBreakdown = {
   success: number;
   failure: number;
+  other: number;
 };
 
 type UseWorkflowRunBreakdownResult = {
@@ -19,6 +20,7 @@ export function useWorkflowRunBreakdown(
     useState<WorkflowRunBreakdown>({
       success: 0,
       failure: 0,
+      other: 0,
     });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -40,6 +42,7 @@ export function useWorkflowRunBreakdown(
           setWorkflowRunBreakdown({
             success: successSummary.count,
             failure: failureSummary.count,
+            other: successSummary.total_workflows - successSummary.count - failureSummary.count,
           });
         }
       } catch (err) {
