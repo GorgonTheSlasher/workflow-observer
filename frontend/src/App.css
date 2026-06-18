@@ -642,6 +642,29 @@ a.failure-widget__message:hover {
 
 /* ── Events table ────────────────────────────────────────────────────────── */
 
+.events-view {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  padding-bottom: 1rem;
+}
+
+.events-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  margin-bottom: 0;
+}
+
+.events-table-wrapper {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
 .events-pagination {
   margin-bottom: 0.75rem;
   display: flex;

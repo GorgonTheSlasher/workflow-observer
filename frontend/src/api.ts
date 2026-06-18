@@ -24,8 +24,17 @@ type WorkflowRunsSummary = {
   workflows: GitHubEvent[];
 };
 
-export async function getSummary(): Promise<Summary> {
-  const response = await fetch(`${API_BASE_URL}/summary`);
+export async function getSummary(
+  repoName?: string,
+  sinceDays?: number | null,
+): Promise<Summary> {
+  const params = new URLSearchParams();
+  if (repoName) params.append("repo_name", repoName);
+  if (sinceDays != null) params.append("since_days", String(sinceDays));
+
+  const query = params.toString();
+  const url = query ? `${API_BASE_URL}/summary?${query}` : `${API_BASE_URL}/summary`;
+  const response = await fetch(url);
 
   if (!response.ok) {
     throw new Error("Failed to fetch summary");

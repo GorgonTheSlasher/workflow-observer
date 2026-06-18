@@ -111,6 +111,12 @@ function App() {
   } = useSummary();
 
   const {
+    summary: filteredSummary,
+    isLoading: isLoadingFilteredSummary,
+    error: filteredSummaryError,
+  } = useSummary(repoName, sinceDays);
+
+  const {
     workflowRunBreakdown,
     isLoading: isLoadingWorkflowRunBreakdown,
     error: workflowRunBreakdownError,
@@ -137,6 +143,7 @@ function App() {
     () =>
       repositoriesError ??
       summaryError ??
+      filteredSummaryError ??
       workflowRunBreakdownError ??
       timelineError ??
       failureTrendError ??
@@ -146,6 +153,7 @@ function App() {
     [
       repositoriesError,
       summaryError,
+      filteredSummaryError,
       workflowRunBreakdownError,
       timelineError,
       failureTrendError,
@@ -294,15 +302,15 @@ function App() {
         )}
 
         {activeView === "events" && (
-          <>
+          <div className="events-view">
             <SummaryCharts
               mode="event-types"
-              summary={summary}
+              summary={filteredSummary}
               workflowRunBreakdown={workflowRunBreakdown}
-              isLoading={isLoadingSummary || isLoadingWorkflowRunBreakdown}
+              isLoading={isLoadingFilteredSummary || isLoadingWorkflowRunBreakdown}
             />
 
-            <section>
+            <section className="events-section">
               <h2>Events</h2>
 
               {!isLoadingEvents && (
@@ -326,50 +334,52 @@ function App() {
                 </div>
               )}
 
-              {isLoadingEvents ? (
-                <p>Loading events...</p>
-              ) : events.length === 0 ? (
-                <p>No events found.</p>
-              ) : (
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Type</th>
-                      <th>Action</th>
-                      <th>Repo</th>
-                      <th>Actor</th>
-                      <th>Branch</th>
-                      <th>Status</th>
-                      <th>Conclusion</th>
-                      <th>Link</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {events.map((event) => (
-                      <tr key={event.id}>
-                        <td>{event.event_type}</td>
-                        <td>{event.action ?? "-"}</td>
-                        <td>{event.repo_name}</td>
-                        <td>{event.actor ?? "-"}</td>
-                        <td>{event.branch ?? "-"}</td>
-                        <td>{event.status ?? "-"}</td>
-                        <td>{event.conclusion ?? "-"}</td>
-                        <td>
-                          {event.html_url ? (
-                            <a href={event.html_url} target="_blank" rel="noreferrer">
-                              View
-                            </a>
-                          ) : (
-                            "-"
-                          )}
-                        </td>
+              <div className="events-table-wrapper">
+                {isLoadingEvents ? (
+                  <p>Loading events...</p>
+                ) : events.length === 0 ? (
+                  <p>No events found.</p>
+                ) : (
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Type</th>
+                        <th>Action</th>
+                        <th>Repo</th>
+                        <th>Actor</th>
+                        <th>Branch</th>
+                        <th>Status</th>
+                        <th>Conclusion</th>
+                        <th>Link</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
+                    </thead>
+                    <tbody>
+                      {events.map((event) => (
+                        <tr key={event.id}>
+                          <td>{event.event_type}</td>
+                          <td>{event.action ?? "-"}</td>
+                          <td>{event.repo_name}</td>
+                          <td>{event.actor ?? "-"}</td>
+                          <td>{event.branch ?? "-"}</td>
+                          <td>{event.status ?? "-"}</td>
+                          <td>{event.conclusion ?? "-"}</td>
+                          <td>
+                            {event.html_url ? (
+                              <a href={event.html_url} target="_blank" rel="noreferrer">
+                                View
+                              </a>
+                            ) : (
+                              "-"
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
             </section>
-          </>
+          </div>
         )}
 
         {activeView === "workflows" && (

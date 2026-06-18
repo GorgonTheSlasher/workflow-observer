@@ -58,20 +58,32 @@ async def github_webhook(
 
 # Summarize all of the database
 @app.get("/summary")
-def summarize_db(db: Session = Depends(get_db)):
+def summarize_db(
+    repo_name: str | None = None,
+    since_days: int | None = None,
+    db: Session = Depends(get_db),
+):
 
     query = db.query(GitHubEvent)
+    actor_query = db.query(GitHubEvent.actor).filter(GitHubEvent.actor.isnot(None))
+    repo_query = db.query(GitHubEvent.repo_name)
 
-    unique_actors_count = (
-    db.query(GitHubEvent.actor)
-    .filter(GitHubEvent.actor.isnot(None))
-    .distinct()
-    .count()
-)
+    if repo_name:
+        query = query.filter(GitHubEvent.repo_name == repo_name)
+        actor_query = actor_query.filter(GitHubEvent.repo_name == repo_name)
+        repo_query = repo_query.filter(GitHubEvent.repo_name == repo_name)
+
+    if since_days is not None:
+        cutoff = datetime.now(UTC) - timedelta(days=since_days)
+        query = query.filter(GitHubEvent.created_at >= cutoff)
+        actor_query = actor_query.filter(GitHubEvent.created_at >= cutoff)
+        repo_query = repo_query.filter(GitHubEvent.created_at >= cutoff)
+
+    unique_actors_count = actor_query.distinct().count()
 
     return {
         "total_events": query.count(),
-        "total_repositories": db.query(GitHubEvent.repo_name).distinct().count(),
+        "total_repositories": repo_query.distinct().count(),
         "total_unique_actors": unique_actors_count,
         "total_members": query.filter(GitHubEvent.event_type == "member").count(),
         "total_issues": query.filter(GitHubEvent.event_type == "issues").count(),
