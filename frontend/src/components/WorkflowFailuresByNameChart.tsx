@@ -5,7 +5,8 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
-  Cell,
+  Rectangle,
+  type BarShapeProps,
 } from "recharts";
 import type { WorkflowFailuresByNameEntry } from "../api";
 
@@ -79,11 +80,14 @@ export default function WorkflowFailuresByNameChart({
                   }}
                   formatter={(value) => [value, "Failures"]}
                 />
-                <Bar dataKey="count" radius={[0, 4, 4, 0]}>
-                  {data.map((_, i) => (
-                    <Cell key={i} fill={CHART_THEME.bar} fillOpacity={1 - i * 0.12} />
-                  ))}
-                </Bar>
+                <Bar
+                  dataKey="count"
+                  radius={[0, 4, 4, 0]}
+                  fill={CHART_THEME.bar}
+                  shape={(props: BarShapeProps) => (
+                    <Rectangle {...props} fillOpacity={1 - props.index * 0.12} />
+                  )}
+                />
               </BarChart>
             </ResponsiveContainer>
           </div>

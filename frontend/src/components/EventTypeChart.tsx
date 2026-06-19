@@ -6,7 +6,8 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Cell,
+  Rectangle,
+  type BarShapeProps,
 } from "recharts";
 import type { EventTypeBreakdownEntry } from "../api";
 
@@ -82,11 +83,16 @@ export default function EventTypeChart({
                   }}
                   formatter={(value) => [value, "Events"]}
                 />
-                <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-                  {data.map((d) => (
-                    <Cell key={d.event_type} fill={EVENT_COLORS[d.event_type] ?? "#8A93A3"} />
-                  ))}
-                </Bar>
+                <Bar
+                  dataKey="count"
+                  radius={[4, 4, 0, 0]}
+                  shape={(props: BarShapeProps) => {
+                    const eventType = props.payload?.event_type as string | undefined;
+                    return (
+                      <Rectangle {...props} fill={EVENT_COLORS[eventType ?? ""] ?? "#8A93A3"} />
+                    );
+                  }}
+                />
               </BarChart>
             </ResponsiveContainer>
           </div>

@@ -5,7 +5,8 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
-  Cell,
+  Rectangle,
+  type BarShapeProps,
 } from "recharts";
 import type { TopActorEntry } from "../api";
 
@@ -18,9 +19,8 @@ const CHART_THEME = {
   text:    "#D1E3DD",
   grid:    "rgba(209, 227, 221, 0.1)",
   tooltip: { background: "#32292F", border: "rgba(209, 227, 221, 0.15)" },
+  bar:     "#00F6ED",
 };
-
-const BAR_COLORS = ["#A7C4C2", "#5F7FD9", "#97EFE9", "#A7C4C2", "#34d399", "#e05c6a"];
 
 export default function TopActorsChart({
   data,
@@ -79,14 +79,14 @@ export default function TopActorsChart({
                   }}
                   formatter={(value) => [value, "Events"]}
                 />
-                <Bar dataKey="count" radius={[0, 4, 4, 0]}>
-                  {data.map((_, i) => (
-                    <Cell
-                      key={i}
-                      fill={BAR_COLORS[i % BAR_COLORS.length]}
-                    />
-                  ))}
-                </Bar>
+                <Bar
+                  dataKey="count"
+                  radius={[0, 4, 4, 0]}
+                  fill={CHART_THEME.bar}
+                  shape={(props: BarShapeProps) => (
+                    <Rectangle {...props} fillOpacity={1 - props.index * 0.12} />
+                  )}
+                />
               </BarChart>
             </ResponsiveContainer>
           </div>
