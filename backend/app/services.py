@@ -222,6 +222,34 @@ def get_event_type_breakdown(
 
     return [{"event_type": event_type, "count": count} for event_type, count in rows]
 
+def get_workflow_failures_by_name(
+    repo_name: str | None = None,
+    since_days: int | None = None,
+    db: Session = Depends(get_db),
+) -> list[dict]:
+    query = db.query(GitHubEvent.details_json).filter(
+        GitHubEvent.event_type == "workflow_run",
+        GitHubEvent.conclusion == "failure",
+    )
+
+    if repo_name:
+        query = query.filter(GitHubEvent.repo_name == repo_name)
+
+    if since_days is not None:
+        cutoff = datetime.now(UTC) - timedelta(days=since_days)
+        query = query.filter(GitHubEvent.created_at >= cutoff)
+
+    counts: dict[str, int] = defaultdict(int)
+    for (details_json,) in query.all():
+        workflow_run = (details_json or {}).get("workflow_run", {})
+        name = workflow_run.get("name") or "Unknown"
+        counts[name] += 1
+
+    return [
+        {"workflow_name": name, "count": count}
+        for name, count in sorted(counts.items(), key=lambda kv: kv[1], reverse=True)
+    ]
+
 def get_timeline(
     repo_name: str | None = None,
     since_days: int | None = None,

@@ -1,7 +1,7 @@
 :root {
-  --bg:        #212121;
-  --surface:   #0f1108;
-  --accent:    #00F6ED;
+  --bg:        #0f1108;
+  --surface:   #212121;
+  --accent:    #fff;
   --text:      #fff;
   --input-bg:  #0f1108;
   --border:    rgba(209, 227, 221, 0.12);

@@ -541,6 +541,11 @@ section {
 /* ── Failure widget ───────────────────────────────────────────────────────── */
 
 .failure-widget {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  margin-bottom: 0;
   border: 1px solid rgba(207, 34, 46, 0.35);
   border-radius: 14px;
   padding: 1rem;
@@ -549,6 +554,7 @@ section {
 }
 
 .failure-widget__header {
+  flex-shrink: 0;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -577,7 +583,11 @@ section {
 }
 
 .failure-widget__list {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
   display: grid;
+  align-content: start;
   gap: 0.75rem;
   margin: 0;
   padding: 0;
@@ -627,6 +637,41 @@ a.failure-widget__message:hover {
 .failure-widget__empty {
   margin: 0;
   color: rgba(209, 227, 221, 0.55);
+}
+
+/* ── Workflows view ──────────────────────────────────────────────────────── */
+
+.workflows-view {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  padding-bottom: 1rem;
+}
+
+.workflows-charts-row {
+  flex: 0 0 320px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+  min-height: 0;
+}
+
+.workflows-charts-row > section {
+  margin-top: 0;
+  margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.workflows-charts-row .chart-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 /* ── Events table ────────────────────────────────────────────────────────── */

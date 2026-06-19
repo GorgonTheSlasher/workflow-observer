@@ -18,8 +18,9 @@ const CHART_THEME = {
   text:    "#D1E3DD",
   grid:    "rgba(209, 227, 221, 0.1)",
   tooltip: { background: "#32292F", border: "rgba(209, 227, 221, 0.15)" },
-  bar:     "#00F6ED",
 };
+
+const BAR_COLORS = ["#A7C4C2", "#5F7FD9", "#97EFE9", "#A7C4C2", "#34d399", "#e05c6a"];
 
 export default function TopActorsChart({
   data,
@@ -82,8 +83,7 @@ export default function TopActorsChart({
                   {data.map((_, i) => (
                     <Cell
                       key={i}
-                      fill={CHART_THEME.bar}
-                      fillOpacity={1 - i * 0.12}
+                      fill={BAR_COLORS[i % BAR_COLORS.length]}
                     />
                   ))}
                 </Bar>

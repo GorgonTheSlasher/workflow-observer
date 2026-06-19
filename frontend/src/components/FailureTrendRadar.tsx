@@ -60,7 +60,7 @@ export default function FailureTrendRadar({
         {isEmpty ? (
           <p className="chart-empty">No workflow run data available.</p>
         ) : (
-          <div className="chart-body" style={{ minHeight: 320 }}>
+          <div className="chart-body">
             <ResponsiveContainer width="100%" height="100%">
               <RadarChart data={displayData} margin={{ top: 8, right: 32, left: 32, bottom: 8 }}>
                 <PolarGrid stroke={CHART_THEME.grid} />

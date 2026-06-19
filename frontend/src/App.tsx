@@ -16,6 +16,8 @@ import { useTimeline } from "./hooks/useTimeline";
 import { useFailureTrend } from "./hooks/useFailureTrend";
 import { useTopActors } from "./hooks/useTopActors";
 import { useEventTypeBreakdown } from "./hooks/useEventTypeBreakdown";
+import { useWorkflowFailuresByName } from "./hooks/useWorkflowFailuresByName";
+import WorkflowFailuresByNameChart from "./components/WorkflowFailuresByNameChart";
 import "./App.css";
 
 type ActiveView = "summary" | "events" | "workflows";
@@ -146,6 +148,12 @@ function App() {
     error: eventsTopActorsError,
   } = useTopActors(repoName, sinceDays, eventType, actor);
 
+  const {
+    workflowFailuresByName,
+    isLoading: isLoadingWorkflowFailuresByName,
+    error: workflowFailuresByNameError,
+  } = useWorkflowFailuresByName(repoName, sinceDays);
+
   const error = useMemo(
     () =>
       repositoriesError ??
@@ -156,6 +164,7 @@ function App() {
       topActorsError ??
       eventTypeBreakdownError ??
       eventsTopActorsError ??
+      workflowFailuresByNameError ??
       eventsError ??
       failedWorkflowsError,
     [
@@ -167,6 +176,7 @@ function App() {
       topActorsError,
       eventTypeBreakdownError,
       eventsTopActorsError,
+      workflowFailuresByNameError,
       eventsError,
       failedWorkflowsError,
     ]
@@ -390,13 +400,19 @@ function App() {
         )}
 
         {activeView === "workflows" && (
-          <>
-            <FailureTrendRadar data={failureTrend} isLoading={isLoadingFailureTrend} />
+          <div className="workflows-view">
+            <div className="workflows-charts-row">
+              <FailureTrendRadar data={failureTrend} isLoading={isLoadingFailureTrend} />
+              <WorkflowFailuresByNameChart
+                data={workflowFailuresByName}
+                isLoading={isLoadingWorkflowFailuresByName}
+              />
+            </div>
             <RecentWorkflowFailuresWidget
               failures={failedWorkflows}
               isLoading={isLoadingFailures}
             />
-          </>
+          </div>
         )}
       </main>
     </div>
