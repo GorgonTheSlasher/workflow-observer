@@ -11,7 +11,7 @@ type WorkflowHealthDonutProps = {
 };
 
 const CHART_THEME = {
-  text:    "#D1E3DD",
+  text:    "#8A95A5",
   tooltip: { background: "#32292F", border: "rgba(209, 227, 221, 0.15)" },
 };
 
@@ -25,9 +25,9 @@ export default function WorkflowHealthDonut({
   const successRate = completed > 0 ? Math.round((success / completed) * 100) : null;
 
   const pieData = [
-    { name: "Success", value: success, fill: "#0add3e" },
-    { name: "Failure", value: failure, fill: "#ff0015" },
-    { name: "Other", value: other, fill: "#A7C4C2" },
+    { name: "Success", value: success, fill: "#FFB800" },
+    { name: "Failure", value: failure, fill: "#8A95A5" },
+    { name: "Other", value: other, fill: "#000000" },
   ].filter((d) => d.value > 0);
 
   if (isLoading) {

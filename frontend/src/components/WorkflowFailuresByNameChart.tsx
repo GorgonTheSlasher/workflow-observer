@@ -85,7 +85,7 @@ export default function WorkflowFailuresByNameChart({
                   radius={[0, 4, 4, 0]}
                   fill={CHART_THEME.bar}
                   shape={(props: BarShapeProps) => (
-                    <Rectangle {...props} fillOpacity={1 - props.index * 0.12} />
+                    <Rectangle {...props} fillOpacity={1 - props.index * 0.15} />
                   )}
                 />
               </BarChart>

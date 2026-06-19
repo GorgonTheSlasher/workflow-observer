@@ -19,7 +19,7 @@ const CHART_THEME = {
   text:    "#D1E3DD",
   grid:    "rgba(209, 227, 221, 0.1)",
   tooltip: { background: "#32292F", border: "rgba(209, 227, 221, 0.15)" },
-  bar:     "#00F6ED",
+  bar:     "#FFB800",
 };
 
 export default function TopActorsChart({
@@ -84,7 +84,7 @@ export default function TopActorsChart({
                   radius={[0, 4, 4, 0]}
                   fill={CHART_THEME.bar}
                   shape={(props: BarShapeProps) => (
-                    <Rectangle {...props} fillOpacity={1 - props.index * 0.12} />
+                    <Rectangle {...props} fillOpacity={1 - props.index * 0.15} />
                   )}
                 />
               </BarChart>
