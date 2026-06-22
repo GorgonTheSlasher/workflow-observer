@@ -62,8 +62,8 @@ export default function RecentWorkflowFailuresWidget({
           <p>Latest failed workflow runs for the selected repository.</p>
         </div>
 
-        <span className="failure-widget__count" title="Total failed workflow runs">
-          {failures.length}
+        <span className="failure-widget__count" title="Showing recent of total failed workflow runs">
+          {recentFailures.length} of {failures.length}
         </span>
       </div>
 
