@@ -13,7 +13,7 @@ export type Summary = {
   total_workflows: number;
 };
 
-export type WorkflowRunResult = "success" | "failure";
+type WorkflowRunResult = "success" | "failure";
 
 type WorkflowRunsSummary = {
   repo_name: string;
@@ -154,19 +154,6 @@ export async function getEventTypeBreakdown(
   return response.json();
 }
 
-export type FailureTrendEntry = {
-  conclusion: string;
-  current: number;
-  prior: number;
-};
-
-export async function getFailureTrend(repoName: string): Promise<FailureTrendEntry[]> {
-  const params = new URLSearchParams({ repo_name: repoName });
-  const response = await fetch(`${API_BASE_URL}/summary/failure-trend?${params}`);
-  if (!response.ok) throw new Error("Failed to fetch failure trend");
-  return response.json();
-}
-
 export type WorkflowFailuresByNameEntry = {
   workflow_name: string;
   count: number;
@@ -187,6 +174,29 @@ export async function getWorkflowFailuresByName(
 
   const response = await fetch(url);
   if (!response.ok) throw new Error("Failed to fetch workflow failures by name");
+  return response.json();
+}
+
+export type WorkflowFailuresByBranchEntry = {
+  branch: string;
+  count: number;
+};
+
+export async function getWorkflowFailuresByBranch(
+  repoName?: string,
+  sinceDays?: number | null,
+): Promise<WorkflowFailuresByBranchEntry[]> {
+  const params = new URLSearchParams();
+  if (repoName) params.append("repo_name", repoName);
+  if (sinceDays != null) params.append("since_days", String(sinceDays));
+
+  const query = params.toString();
+  const url = query
+    ? `${API_BASE_URL}/summary/workflow-failures-by-branch?${query}`
+    : `${API_BASE_URL}/summary/workflow-failures-by-branch`;
+
+  const response = await fetch(url);
+  if (!response.ok) throw new Error("Failed to fetch workflow failures by branch");
   return response.json();
 }
 

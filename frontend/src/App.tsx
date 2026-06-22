@@ -4,7 +4,6 @@ import RecentActivityFeed from "./components/RecentActivityFeed";
 import EventTypeChart from "./components/EventTypeChart";
 import StatStrip from "./components/StatStrip";
 import TimelineChart from "./components/TimelineChart";
-import FailureTrendRadar from "./components/FailureTrendRadar";
 import WorkflowHealthDonut from "./components/WorkflowHealthDonut";
 import TopActorsChart from "./components/TopActorsChart";
 import { useEvents, type EventTypeFilter } from "./hooks/useEvents";
@@ -13,13 +12,14 @@ import { useRepositories } from "./hooks/useRepositories";
 import { useSummary } from "./hooks/useSummary";
 import { useWorkflowRunBreakdown } from "./hooks/useWorkflowRunBreakdown";
 import { useTimeline } from "./hooks/useTimeline";
-import { useFailureTrend } from "./hooks/useFailureTrend";
 import { useTopActors } from "./hooks/useTopActors";
 import { useEventTypeBreakdown } from "./hooks/useEventTypeBreakdown";
 import { useWorkflowFailuresByName } from "./hooks/useWorkflowFailuresByName";
 import WorkflowFailuresByNameChart from "./components/WorkflowFailuresByNameChart";
 import { useWorkflowRunTimeline } from "./hooks/useWorkflowRunTimeline";
 import WorkflowRunTimelineChart from "./components/WorkflowRunTimelineChart";
+import { useWorkflowFailuresByBranch } from "./hooks/useWorkflowFailuresByBranch";
+import WorkflowFailuresByBranchChart from "./components/WorkflowFailuresByBranchChart";
 import "./App.css";
 
 type ActiveView = "summary" | "events" | "workflows";
@@ -128,11 +128,6 @@ function App() {
   } = useTimeline(repoName, sinceDays);
 
   const {
-    failureTrend,
-    isLoading: isLoadingFailureTrend,
-    error: failureTrendError,
-  } = useFailureTrend(repoName);
-  const {
     topActors,
     isLoading: isLoadingTopActors,
     error: topActorsError,
@@ -162,18 +157,24 @@ function App() {
     error: workflowRunTimelineError,
   } = useWorkflowRunTimeline(repoName, sinceDays);
 
+  const {
+    workflowFailuresByBranch,
+    isLoading: isLoadingWorkflowFailuresByBranch,
+    error: workflowFailuresByBranchError,
+  } = useWorkflowFailuresByBranch(repoName, sinceDays);
+
   const error = useMemo(
     () =>
       repositoriesError ??
       summaryError ??
       workflowRunBreakdownError ??
       timelineError ??
-      failureTrendError ??
       topActorsError ??
       eventTypeBreakdownError ??
       eventsTopActorsError ??
       workflowFailuresByNameError ??
       workflowRunTimelineError ??
+      workflowFailuresByBranchError ??
       eventsError ??
       failedWorkflowsError,
     [
@@ -181,12 +182,12 @@ function App() {
       summaryError,
       workflowRunBreakdownError,
       timelineError,
-      failureTrendError,
       topActorsError,
       eventTypeBreakdownError,
       eventsTopActorsError,
       workflowFailuresByNameError,
       workflowRunTimelineError,
+      workflowFailuresByBranchError,
       eventsError,
       failedWorkflowsError,
     ]
@@ -411,24 +412,27 @@ function App() {
 
         {activeView === "workflows" && (
           <div className="workflows-view">
-            <div className="workflows-trend-row">
+            <div className="workflows-charts-row">
               <WorkflowRunTimelineChart
                 data={workflowRunTimeline}
                 isLoading={isLoadingWorkflowRunTimeline}
               />
-            </div>
-            <div className="workflows-charts-row">
-              <FailureTrendRadar data={failureTrend} isLoading={isLoadingFailureTrend} />
               <WorkflowFailuresByNameChart
                 data={workflowFailuresByName}
                 isLoading={isLoadingWorkflowFailuresByName}
               />
             </div>
-            <RecentWorkflowFailuresWidget
-              failures={failedWorkflows}
-              limit={3}
-              isLoading={isLoadingFailures}
-            />
+            <div className="workflows-bottom-row">
+              <RecentWorkflowFailuresWidget
+                failures={failedWorkflows}
+                limit={3}
+                isLoading={isLoadingFailures}
+              />
+              <WorkflowFailuresByBranchChart
+                data={workflowFailuresByBranch}
+                isLoading={isLoadingWorkflowFailuresByBranch}
+              />
+            </div>
           </div>
         )}
       </main>

@@ -8,7 +8,7 @@ from app.database import get_db
 from app.event_dispatcher import dispatch_github_webhook
 from app.init_db import init_db
 from app.models import GitHubEvent
-from app.services import get_filtered_events, get_failure_trend, get_timeline, get_top_actors, get_event_type_breakdown, get_workflow_failures_by_name, get_workflow_run_timeline
+from app.services import get_filtered_events, get_timeline, get_top_actors, get_event_type_breakdown, get_workflow_failures_by_name, get_workflow_failures_by_branch, get_workflow_run_timeline
 
 from app.alerts import send_slack_alert
 
@@ -206,35 +206,6 @@ def get_recent_events(
         .all()
     )
 
-# Summarizes all events by repo and show success/failures
-@app.get("/summary/repository")
-def get_repository_summary(
-    repo_name: str,
-    db: Session = Depends(get_db),
-):
-    total_events = db.query(GitHubEvent).filter(
-        GitHubEvent.repo_name == repo_name
-    ).count()
-
-    failed_workflows = db.query(GitHubEvent).filter(
-        GitHubEvent.repo_name == repo_name,
-        GitHubEvent.event_type == "workflow_run",
-        GitHubEvent.conclusion == "failure",
-    ).count()
-
-    successful_workflows = db.query(GitHubEvent).filter(
-        GitHubEvent.repo_name == repo_name,
-        GitHubEvent.event_type == "workflow_run",
-        GitHubEvent.conclusion == "success",
-    ).count()
-
-    return {
-        "repo_name": repo_name,
-        "total_events": total_events,
-        "failed_workflows": failed_workflows,
-        "successful_workflows": successful_workflows,
-    }
-
 @app.get("/summary/top-actors")
 def get_top_actors_summary(
     repo_name: str | None = None,
@@ -269,13 +240,6 @@ def get_event_type_breakdown_summary(
         since_days=since_days,
     )
 
-@app.get("/summary/failure-trend")
-def get_workflow_failure_trend(
-    repo_name: str | None = None,
-    db: Session = Depends(get_db),
-):
-    return get_failure_trend(db=db, repo_name=repo_name)
-
 @app.get("/summary/workflow-failures-by-name")
 def get_workflow_failures_by_name_summary(
     repo_name: str | None = None,
@@ -283,6 +247,14 @@ def get_workflow_failures_by_name_summary(
     db: Session = Depends(get_db),
 ):
     return get_workflow_failures_by_name(db=db, repo_name=repo_name, since_days=since_days)
+
+@app.get("/summary/workflow-failures-by-branch")
+def get_workflow_failures_by_branch_summary(
+    repo_name: str | None = None,
+    since_days: int | None = None,
+    db: Session = Depends(get_db),
+):
+    return get_workflow_failures_by_branch(db=db, repo_name=repo_name, since_days=since_days)
 
 @app.get("/summary/workflow-runs/timeline")
 def get_workflow_run_timeline_summary(
@@ -299,22 +271,6 @@ def get_event_timeline(
     db: Session = Depends(get_db),
 ):
     return get_timeline(db=db, repo_name=repo_name, since_days=since_days)
-
-# actor is a query param (/summary/actor?actor=...) to avoid colliding with fixed paths above
-@app.get("/summary/actor")
-def get_actor_activity(
-    actor: str,
-    db: Session = Depends(get_db),
-):
-    events = (
-        db.query(GitHubEvent)
-        .filter(GitHubEvent.actor == actor)
-        .order_by(GitHubEvent.created_at.desc())
-        .all()
-    )
-
-    return events
-
 
 # Route for debugging without having to push to test repo
 @app.post("/test-alert")

@@ -649,30 +649,6 @@ a.failure-widget__message:hover {
   padding-bottom: 1rem;
 }
 
-.workflows-trend-row {
-  flex: 0 0 200px;
-  margin-bottom: 1rem;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.workflows-trend-row > section {
-  margin-top: 0;
-  margin-bottom: 0;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  flex: 1;
-}
-
-.workflows-trend-row .chart-card {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-}
-
 .workflows-charts-row {
   flex: 0 0 320px;
   display: grid;
@@ -685,6 +661,29 @@ a.failure-widget__message:hover {
 .workflows-charts-row > section {
   margin-top: 0;
   margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.workflows-bottom-row {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  min-height: 0;
+}
+
+.workflows-bottom-row > section {
+  margin-top: 0;
+  margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.workflows-bottom-row .chart-card {
+  flex: 1;
   display: flex;
   flex-direction: column;
   min-height: 0;
