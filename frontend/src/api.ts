@@ -190,6 +190,31 @@ export async function getWorkflowFailuresByName(
   return response.json();
 }
 
+export type WorkflowRunTimelineEntry = {
+  date: string;
+  success: number;
+  failure: number;
+  other: number;
+};
+
+export async function getWorkflowRunTimeline(
+  repoName?: string,
+  sinceDays?: number | null,
+): Promise<WorkflowRunTimelineEntry[]> {
+  const params = new URLSearchParams();
+  if (repoName) params.append("repo_name", repoName);
+  if (sinceDays != null) params.append("since_days", String(sinceDays));
+
+  const query = params.toString();
+  const url = query
+    ? `${API_BASE_URL}/summary/workflow-runs/timeline?${query}`
+    : `${API_BASE_URL}/summary/workflow-runs/timeline`;
+
+  const response = await fetch(url);
+  if (!response.ok) throw new Error("Failed to fetch workflow run timeline");
+  return response.json();
+}
+
 export type EventFilters = {
   event_type?: string;
   repo_name?: string;

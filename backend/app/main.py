@@ -8,7 +8,7 @@ from app.database import get_db
 from app.event_dispatcher import dispatch_github_webhook
 from app.init_db import init_db
 from app.models import GitHubEvent
-from app.services import get_filtered_events, get_failure_trend, get_timeline, get_top_actors, get_event_type_breakdown, get_workflow_failures_by_name
+from app.services import get_filtered_events, get_failure_trend, get_timeline, get_top_actors, get_event_type_breakdown, get_workflow_failures_by_name, get_workflow_run_timeline
 
 from app.alerts import send_slack_alert
 
@@ -283,6 +283,14 @@ def get_workflow_failures_by_name_summary(
     db: Session = Depends(get_db),
 ):
     return get_workflow_failures_by_name(db=db, repo_name=repo_name, since_days=since_days)
+
+@app.get("/summary/workflow-runs/timeline")
+def get_workflow_run_timeline_summary(
+    repo_name: str | None = None,
+    since_days: int | None = None,
+    db: Session = Depends(get_db),
+):
+    return get_workflow_run_timeline(db=db, repo_name=repo_name, since_days=since_days)
 
 @app.get("/summary/timeline")
 def get_event_timeline(

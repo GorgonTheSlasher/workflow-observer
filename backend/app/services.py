@@ -250,6 +250,37 @@ def get_workflow_failures_by_name(
         for name, count in sorted(counts.items(), key=lambda kv: kv[1], reverse=True)
     ]
 
+def get_workflow_run_timeline(
+    repo_name: str | None = None,
+    since_days: int | None = None,
+    db: Session = Depends(get_db),
+) -> list[dict]:
+    query = db.query(GitHubEvent.created_at, GitHubEvent.conclusion).filter(
+        GitHubEvent.event_type == "workflow_run",
+    )
+
+    if repo_name:
+        query = query.filter(GitHubEvent.repo_name == repo_name)
+
+    if since_days is not None:
+        cutoff = datetime.now(UTC) - timedelta(days=since_days)
+        query = query.filter(GitHubEvent.created_at >= cutoff)
+
+    pivot: dict[str, dict[str, int]] = defaultdict(lambda: {"success": 0, "failure": 0, "other": 0})
+
+    for created_at, conclusion in query.all():
+        if created_at is None:
+            continue
+        date_str = created_at.strftime('%Y-%m-%d')
+        if conclusion == "success":
+            pivot[date_str]["success"] += 1
+        elif conclusion == "failure":
+            pivot[date_str]["failure"] += 1
+        else:
+            pivot[date_str]["other"] += 1
+
+    return [{"date": date, **counts} for date, counts in sorted(pivot.items())]
+
 def get_timeline(
     repo_name: str | None = None,
     since_days: int | None = None,

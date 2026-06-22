@@ -50,7 +50,7 @@ export default function FailureTrendRadar({
   return (
     <section>
       <article className="chart-card">
-        <div className="chart-card__header">
+        <div className="chart-card__header chart-card__header--row">
           <h2>Workflow Failure Trend</h2>
           <p>
             Conclusion breakdown by percentage — current 14 days vs prior 14 days.

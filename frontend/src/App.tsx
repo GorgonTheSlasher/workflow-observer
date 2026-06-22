@@ -18,6 +18,8 @@ import { useTopActors } from "./hooks/useTopActors";
 import { useEventTypeBreakdown } from "./hooks/useEventTypeBreakdown";
 import { useWorkflowFailuresByName } from "./hooks/useWorkflowFailuresByName";
 import WorkflowFailuresByNameChart from "./components/WorkflowFailuresByNameChart";
+import { useWorkflowRunTimeline } from "./hooks/useWorkflowRunTimeline";
+import WorkflowRunTimelineChart from "./components/WorkflowRunTimelineChart";
 import "./App.css";
 
 type ActiveView = "summary" | "events" | "workflows";
@@ -154,6 +156,12 @@ function App() {
     error: workflowFailuresByNameError,
   } = useWorkflowFailuresByName(repoName, sinceDays);
 
+  const {
+    workflowRunTimeline,
+    isLoading: isLoadingWorkflowRunTimeline,
+    error: workflowRunTimelineError,
+  } = useWorkflowRunTimeline(repoName, sinceDays);
+
   const error = useMemo(
     () =>
       repositoriesError ??
@@ -165,6 +173,7 @@ function App() {
       eventTypeBreakdownError ??
       eventsTopActorsError ??
       workflowFailuresByNameError ??
+      workflowRunTimelineError ??
       eventsError ??
       failedWorkflowsError,
     [
@@ -177,6 +186,7 @@ function App() {
       eventTypeBreakdownError,
       eventsTopActorsError,
       workflowFailuresByNameError,
+      workflowRunTimelineError,
       eventsError,
       failedWorkflowsError,
     ]
@@ -401,6 +411,12 @@ function App() {
 
         {activeView === "workflows" && (
           <div className="workflows-view">
+            <div className="workflows-trend-row">
+              <WorkflowRunTimelineChart
+                data={workflowRunTimeline}
+                isLoading={isLoadingWorkflowRunTimeline}
+              />
+            </div>
             <div className="workflows-charts-row">
               <FailureTrendRadar data={failureTrend} isLoading={isLoadingFailureTrend} />
               <WorkflowFailuresByNameChart
@@ -410,6 +426,7 @@ function App() {
             </div>
             <RecentWorkflowFailuresWidget
               failures={failedWorkflows}
+              limit={3}
               isLoading={isLoadingFailures}
             />
           </div>

@@ -421,7 +421,6 @@ section {
   align-items: baseline;
   gap: 0.75rem;
   text-align: left;
-  margin-left: 3.5rem;
 }
 
 .chart-card__header--row p {
@@ -588,7 +587,7 @@ section {
   min-height: 0;
   display: grid;
   align-content: start;
-  gap: 0.75rem;
+  gap: 0.5rem;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -599,7 +598,7 @@ section {
   gap: 0.75rem;
   border: 1px solid rgba(207, 34, 46, 0.2);
   border-radius: 12px;
-  padding: 0.85rem;
+  padding: 0.6rem 0.85rem;
   background: rgba(0, 0, 0, 0.15);
 }
 
@@ -648,6 +647,30 @@ a.failure-widget__message:hover {
   min-height: 0;
   overflow: hidden;
   padding-bottom: 1rem;
+}
+
+.workflows-trend-row {
+  flex: 0 0 200px;
+  margin-bottom: 1rem;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.workflows-trend-row > section {
+  margin-top: 0;
+  margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+}
+
+.workflows-trend-row .chart-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .workflows-charts-row {
