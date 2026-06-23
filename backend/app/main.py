@@ -303,7 +303,7 @@ def login_user(
 #=======================Debug===========================#
 
 @app.post("/auth/me")
-def get_me(current_user: UserAccount = Depends(get_current_user)):
-    return {"id": current_user.id, "email": current_user.email}
+def get_me(current_user: dict = Depends(get_current_user)):
+    return current_user
 
 #=======================================================#
