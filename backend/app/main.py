@@ -8,9 +8,14 @@ from app.database import get_db
 from app.event_dispatcher import dispatch_github_webhook
 from app.init_db import init_db
 from app.models import GitHubEvent
-from app.services import get_filtered_events, get_timeline, get_top_actors, get_event_type_breakdown, get_workflow_failures_by_name, get_workflow_failures_by_branch, get_workflow_run_timeline
+from app.services.analytic_services import get_filtered_events, get_timeline, get_top_actors, get_event_type_breakdown, get_workflow_failures_by_name, get_workflow_failures_by_branch, get_workflow_run_timeline
+from app.services.auth_services import register_new_user, user_login, get_current_user
+from app.schemas import AuthCredentials
 
 from app.alerts import send_slack_alert
+
+# debug imports #
+from app.models import UserAccount
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -279,4 +284,26 @@ def test_alert():
     return {"success": True}
 
 
+@app.post("/auth/register")
+def register_user(
+    credentials: AuthCredentials,
+    db: Session = Depends(get_db),
+):
+    return register_new_user(email=credentials.email, password=credentials.password, db=db)
 
+@app.post("/auth/login")
+def login_user(
+    credentials: AuthCredentials,
+    db: Session = Depends(get_db),
+):
+    token = user_login(email=credentials.email, password=credentials.password, db=db)
+
+    return {"access_token": token, "token_type": "bearer"}
+
+#=======================Debug===========================#
+
+@app.post("/auth/me")
+def get_me(current_user: UserAccount = Depends(get_current_user)):
+    return {"id": current_user.id, "email": current_user.email}
+
+#=======================================================#

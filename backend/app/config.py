@@ -18,4 +18,8 @@ class Settings:
             "sqlite:///./workflow_observer.db"
         ) # This is the url for the database. Can be found in .env
 
+        self.JWT_SECRET = os.getenv(
+            "JWT_SECRET"
+        ) # This is the JWT token. Can be found in .env 
+
 settings = Settings()

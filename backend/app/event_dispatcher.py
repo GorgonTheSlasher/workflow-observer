@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.alerts import should_alert_on_event, format_workflow_failure_alert, send_slack_alert
 from app.event_handlers import EVENT_HANDLERS
-from app.services import verify_signature, save_event
+from app.services.event_services import verify_signature, save_event
 
 # debug function for payload info
 #=======================================================#
