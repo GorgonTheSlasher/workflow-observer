@@ -1,6 +1,60 @@
 import type { GitHubEvent } from "./types";
+import { authHeaders, notifyUnauthorized } from "./auth";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+async function apiFetch(url: string): Promise<Response> {
+  const response = await fetch(url, { headers: authHeaders() });
+
+  if (response.status === 401) {
+    notifyUnauthorized();
+  }
+
+  return response;
+}
+
+async function readErrorDetail(response: Response, fallback: string): Promise<string> {
+  const data = await response.json().catch(() => null);
+  return data?.detail ?? fallback;
+}
+
+export type AuthResponse = {
+  access_token: string;
+  token_type: string;
+};
+
+export async function loginUser(email: string, password: string): Promise<AuthResponse> {
+  const response = await fetch(`${API_BASE_URL}/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
+  });
+
+  if (!response.ok) {
+    throw new Error(await readErrorDetail(response, "Login failed"));
+  }
+
+  return response.json();
+}
+
+export type RegisteredUser = {
+  id: number;
+  email: string;
+};
+
+export async function registerUser(email: string, password: string): Promise<RegisteredUser> {
+  const response = await fetch(`${API_BASE_URL}/auth/register`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
+  });
+
+  if (!response.ok) {
+    throw new Error(await readErrorDetail(response, "Registration failed"));
+  }
+
+  return response.json();
+}
 
 export type Summary = {
   total_events: number;
@@ -25,7 +79,7 @@ type WorkflowRunsSummary = {
 };
 
 export async function getSummary(): Promise<Summary> {
-  const response = await fetch(`${API_BASE_URL}/summary`);
+  const response = await apiFetch(`${API_BASE_URL}/summary`);
 
   if (!response.ok) {
     throw new Error("Failed to fetch summary");
@@ -35,7 +89,7 @@ export async function getSummary(): Promise<Summary> {
 }
 
 export async function getRepositories(): Promise<string[]> {
-  const response = await fetch(`${API_BASE_URL}/summary/repositories`);
+  const response = await apiFetch(`${API_BASE_URL}/summary/repositories`);
 
   if (!response.ok) {
     throw new Error("Failed to fetch repositories");
@@ -45,7 +99,7 @@ export async function getRepositories(): Promise<string[]> {
 }
 
 export async function getRecentEvents(limit = 10): Promise<GitHubEvent[]> {
-  const response = await fetch(
+  const response = await apiFetch(
     `${API_BASE_URL}/summary/events/recent?limit=${limit}`
   );
 
@@ -65,7 +119,7 @@ export async function getWorkflowRuns(
   if (repoName) params.append("repo_name", repoName);
   if (sinceDays != null) params.append("since_days", String(sinceDays));
 
-  const response = await fetch(
+  const response = await apiFetch(
     `${API_BASE_URL}/summary/events/workflow-runs?${params}`
   );
 
@@ -100,7 +154,7 @@ export async function getTimeline(
   const params = new URLSearchParams({ repo_name: repoName });
   if (sinceDays != null) params.append("since_days", String(sinceDays));
 
-  const response = await fetch(`${API_BASE_URL}/summary/timeline?${params}`);
+  const response = await apiFetch(`${API_BASE_URL}/summary/timeline?${params}`);
   if (!response.ok) throw new Error("Failed to fetch timeline");
   return response.json();
 }
@@ -122,7 +176,7 @@ export async function getTopActors(
   if (sinceDays != null) params.append("since_days", String(sinceDays));
   if (eventType) params.append("event_type", eventType);
   if (actor) params.append("actor", actor);
-  const response = await fetch(`${API_BASE_URL}/summary/top-actors?${params}`);
+  const response = await apiFetch(`${API_BASE_URL}/summary/top-actors?${params}`);
   if (!response.ok) throw new Error("Failed to fetch top actors");
   return response.json();
 }
@@ -149,7 +203,7 @@ export async function getEventTypeBreakdown(
     ? `${API_BASE_URL}/summary/events/by-type?${query}`
     : `${API_BASE_URL}/summary/events/by-type`;
 
-  const response = await fetch(url);
+  const response = await apiFetch(url);
   if (!response.ok) throw new Error("Failed to fetch event type breakdown");
   return response.json();
 }
@@ -172,7 +226,7 @@ export async function getWorkflowFailuresByName(
     ? `${API_BASE_URL}/summary/workflow-failures-by-name?${query}`
     : `${API_BASE_URL}/summary/workflow-failures-by-name`;
 
-  const response = await fetch(url);
+  const response = await apiFetch(url);
   if (!response.ok) throw new Error("Failed to fetch workflow failures by name");
   return response.json();
 }
@@ -195,7 +249,7 @@ export async function getWorkflowFailuresByBranch(
     ? `${API_BASE_URL}/summary/workflow-failures-by-branch?${query}`
     : `${API_BASE_URL}/summary/workflow-failures-by-branch`;
 
-  const response = await fetch(url);
+  const response = await apiFetch(url);
   if (!response.ok) throw new Error("Failed to fetch workflow failures by branch");
   return response.json();
 }
@@ -220,7 +274,7 @@ export async function getWorkflowRunTimeline(
     ? `${API_BASE_URL}/summary/workflow-runs/timeline?${query}`
     : `${API_BASE_URL}/summary/workflow-runs/timeline`;
 
-  const response = await fetch(url);
+  const response = await apiFetch(url);
   if (!response.ok) throw new Error("Failed to fetch workflow run timeline");
   return response.json();
 }
@@ -258,7 +312,7 @@ export async function getEvents(
     ? `${API_BASE_URL}/summary/events?${query}`
     : `${API_BASE_URL}/summary/events`;
 
-  const response = await fetch(url);
+  const response = await apiFetch(url);
 
   if (!response.ok) {
     throw new Error("Failed to fetch events");

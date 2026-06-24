@@ -63,7 +63,7 @@ async def github_webhook(
 
 # Summarize all of the database
 @app.get("/summary")
-def summarize_db(db: Session = Depends(get_db)):
+def summarize_db(db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
 
     query = db.query(GitHubEvent)
 
@@ -87,7 +87,7 @@ def summarize_db(db: Session = Depends(get_db)):
 
 # Lists repositories that have stored events
 @app.get("/summary/repositories")
-def get_repositories(db: Session = Depends(get_db)):
+def get_repositories(db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     rows = (
         db.query(GitHubEvent.repo_name)
         .filter(GitHubEvent.repo_name.isnot(None))
@@ -110,6 +110,7 @@ def get_events(
     limit: int = 100,
     offset: int = 0,
     db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
 ):
     return get_filtered_events(
         db=db,
@@ -129,7 +130,8 @@ def get_workflow_runs(
     repo_name: str | None = None,
     result: str | None = None,
     since_days: int | None = None,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
 ):
     if result not in {"success", "failure"}:
         raise HTTPException(
@@ -203,6 +205,7 @@ def get_workflow_runs(
 def get_recent_events(
     limit: int = 10,
     db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
 ):
     return (
         db.query(GitHubEvent)
@@ -219,6 +222,7 @@ def get_top_actors_summary(
     event_type: str | None = None,
     actor: str | None = None,
     db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
 ):
     return get_top_actors(
         db=db,
@@ -236,6 +240,7 @@ def get_event_type_breakdown_summary(
     actor: str | None = None,
     since_days: int | None = None,
     db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
 ):
     return get_event_type_breakdown(
         db=db,
@@ -250,6 +255,7 @@ def get_workflow_failures_by_name_summary(
     repo_name: str | None = None,
     since_days: int | None = None,
     db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
 ):
     return get_workflow_failures_by_name(db=db, repo_name=repo_name, since_days=since_days)
 
@@ -258,6 +264,7 @@ def get_workflow_failures_by_branch_summary(
     repo_name: str | None = None,
     since_days: int | None = None,
     db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
 ):
     return get_workflow_failures_by_branch(db=db, repo_name=repo_name, since_days=since_days)
 
@@ -266,6 +273,7 @@ def get_workflow_run_timeline_summary(
     repo_name: str | None = None,
     since_days: int | None = None,
     db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
 ):
     return get_workflow_run_timeline(db=db, repo_name=repo_name, since_days=since_days)
 
@@ -274,12 +282,13 @@ def get_event_timeline(
     repo_name: str | None = None,
     since_days: int | None = None,
     db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
 ):
     return get_timeline(db=db, repo_name=repo_name, since_days=since_days)
 
 # Route for debugging without having to push to test repo
 @app.post("/test-alert")
-def test_alert():
+def test_alert(current_user: dict = Depends(get_current_user)):
     send_slack_alert("Test alert from Workflow Observer")
     return {"success": True}
 

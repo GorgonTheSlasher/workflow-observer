@@ -6,6 +6,8 @@ import StatStrip from "./components/StatStrip";
 import TimelineChart from "./components/TimelineChart";
 import WorkflowHealthDonut from "./components/WorkflowHealthDonut";
 import TopActorsChart from "./components/TopActorsChart";
+import LoginPage from "./components/LoginPage";
+import { useAuth } from "./context/AuthContext";
 import { useEvents, type EventTypeFilter } from "./hooks/useEvents";
 import { useFailedWorkflowRuns } from "./hooks/useFailedWorkflowRuns";
 import { useRepositories } from "./hooks/useRepositories";
@@ -65,7 +67,8 @@ function WorkflowsIcon() {
   );
 }
 
-function App() {
+function Dashboard() {
+  const { logout } = useAuth();
   const [activeView, setActiveView] = useState<ActiveView>("summary");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedRepoName, setSelectedRepoName] = useState("");
@@ -305,6 +308,9 @@ function App() {
               ))}
             </select>
 
+            <button className="app-header__logout" onClick={logout}>
+              Log Out
+            </button>
           </div>
         </header>
 
@@ -438,6 +444,16 @@ function App() {
       </main>
     </div>
   );
+}
+
+function App() {
+  const { isAuthenticated } = useAuth();
+
+  if (!isAuthenticated) {
+    return <LoginPage />;
+  }
+
+  return <Dashboard />;
 }
 
 export default App;
