@@ -3,14 +3,14 @@ from app.models import UserAccount
 from argon2 import PasswordHasher
 from sqlalchemy.orm import Session
 from fastapi import Depends, HTTPException
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.database import get_db
 from argon2.exceptions import VerifyMismatchError
 from datetime import datetime, UTC, timedelta
 from app.config import settings
 
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
+bearer_scheme = HTTPBearer()
 
 
 def register_new_user(
@@ -66,12 +66,12 @@ def user_login(
     return encoded_jwt
 
 def get_current_user(
-        token: str = Depends(oauth2_scheme),
+        credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
         db: Session = Depends(get_db),
 ):
 
     try:
-        payload = jwt.decode(token, settings.JWT_SECRET, algorithms=["HS256"])
+        payload = jwt.decode(credentials.credentials, settings.JWT_SECRET, algorithms=["HS256"])
 
     except jwt.PyJWTError:
         raise HTTPException(status_code=401, detail="Could not validate credentials")
