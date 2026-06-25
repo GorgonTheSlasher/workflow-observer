@@ -20,6 +20,23 @@ class Settings:
 
         self.JWT_SECRET = os.getenv(
             "JWT_SECRET"
-        ) # This is the JWT token. Can be found in .env 
+        ) # This is the JWT token. Can be found in .env
+
+        self.GITHUB_OAUTH_CLIENT_ID = os.getenv(
+            "GITHUB_OAUTH_CLIENT_ID"
+        ) # Client ID from the GitHub OAuth App. Can be found in .env
+
+        self.GITHUB_OAUTH_CLIENT_SECRET = os.getenv(
+            "GITHUB_OAUTH_CLIENT_SECRET"
+        ) # Client secret from the GitHub OAuth App. Can be found in .env
+
+        self.GITHUB_OAUTH_REDIRECT_URI = os.getenv(
+            "GITHUB_OAUTH_REDIRECT_URI"
+        ) # Must match the callback URL configured on the GitHub OAuth App. Can be found in .env
+
+        self.FRONTEND_BASE_URL = os.getenv(
+            "FRONTEND_BASE_URL",
+            "http://localhost:5173"
+        ) # Where the GitHub OAuth callback redirects back to after issuing a token. Can be found in .env
 
 settings = Settings()

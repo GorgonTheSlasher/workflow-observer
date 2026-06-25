@@ -1,25 +1,30 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useState,
-  type ReactNode,
-} from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { loginUser, registerUser } from "../api";
 import { clearToken, getToken, setToken, setUnauthorizedHandler } from "../auth";
+import { AuthContext } from "./auth-context";
 
-type AuthContextValue = {
-  isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string) => Promise<void>;
-  logout: () => void;
-};
+function consumeRedirectToken(): boolean {
+  const params = new URLSearchParams(window.location.search);
+  const tokenFromRedirect = params.get("token");
 
-const AuthContext = createContext<AuthContextValue | null>(null);
+  if (!tokenFromRedirect) {
+    return false;
+  }
+
+  setToken(tokenFromRedirect);
+
+  params.delete("token");
+  const remaining = params.toString();
+  const newUrl = `${window.location.pathname}${remaining ? `?${remaining}` : ""}`;
+  window.history.replaceState({}, "", newUrl);
+
+  return true;
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(() => Boolean(getToken()));
+  const [isAuthenticated, setIsAuthenticated] = useState(
+    () => consumeRedirectToken() || Boolean(getToken())
+  );
 
   const logout = useCallback(() => {
     clearToken();
@@ -45,14 +50,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth(): AuthContextValue {
-  const context = useContext(AuthContext);
-
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-
-  return context;
 }

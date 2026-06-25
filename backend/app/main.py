@@ -2,20 +2,20 @@ from contextlib import asynccontextmanager
 from datetime import datetime, UTC, timedelta
 from fastapi import FastAPI, Request, Header, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
+from app.config import settings
 from app.database import get_db
 from app.event_dispatcher import dispatch_github_webhook
 from app.init_db import init_db
 from app.models import GitHubEvent
 from app.services.analytic_services import get_filtered_events, get_timeline, get_top_actors, get_event_type_breakdown, get_workflow_failures_by_name, get_workflow_failures_by_branch, get_workflow_run_timeline
-from app.services.auth_services import register_new_user, user_login, get_current_user
+from app.services.auth_services import register_new_user, user_login, get_current_user, get_github_authorize_url, login_with_github
 from app.schemas import AuthCredentials
 
 from app.alerts import send_slack_alert
 
-# debug imports #
-from app.models import UserAccount
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -308,6 +308,18 @@ def login_user(
     token = user_login(email=credentials.email, password=credentials.password, db=db)
 
     return {"access_token": token, "token_type": "bearer"}
+
+# Redirects the browser to GitHub's OAuth consent screen
+@app.get("/auth/github/login")
+def github_login():
+    return RedirectResponse(get_github_authorize_url())
+
+# GitHub redirects back here with a one-time code after the user approves access
+@app.get("/auth/github/callback")
+def github_callback(code: str, db: Session = Depends(get_db)):
+    token = login_with_github(code=code, db=db)
+
+    return RedirectResponse(f"{settings.FRONTEND_BASE_URL}/?token={token}")
 
 #=======================Debug===========================#
 

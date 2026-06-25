@@ -7,7 +7,7 @@ import TimelineChart from "./components/TimelineChart";
 import WorkflowHealthDonut from "./components/WorkflowHealthDonut";
 import TopActorsChart from "./components/TopActorsChart";
 import LoginPage from "./components/LoginPage";
-import { useAuth } from "./context/AuthContext";
+import { useAuth } from "./hooks/useAuth";
 import { useEvents, type EventTypeFilter } from "./hooks/useEvents";
 import { useFailedWorkflowRuns } from "./hooks/useFailedWorkflowRuns";
 import { useRepositories } from "./hooks/useRepositories";

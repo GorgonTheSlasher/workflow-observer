@@ -500,6 +500,45 @@ section {
   background: rgba(87, 98, 213, 0.35);
 }
 
+.login-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0 1.5rem;
+  color: rgba(209, 227, 221, 0.45);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.login-divider::before,
+.login-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.login-github {
+  padding: 1.5rem;
+}
+
+.login-github-btn {
+  width: 100%;
+  padding: 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--input-bg);
+  color: var(--text);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.login-github-btn:hover {
+  background: var(--surface);
+}
+
 /* ── Charts ──────────────────────────────────────────────────────────────── */
 
 .chart-card {

@@ -18,6 +18,10 @@ async function readErrorDetail(response: Response, fallback: string): Promise<st
   return data?.detail ?? fallback;
 }
 
+export function getGithubLoginUrl(): string {
+  return `${API_BASE_URL}/auth/github/login`;
+}
+
 export type AuthResponse = {
   access_token: string;
   token_type: string;

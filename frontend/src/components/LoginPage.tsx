@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../hooks/useAuth";
+import { getGithubLoginUrl } from "../api";
 
 type Tab = "login" | "register";
 
@@ -89,6 +90,20 @@ export default function LoginPage() {
             {isSubmitting ? "Please wait..." : tab === "login" ? "Log In" : "Register"}
           </button>
         </form>
+
+        <div className="login-divider">
+          <span>or</span>
+        </div>
+
+        <div className="login-github">
+          <button
+            type="button"
+            className="login-github-btn"
+            onClick={() => { window.location.href = getGithubLoginUrl(); }}
+          >
+            Sign in with GitHub
+          </button>
+        </div>
       </div>
     </div>
   );

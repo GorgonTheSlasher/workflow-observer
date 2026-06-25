@@ -28,8 +28,10 @@ class UserAccount(Base):
 
     id = Column(Integer, primary_key=True)
 
-    email = Column(String, unique=True)
-    hashed_pass = Column(String)
+    email = Column(String, unique=True, nullable=True)
+    hashed_pass = Column(String, nullable=True)
+    github_id = Column(Integer, unique=True, nullable=True)
+    github_username = Column(String, nullable=True)
     is_active = Column(Boolean, default=True)
 
     created_at = Column(DateTime, default=lambda: datetime.now(UTC))
