@@ -1,4 +1,3 @@
-from contextlib import asynccontextmanager
 from datetime import datetime, UTC, timedelta
 from fastapi import FastAPI, Request, Header, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -8,7 +7,6 @@ from sqlalchemy.orm import Session
 from app.config import settings
 from app.database import get_db
 from app.event_dispatcher import dispatch_github_webhook
-from app.init_db import init_db
 from app.models import GitHubEvent
 from app.services.analytic_services import get_filtered_events, get_timeline, get_top_actors, get_event_type_breakdown, get_workflow_failures_by_name, get_workflow_failures_by_branch, get_workflow_run_timeline
 from app.services.auth_services import register_new_user, user_login, get_current_user, get_github_authorize_url, login_with_github
@@ -16,15 +14,8 @@ from app.schemas import AuthCredentials
 
 from app.alerts import send_slack_alert
 
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    init_db()
-    yield
-
 app = FastAPI(
     title="GitHub Workflow Observer",
-    lifespan=lifespan
 )
 
 # Makes it so browser wont block frontend requests
