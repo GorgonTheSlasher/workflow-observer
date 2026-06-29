@@ -20,6 +20,7 @@ class GitHubEvent(Base):
     commit_sha = Column(String, nullable=True)
     html_url = Column(String, nullable=True)
     details_json = Column(JSON, nullable=True)
+    installation_id = Column(Integer, nullable=True)
 
     created_at = Column(DateTime, default=lambda: datetime.now(UTC))
 
@@ -35,3 +36,10 @@ class UserAccount(Base):
     is_active = Column(Boolean, default=True)
 
     created_at = Column(DateTime, default=lambda: datetime.now(UTC))
+
+class Installation(Base):
+    __tablename__ = "installations"
+    id = Column(Integer, primary_key=True)
+    github_installation_id = Column(Integer, unique=True)
+    user_id = Column(Integer, nullable=True)
+    account_login = Column(String)

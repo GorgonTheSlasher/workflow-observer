@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { useAuth } from "../hooks/useAuth";
-import { getGithubLoginUrl } from "../api";
+import { getGithubInstallUrl, getGithubLoginUrl } from "../api";
 
 type Tab = "login" | "register";
 
@@ -102,6 +102,13 @@ export default function LoginPage() {
             onClick={() => { window.location.href = getGithubLoginUrl(); }}
           >
             Sign in with GitHub
+          </button>
+          <button
+            type="button"
+            className="login-github-btn login-github-btn--install"
+            onClick={() => { window.location.href = getGithubInstallUrl(); }}
+          >
+            Install GitHub App
           </button>
         </div>
       </div>

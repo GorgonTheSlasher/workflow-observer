@@ -404,6 +404,11 @@ section {
   white-space: nowrap;
 }
 
+.app-header__connect {
+  white-space: nowrap;
+  background: transparent;
+}
+
 /* ── Login page ──────────────────────────────────────────────────────────── */
 
 .login-page {
@@ -520,6 +525,9 @@ section {
 }
 
 .login-github {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
   padding: 1.5rem;
 }
 
@@ -537,6 +545,11 @@ section {
 
 .login-github-btn:hover {
   background: var(--surface);
+}
+
+.login-github-btn--install {
+  background: transparent;
+  font-weight: 500;
 }
 
 /* ── Charts ──────────────────────────────────────────────────────────────── */

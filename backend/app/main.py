@@ -300,15 +300,15 @@ def login_user(
 
     return {"access_token": token, "token_type": "bearer"}
 
-# Redirects the browser to GitHub's OAuth consent screen
+# Redirects the browser to GitHub's authorization screen (GitHub App, consolidated login + install)
 @app.get("/auth/github/login")
 def github_login():
     return RedirectResponse(get_github_authorize_url())
 
-# GitHub redirects back here with a one-time code after the user approves access
-@app.get("/auth/github/callback")
-def github_callback(code: str, db: Session = Depends(get_db)):
-    token = login_with_github(code=code, db=db)
+# GitHub redirects back here with a one-time code, and an installation_id if this came from an install
+@app.get("/github-app/auth")
+def github_app_auth(code: str, installation_id: int | None = None, db: Session = Depends(get_db)):
+    token = login_with_github(code=code, db=db, installation_id=installation_id)
 
     return RedirectResponse(f"{settings.FRONTEND_BASE_URL}/?token={token}")
 

@@ -22,6 +22,12 @@ export function getGithubLoginUrl(): string {
   return `${API_BASE_URL}/auth/github/login`;
 }
 
+const GITHUB_APP_SLUG = "workflow-observer";
+
+export function getGithubInstallUrl(): string {
+  return `https://github.com/apps/${GITHUB_APP_SLUG}/installations/new`;
+}
+
 export type AuthResponse = {
   access_token: string;
   token_type: string;

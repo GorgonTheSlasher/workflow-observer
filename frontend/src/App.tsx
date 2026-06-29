@@ -8,6 +8,7 @@ import WorkflowHealthDonut from "./components/WorkflowHealthDonut";
 import TopActorsChart from "./components/TopActorsChart";
 import LoginPage from "./components/LoginPage";
 import { useAuth } from "./hooks/useAuth";
+import { getGithubInstallUrl } from "./api";
 import { useEvents, type EventTypeFilter } from "./hooks/useEvents";
 import { useFailedWorkflowRuns } from "./hooks/useFailedWorkflowRuns";
 import { useRepositories } from "./hooks/useRepositories";
@@ -307,6 +308,13 @@ function Dashboard() {
                 <option key={opt.label} value={opt.value ?? ""}>{opt.label}</option>
               ))}
             </select>
+
+            <button
+              className="app-header__connect"
+              onClick={() => { window.location.href = getGithubInstallUrl(); }}
+            >
+              Connect GitHub App
+            </button>
 
             <button className="app-header__logout" onClick={logout}>
               Log Out

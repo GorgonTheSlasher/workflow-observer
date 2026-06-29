@@ -10,6 +10,7 @@ from app.database import get_db
 from argon2.exceptions import VerifyMismatchError
 from datetime import datetime, UTC, timedelta
 from app.config import settings
+from app.services.installation_services import link_installation
 
 
 bearer_scheme = HTTPBearer()
@@ -76,24 +77,24 @@ def user_login(
 
 def get_github_authorize_url() -> str:
     params = {
-        "client_id": settings.GITHUB_OAUTH_CLIENT_ID,
-        "redirect_uri": settings.GITHUB_OAUTH_REDIRECT_URI,
-        "scope": "read:user",
+        "client_id": settings.GITHUB_APP_CLIENT_ID,
+        "redirect_uri": settings.GITHUB_APP_REDIRECT_URI,
     }
     return f"{GITHUB_AUTHORIZE_URL}?{urlencode(params)}"
 
 def login_with_github(
         code: str,
         db: Session = Depends(get_db),
+        installation_id: int | None = None,
 ):
     token_response = requests.post(
         GITHUB_TOKEN_URL,
         headers={"Accept": "application/json"},
         data={
-            "client_id": settings.GITHUB_OAUTH_CLIENT_ID,
-            "client_secret": settings.GITHUB_OAUTH_CLIENT_SECRET,
+            "client_id": settings.GITHUB_APP_CLIENT_ID,
+            "client_secret": settings.GITHUB_APP_CLIENT_SECRET,
             "code": code,
-            "redirect_uri": settings.GITHUB_OAUTH_REDIRECT_URI,
+            "redirect_uri": settings.GITHUB_APP_REDIRECT_URI,
         },
         timeout=10,
     )
@@ -138,6 +139,9 @@ def login_with_github(
 
     if not existing.is_active:
         raise HTTPException(status_code=401, detail="Account not active")
+
+    if installation_id:
+        link_installation(installation_id=installation_id, user_id=existing.id, db=db)
 
     return _issue_jwt(existing.id)
 

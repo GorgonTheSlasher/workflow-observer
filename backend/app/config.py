@@ -39,4 +39,28 @@ class Settings:
             "http://localhost:5173"
         ) # Where the GitHub OAuth callback redirects back to after issuing a token. Can be found in .env
 
+        self.GITHUB_APP_ID = os.getenv(
+            "GITHUB_APP_ID"
+        ) # ID for github app. Can be found in .env
+
+        self.GITHUB_APP_WEBHOOK_SECRET = os.getenv(
+            "GITHUB_APP_WEBHOOK_SECRET"
+        ) # Webhook secret for github app. Can be found in .env
+
+        self.GITHUB_APP_PRIVATE_KEY = os.getenv(
+            "GITHUB_APP_PRIVATE_KEY"
+        ) # Key for accessing github app. Can be found in .env
+
+        self.GITHUB_APP_CLIENT_ID = os.getenv(
+            "GITHUB_APP_CLIENT_ID"
+        )
+
+        self.GITHUB_APP_CLIENT_SECRET = os.getenv(
+            "GITHUB_APP_CLIENT_SECRET"
+        )
+
+        self.GITHUB_APP_REDIRECT_URI = os.getenv(
+            "GITHUB_APP_REDIRECT_URI"
+        )
+
 settings = Settings()
