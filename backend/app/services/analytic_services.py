@@ -19,9 +19,13 @@ def get_filtered_events(
     limit: int = 100,
     offset: int = 0,
     db: Session = Depends(get_db),
+    installation_ids: list[int] | None = None,
 ) -> dict:
 
     query = db.query(GitHubEvent)
+
+    if installation_ids is not None:
+        query = query.filter(GitHubEvent.installation_id.in_(installation_ids))
 
     if event_type:
         query = query.filter(GitHubEvent.event_type == event_type)
@@ -72,11 +76,15 @@ def get_top_actors(
     event_type: str | None = None,
     actor: str | None = None,
     db: Session = Depends(get_db),
+    installation_ids: list[int] | None = None,
 ) -> list[dict]:
     query = db.query(
         GitHubEvent.actor,
         func.count(GitHubEvent.id).label("count"),
     ).filter(GitHubEvent.actor.isnot(None))
+
+    if installation_ids is not None:
+        query = query.filter(GitHubEvent.installation_id.in_(installation_ids))
 
     if repo_name:
         query = query.filter(GitHubEvent.repo_name == repo_name)
@@ -107,11 +115,15 @@ def get_event_type_breakdown(
     actor: str | None = None,
     since_days: int | None = None,
     db: Session = Depends(get_db),
+    installation_ids: list[int] | None = None,
 ) -> list[dict]:
     query = db.query(
         GitHubEvent.event_type,
         func.count(GitHubEvent.id).label("count"),
     )
+
+    if installation_ids is not None:
+        query = query.filter(GitHubEvent.installation_id.in_(installation_ids))
 
     if repo_name:
         query = query.filter(GitHubEvent.repo_name == repo_name)
@@ -139,11 +151,15 @@ def get_workflow_failures_by_name(
     repo_name: str | None = None,
     since_days: int | None = None,
     db: Session = Depends(get_db),
+    installation_ids: list[int] | None = None,
 ) -> list[dict]:
     query = db.query(GitHubEvent.details_json).filter(
         GitHubEvent.event_type == "workflow_run",
         GitHubEvent.conclusion == "failure",
     )
+
+    if installation_ids is not None:
+        query = query.filter(GitHubEvent.installation_id.in_(installation_ids))
 
     if repo_name:
         query = query.filter(GitHubEvent.repo_name == repo_name)
@@ -167,6 +183,7 @@ def get_workflow_failures_by_branch(
     repo_name: str | None = None,
     since_days: int | None = None,
     db: Session = Depends(get_db),
+    installation_ids: list[int] | None = None,
 ) -> list[dict]:
     query = db.query(
         GitHubEvent.branch,
@@ -175,6 +192,9 @@ def get_workflow_failures_by_branch(
         GitHubEvent.event_type == "workflow_run",
         GitHubEvent.conclusion == "failure",
     )
+
+    if installation_ids is not None:
+        query = query.filter(GitHubEvent.installation_id.in_(installation_ids))
 
     if repo_name:
         query = query.filter(GitHubEvent.repo_name == repo_name)
@@ -196,10 +216,14 @@ def get_workflow_run_timeline(
     repo_name: str | None = None,
     since_days: int | None = None,
     db: Session = Depends(get_db),
+    installation_ids: list[int] | None = None,
 ) -> list[dict]:
     query = db.query(GitHubEvent.created_at, GitHubEvent.conclusion).filter(
         GitHubEvent.event_type == "workflow_run",
     )
+
+    if installation_ids is not None:
+        query = query.filter(GitHubEvent.installation_id.in_(installation_ids))
 
     if repo_name:
         query = query.filter(GitHubEvent.repo_name == repo_name)
@@ -227,8 +251,12 @@ def get_timeline(
     repo_name: str | None = None,
     since_days: int | None = None,
     db: Session = Depends(get_db),
+    installation_ids: list[int] | None = None,
 ) -> list[dict]:
     query = db.query(GitHubEvent.created_at, GitHubEvent.event_type)
+
+    if installation_ids is not None:
+        query = query.filter(GitHubEvent.installation_id.in_(installation_ids))
 
     if repo_name:
         query = query.filter(GitHubEvent.repo_name == repo_name)

@@ -23,3 +23,16 @@ def link_installation(installation_id: int, user_id: int, db: Session) -> Instal
     db.refresh(existing)
 
     return existing
+
+
+def get_user_installation_ids(user_id: int, db: Session) -> list[int] | None:
+
+    '''Returns the GitHub installation_ids linked to a user, or None if they have none (caller should treat None as "no filter")'''
+
+    rows = db.query(Installation.github_installation_id).filter(
+        Installation.user_id == user_id
+    ).all()
+
+    ids = [row[0] for row in rows]
+
+    return ids or None

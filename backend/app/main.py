@@ -10,6 +10,7 @@ from app.event_dispatcher import dispatch_github_webhook
 from app.models import GitHubEvent
 from app.services.analytic_services import get_filtered_events, get_timeline, get_top_actors, get_event_type_breakdown, get_workflow_failures_by_name, get_workflow_failures_by_branch, get_workflow_run_timeline
 from app.services.auth_services import register_new_user, user_login, get_current_user, get_github_authorize_url, login_with_github
+from app.services.installation_services import get_user_installation_ids
 from app.schemas import AuthCredentials
 
 from app.alerts import send_slack_alert
@@ -49,25 +50,49 @@ async def github_webhook(
         request=request,
         x_github_event=x_github_event,
         x_hub_signature_256=x_hub_signature_256,
-        db=db
+        db=db,
+        secret=settings.GITHUB_WEBHOOK_SECRET,
+    )
+
+# Webhook director for events delivered by the GitHub App's own installations. Verifies against the App's webhook secret and captures installation_id.
+@app.post("/webhook/github-app")
+async def github_app_webhook(
+    request: Request,
+    x_github_event: str = Header(None),
+    x_hub_signature_256: str = Header(None),
+    db: Session = Depends(get_db)
+):
+
+    return await dispatch_github_webhook(
+        request=request,
+        x_github_event=x_github_event,
+        x_hub_signature_256=x_hub_signature_256,
+        db=db,
+        secret=settings.GITHUB_APP_WEBHOOK_SECRET,
     )
 
 # Summarize all of the database
 @app.get("/summary")
 def summarize_db(db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
 
-    query = db.query(GitHubEvent)
+    installation_ids = get_user_installation_ids(current_user["id"], db)
 
-    unique_actors_count = (
-    db.query(GitHubEvent.actor)
-    .filter(GitHubEvent.actor.isnot(None))
-    .distinct()
-    .count()
-)
+    query = db.query(GitHubEvent)
+    if installation_ids is not None:
+        query = query.filter(GitHubEvent.installation_id.in_(installation_ids))
+
+    unique_actors_query = db.query(GitHubEvent.actor).filter(GitHubEvent.actor.isnot(None))
+    if installation_ids is not None:
+        unique_actors_query = unique_actors_query.filter(GitHubEvent.installation_id.in_(installation_ids))
+    unique_actors_count = unique_actors_query.distinct().count()
+
+    repositories_query = db.query(GitHubEvent.repo_name)
+    if installation_ids is not None:
+        repositories_query = repositories_query.filter(GitHubEvent.installation_id.in_(installation_ids))
 
     return {
         "total_events": query.count(),
-        "total_repositories": db.query(GitHubEvent.repo_name).distinct().count(),
+        "total_repositories": repositories_query.distinct().count(),
         "total_unique_actors": unique_actors_count,
         "total_members": query.filter(GitHubEvent.event_type == "member").count(),
         "total_issues": query.filter(GitHubEvent.event_type == "issues").count(),
@@ -79,13 +104,13 @@ def summarize_db(db: Session = Depends(get_db), current_user: dict = Depends(get
 # Lists repositories that have stored events
 @app.get("/summary/repositories")
 def get_repositories(db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
-    rows = (
-        db.query(GitHubEvent.repo_name)
-        .filter(GitHubEvent.repo_name.isnot(None))
-        .distinct()
-        .order_by(GitHubEvent.repo_name)
-        .all()
-    )
+    installation_ids = get_user_installation_ids(current_user["id"], db)
+
+    query = db.query(GitHubEvent.repo_name).filter(GitHubEvent.repo_name.isnot(None))
+    if installation_ids is not None:
+        query = query.filter(GitHubEvent.installation_id.in_(installation_ids))
+
+    rows = query.distinct().order_by(GitHubEvent.repo_name).all()
 
     return [repo_name for (repo_name,) in rows]
     
@@ -113,6 +138,7 @@ def get_events(
         since_days=since_days,
         limit=limit,
         offset=offset,
+        installation_ids=get_user_installation_ids(current_user["id"], db),
     )
 
 # Summarizes workflow runs for a repository by result
@@ -130,9 +156,13 @@ def get_workflow_runs(
             detail="result must be 'success' or 'failure'",
         )
 
+    installation_ids = get_user_installation_ids(current_user["id"], db)
+
     base_query = db.query(GitHubEvent).filter(
         GitHubEvent.event_type == "workflow_run",
     )
+    if installation_ids is not None:
+        base_query = base_query.filter(GitHubEvent.installation_id.in_(installation_ids))
     if repo_name:
         base_query = base_query.filter(GitHubEvent.repo_name == repo_name)
     if since_days is not None:
@@ -198,8 +228,14 @@ def get_recent_events(
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
+    installation_ids = get_user_installation_ids(current_user["id"], db)
+
+    query = db.query(GitHubEvent)
+    if installation_ids is not None:
+        query = query.filter(GitHubEvent.installation_id.in_(installation_ids))
+
     return (
-        db.query(GitHubEvent)
+        query
         .order_by(GitHubEvent.created_at.desc())
         .limit(limit)
         .all()
@@ -222,6 +258,7 @@ def get_top_actors_summary(
         since_days=since_days,
         event_type=event_type,
         actor=actor,
+        installation_ids=get_user_installation_ids(current_user["id"], db),
     )
 
 @app.get("/summary/events/by-type")
@@ -239,6 +276,7 @@ def get_event_type_breakdown_summary(
         event_type=event_type,
         actor=actor,
         since_days=since_days,
+        installation_ids=get_user_installation_ids(current_user["id"], db),
     )
 
 @app.get("/summary/workflow-failures-by-name")
@@ -248,7 +286,12 @@ def get_workflow_failures_by_name_summary(
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
-    return get_workflow_failures_by_name(db=db, repo_name=repo_name, since_days=since_days)
+    return get_workflow_failures_by_name(
+        db=db,
+        repo_name=repo_name,
+        since_days=since_days,
+        installation_ids=get_user_installation_ids(current_user["id"], db),
+    )
 
 @app.get("/summary/workflow-failures-by-branch")
 def get_workflow_failures_by_branch_summary(
@@ -257,7 +300,12 @@ def get_workflow_failures_by_branch_summary(
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
-    return get_workflow_failures_by_branch(db=db, repo_name=repo_name, since_days=since_days)
+    return get_workflow_failures_by_branch(
+        db=db,
+        repo_name=repo_name,
+        since_days=since_days,
+        installation_ids=get_user_installation_ids(current_user["id"], db),
+    )
 
 @app.get("/summary/workflow-runs/timeline")
 def get_workflow_run_timeline_summary(
@@ -266,7 +314,12 @@ def get_workflow_run_timeline_summary(
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
-    return get_workflow_run_timeline(db=db, repo_name=repo_name, since_days=since_days)
+    return get_workflow_run_timeline(
+        db=db,
+        repo_name=repo_name,
+        since_days=since_days,
+        installation_ids=get_user_installation_ids(current_user["id"], db),
+    )
 
 @app.get("/summary/timeline")
 def get_event_timeline(
@@ -275,7 +328,12 @@ def get_event_timeline(
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
-    return get_timeline(db=db, repo_name=repo_name, since_days=since_days)
+    return get_timeline(
+        db=db,
+        repo_name=repo_name,
+        since_days=since_days,
+        installation_ids=get_user_installation_ids(current_user["id"], db),
+    )
 
 # Route for debugging without having to push to test repo
 @app.post("/test-alert")

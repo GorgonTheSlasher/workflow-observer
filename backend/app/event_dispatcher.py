@@ -28,16 +28,19 @@ async def dispatch_github_webhook(
     request: Request,
     x_github_event: str,
     x_hub_signature_256: str,
-    db: Session
+    db: Session,
+    secret: str,
 ):
     body = await request.body()
 
-    verify_signature(body, x_hub_signature_256)
+    verify_signature(body, x_hub_signature_256, secret)
 
     payload = json.loads(body)
 
     # debug
     # debug_payload(payload)
+
+    installation_id = (payload.get("installation") or {}).get("id")
 
     handler = EVENT_HANDLERS.get(x_github_event)
 
@@ -46,13 +49,14 @@ async def dispatch_github_webhook(
             "success": False,
             "message": f"No handler for event: {x_github_event}"
         }
-    
+
     event_data = handler(payload)
 
     saved_event = save_event(
         db=db,
         event_type=x_github_event,
         data=event_data,
+        installation_id=installation_id,
     )
 
     should_alert = should_alert_on_event(
