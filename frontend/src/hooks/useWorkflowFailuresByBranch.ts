@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { getWorkflowFailuresByBranch, type WorkflowFailuresByBranchEntry } from "../api";
-import { useEventTick } from "../context/EventStreamContext";
+import { useEventTick } from "./useEventTick";
 
 type UseWorkflowFailuresByBranchResult = {
   workflowFailuresByBranch: WorkflowFailuresByBranchEntry[];

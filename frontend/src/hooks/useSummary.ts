@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { getSummary, type Summary } from "../api";
-import { useEventTick } from "../context/EventStreamContext";
+import { useEventTick } from "./useEventTick";
 
 type UseSummaryResult = {
   summary: Summary | null;

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { getWorkflowFailuresByName, type WorkflowFailuresByNameEntry } from "../api";
-import { useEventTick } from "../context/EventStreamContext";
+import { useEventTick } from "./useEventTick";
 
 type UseWorkflowFailuresByNameResult = {
   workflowFailuresByName: WorkflowFailuresByNameEntry[];

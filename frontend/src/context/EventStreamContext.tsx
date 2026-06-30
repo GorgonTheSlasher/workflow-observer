@@ -1,7 +1,6 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { getToken } from "../auth";
-
-const EventStreamContext = createContext(0);
+import { EventStreamContext } from "./event-stream-context";
 
 export function EventStreamProvider({ children }: { children: ReactNode }) {
   const [tick, setTick] = useState(0);
@@ -27,8 +26,4 @@ export function EventStreamProvider({ children }: { children: ReactNode }) {
       {children}
     </EventStreamContext.Provider>
   );
-}
-
-export function useEventTick() {
-  return useContext(EventStreamContext);
 }

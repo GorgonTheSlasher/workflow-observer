@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { getWorkflowRuns } from "../api";
-import { useEventTick } from "../context/EventStreamContext";
+import { useEventTick } from "./useEventTick";
 
 type WorkflowRunBreakdown = {
   success: number;

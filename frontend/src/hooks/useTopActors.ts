@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { getTopActors, type TopActorEntry } from "../api";
-import { useEventTick } from "../context/EventStreamContext";
+import { useEventTick } from "./useEventTick";
 
 type UseTopActorsResult = {
   topActors: TopActorEntry[];

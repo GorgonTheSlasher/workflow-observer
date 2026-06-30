@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { getTimeline, type TimelineEntry } from "../api";
-import { useEventTick } from "../context/EventStreamContext";
+import { useEventTick } from "./useEventTick";
 
 type UseTimelineResult = {
   timeline: TimelineEntry[];

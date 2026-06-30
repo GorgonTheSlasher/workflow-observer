@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { getEventTypeBreakdown, type EventTypeBreakdownEntry } from "../api";
-import { useEventTick } from "../context/EventStreamContext";
+import { useEventTick } from "./useEventTick";
 
 type UseEventTypeBreakdownResult = {
   eventTypeBreakdown: EventTypeBreakdownEntry[];

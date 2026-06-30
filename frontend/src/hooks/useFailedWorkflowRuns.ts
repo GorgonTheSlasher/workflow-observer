@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { getFailedWorkflowRuns } from "../api";
-import { useEventTick } from "../context/EventStreamContext";
+import { useEventTick } from "./useEventTick";
 import type { GitHubEvent } from "../types";
 
 type UseFailedWorkflowRunsResult = {

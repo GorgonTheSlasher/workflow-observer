@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { getWorkflowRunTimeline, type WorkflowRunTimelineEntry } from "../api";
-import { useEventTick } from "../context/EventStreamContext";
+import { useEventTick } from "./useEventTick";
 
 type UseWorkflowRunTimelineResult = {
   workflowRunTimeline: WorkflowRunTimelineEntry[];

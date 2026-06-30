@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { getRecentEvents } from "../api";
-import { useEventTick } from "../context/EventStreamContext";
+import { useEventTick } from "./useEventTick";
 import type { GitHubEvent } from "../types";
 
 export function useRecentEvents(limit = 10) {
