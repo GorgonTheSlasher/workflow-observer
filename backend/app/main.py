@@ -1,13 +1,19 @@
+import asyncio
+import json
+
+import jwt as pyjwt
 from datetime import datetime, UTC, timedelta
 from fastapi import FastAPI, Request, Header, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
+from sse_starlette.sse import EventSourceResponse
 
+from app.broadcaster import broadcaster
 from app.config import settings
-from app.database import get_db
+from app.database import get_db, SessionLocal
 from app.event_dispatcher import dispatch_github_webhook
-from app.models import GitHubEvent
+from app.models import GitHubEvent, UserAccount
 from app.services.analytic_services import get_filtered_events, get_timeline, get_top_actors, get_event_type_breakdown, get_workflow_failures_by_name, get_workflow_failures_by_branch, get_workflow_run_timeline
 from app.services.auth_services import register_new_user, user_login, get_current_user, get_github_authorize_url, login_with_github
 from app.services.installation_services import get_user_installation_ids
@@ -334,6 +340,39 @@ def get_event_timeline(
         since_days=since_days,
         installation_ids=get_user_installation_ids(current_user["id"], db),
     )
+
+@app.get("/events/stream")
+async def event_stream(token: str):
+    db = SessionLocal()
+    try:
+        try:
+            payload = pyjwt.decode(token, settings.JWT_SECRET, algorithms=["HS256"])
+        except pyjwt.PyJWTError:
+            raise HTTPException(status_code=401, detail="Invalid token")
+
+        user_id = int(payload["sub"])
+        user = db.query(UserAccount).filter(
+            UserAccount.id == user_id,
+            UserAccount.is_active.is_(True),
+        ).first()
+        if not user:
+            raise HTTPException(status_code=401, detail="Invalid token")
+    finally:
+        db.close()
+
+    async def generate():
+        q = broadcaster.subscribe()
+        try:
+            while True:
+                try:
+                    data = await asyncio.wait_for(q.get(), timeout=15.0)
+                    yield {"event": "new_event", "data": json.dumps(data)}
+                except asyncio.TimeoutError:
+                    yield {"event": "ping", "data": ""}
+        finally:
+            broadcaster.unsubscribe(q)
+
+    return EventSourceResponse(generate())
 
 # Route for debugging without having to push to test repo
 @app.post("/test-alert")

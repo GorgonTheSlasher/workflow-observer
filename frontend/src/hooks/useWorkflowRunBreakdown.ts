@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getWorkflowRuns } from "../api";
+import { useEventTick } from "../context/EventStreamContext";
 
 type WorkflowRunBreakdown = {
   success: number;
@@ -17,6 +18,7 @@ export function useWorkflowRunBreakdown(
   repoName: string,
   sinceDays?: number | null,
 ): UseWorkflowRunBreakdownResult {
+  const tick = useEventTick();
   const [workflowRunBreakdown, setWorkflowRunBreakdown] =
     useState<WorkflowRunBreakdown>({
       success: 0,
@@ -62,7 +64,7 @@ export function useWorkflowRunBreakdown(
     return () => {
       cancelled = true;
     };
-  }, [repoName, sinceDays]);
+  }, [repoName, sinceDays, tick]);
 
   return { workflowRunBreakdown, isLoading, error };
 }

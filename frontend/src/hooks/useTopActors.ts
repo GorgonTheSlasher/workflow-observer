@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getTopActors, type TopActorEntry } from "../api";
+import { useEventTick } from "../context/EventStreamContext";
 
 type UseTopActorsResult = {
   topActors: TopActorEntry[];
@@ -13,6 +14,7 @@ export function useTopActors(
   eventType?: string,
   actor?: string,
 ): UseTopActorsResult {
+  const tick = useEventTick();
   const [topActors, setTopActors] = useState<TopActorEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,7 +41,7 @@ export function useTopActors(
     return () => {
       cancelled = true;
     };
-  }, [repoName, sinceDays, eventType, actor]);
+  }, [repoName, sinceDays, eventType, actor, tick]);
 
   return { topActors, isLoading, error };
 }

@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { getRecentEvents } from "../api";
+import { useEventTick } from "../context/EventStreamContext";
 import type { GitHubEvent } from "../types";
 
 export function useRecentEvents(limit = 10) {
+  const tick = useEventTick();
   const [events, setEvents] = useState<GitHubEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -29,7 +31,7 @@ export function useRecentEvents(limit = 10) {
     return () => {
       cancelled = true;
     };
-  }, [limit]);
+  }, [limit, tick]);
 
   return { events, isLoading, error };
 }

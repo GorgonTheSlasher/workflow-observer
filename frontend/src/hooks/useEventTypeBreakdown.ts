@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getEventTypeBreakdown, type EventTypeBreakdownEntry } from "../api";
+import { useEventTick } from "../context/EventStreamContext";
 
 type UseEventTypeBreakdownResult = {
   eventTypeBreakdown: EventTypeBreakdownEntry[];
@@ -13,6 +14,7 @@ export function useEventTypeBreakdown(
   actor: string,
   sinceDays?: number | null,
 ): UseEventTypeBreakdownResult {
+  const tick = useEventTick();
   const [eventTypeBreakdown, setEventTypeBreakdown] = useState<EventTypeBreakdownEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,7 +41,7 @@ export function useEventTypeBreakdown(
     return () => {
       cancelled = true;
     };
-  }, [repoName, eventType, actor, sinceDays]);
+  }, [repoName, eventType, actor, sinceDays, tick]);
 
   return { eventTypeBreakdown, isLoading, error };
 }

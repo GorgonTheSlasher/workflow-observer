@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getTimeline, type TimelineEntry } from "../api";
+import { useEventTick } from "../context/EventStreamContext";
 
 type UseTimelineResult = {
   timeline: TimelineEntry[];
@@ -11,6 +12,7 @@ export function useTimeline(
   repoName: string,
   sinceDays: number | null,
 ): UseTimelineResult {
+  const tick = useEventTick();
   const [timeline, setTimeline] = useState<TimelineEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -38,7 +40,7 @@ export function useTimeline(
     return () => {
       cancelled = true;
     };
-  }, [repoName, sinceDays]);
+  }, [repoName, sinceDays, tick]);
 
   return { timeline, isLoading, error };
 }

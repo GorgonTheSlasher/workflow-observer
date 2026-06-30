@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getRepositories } from "../api";
+import { useEventTick } from "../context/EventStreamContext";
 
 type UseRepositoriesResult = {
   repositories: string[];
@@ -8,6 +9,7 @@ type UseRepositoriesResult = {
 };
 
 export function useRepositories(): UseRepositoriesResult {
+  const tick = useEventTick();
   const [repositories, setRepositories] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -38,7 +40,7 @@ export function useRepositories(): UseRepositoriesResult {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [tick]);
 
   return { repositories, isLoading, error };
 }

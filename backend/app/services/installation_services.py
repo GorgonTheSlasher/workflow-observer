@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from app.models import Installation
+from app.models import Installation, GitHubEvent
 
 
 def link_installation(installation_id: int, user_id: int, db: Session) -> Installation:
@@ -23,6 +23,25 @@ def link_installation(installation_id: int, user_id: int, db: Session) -> Instal
     db.refresh(existing)
 
     return existing
+
+
+def delete_installation(installation_id: int, db: Session) -> bool:
+    '''Removes the Installation row and all associated events for a given GitHub installation_id. Returns True if a row was deleted.'''
+
+    row = db.query(Installation).filter(
+        Installation.github_installation_id == installation_id
+    ).first()
+
+    if not row:
+        return False
+
+    db.query(GitHubEvent).filter(
+        GitHubEvent.installation_id == installation_id
+    ).delete()
+
+    db.delete(row)
+    db.commit()
+    return True
 
 
 def get_user_installation_ids(user_id: int, db: Session) -> list[int] | None:

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getWorkflowRunTimeline, type WorkflowRunTimelineEntry } from "../api";
+import { useEventTick } from "../context/EventStreamContext";
 
 type UseWorkflowRunTimelineResult = {
   workflowRunTimeline: WorkflowRunTimelineEntry[];
@@ -11,6 +12,7 @@ export function useWorkflowRunTimeline(
   repoName: string,
   sinceDays?: number | null,
 ): UseWorkflowRunTimelineResult {
+  const tick = useEventTick();
   const [workflowRunTimeline, setWorkflowRunTimeline] = useState<WorkflowRunTimelineEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -37,7 +39,7 @@ export function useWorkflowRunTimeline(
     return () => {
       cancelled = true;
     };
-  }, [repoName, sinceDays]);
+  }, [repoName, sinceDays, tick]);
 
   return { workflowRunTimeline, isLoading, error };
 }

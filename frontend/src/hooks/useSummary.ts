@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getSummary, type Summary } from "../api";
+import { useEventTick } from "../context/EventStreamContext";
 
 type UseSummaryResult = {
   summary: Summary | null;
@@ -8,6 +9,7 @@ type UseSummaryResult = {
 };
 
 export function useSummary(): UseSummaryResult {
+  const tick = useEventTick();
   const [summary, setSummary] = useState<Summary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -38,7 +40,7 @@ export function useSummary(): UseSummaryResult {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [tick]);
 
   return { summary, isLoading, error };
 }

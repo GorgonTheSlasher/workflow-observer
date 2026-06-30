@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getEvents, type EventFilters } from "../api";
+import { useEventTick } from "../context/EventStreamContext";
 import type { GitHubEvent } from "../types";
 
 export type EventTypeFilter =
@@ -25,6 +26,7 @@ type UseEventsResult = {
 };
 
 export function useEvents(filters: EventFilters = {}): UseEventsResult {
+  const tick = useEventTick();
   const [events, setEvents] = useState<GitHubEvent[]>([]);
   const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -60,7 +62,7 @@ export function useEvents(filters: EventFilters = {}): UseEventsResult {
     return () => {
       cancelled = true;
     };
-  }, [filters]);
+  }, [filters, tick]);
 
   return { events, total, isLoading, error };
 }

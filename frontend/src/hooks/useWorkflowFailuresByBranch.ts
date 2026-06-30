@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getWorkflowFailuresByBranch, type WorkflowFailuresByBranchEntry } from "../api";
+import { useEventTick } from "../context/EventStreamContext";
 
 type UseWorkflowFailuresByBranchResult = {
   workflowFailuresByBranch: WorkflowFailuresByBranchEntry[];
@@ -11,6 +12,7 @@ export function useWorkflowFailuresByBranch(
   repoName: string,
   sinceDays?: number | null,
 ): UseWorkflowFailuresByBranchResult {
+  const tick = useEventTick();
   const [workflowFailuresByBranch, setWorkflowFailuresByBranch] = useState<WorkflowFailuresByBranchEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -37,7 +39,7 @@ export function useWorkflowFailuresByBranch(
     return () => {
       cancelled = true;
     };
-  }, [repoName, sinceDays]);
+  }, [repoName, sinceDays, tick]);
 
   return { workflowFailuresByBranch, isLoading, error };
 }

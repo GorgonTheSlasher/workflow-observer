@@ -8,6 +8,7 @@ import WorkflowHealthDonut from "./components/WorkflowHealthDonut";
 import TopActorsChart from "./components/TopActorsChart";
 import LoginPage from "./components/LoginPage";
 import { useAuth } from "./hooks/useAuth";
+import { EventStreamProvider } from "./context/EventStreamContext";
 import { getGithubInstallUrl } from "./api";
 import { useEvents, type EventTypeFilter } from "./hooks/useEvents";
 import { useFailedWorkflowRuns } from "./hooks/useFailedWorkflowRuns";
@@ -461,7 +462,11 @@ function App() {
     return <LoginPage />;
   }
 
-  return <Dashboard />;
+  return (
+    <EventStreamProvider>
+      <Dashboard />
+    </EventStreamProvider>
+  );
 }
 
 export default App;

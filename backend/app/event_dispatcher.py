@@ -6,6 +6,8 @@ from sqlalchemy.orm import Session
 from app.alerts import should_alert_on_event, format_workflow_failure_alert, send_slack_alert
 from app.event_handlers import EVENT_HANDLERS
 from app.services.event_services import verify_signature, save_event
+from app.services.installation_services import delete_installation
+from app.broadcaster import broadcaster
 
 # debug function for payload info
 #=======================================================#
@@ -42,6 +44,10 @@ async def dispatch_github_webhook(
 
     installation_id = (payload.get("installation") or {}).get("id")
 
+    if x_github_event == "installation" and payload.get("action") == "deleted":
+        delete_installation(installation_id, db)
+        return {"success": True, "event": "installation", "action": "deleted"}
+
     handler = EVENT_HANDLERS.get(x_github_event)
 
     if not handler:
@@ -58,6 +64,8 @@ async def dispatch_github_webhook(
         data=event_data,
         installation_id=installation_id,
     )
+
+    await broadcaster.publish({"event_type": x_github_event})
 
     should_alert = should_alert_on_event(
         x_github_event,

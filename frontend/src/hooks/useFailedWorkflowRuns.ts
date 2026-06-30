@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getFailedWorkflowRuns } from "../api";
+import { useEventTick } from "../context/EventStreamContext";
 import type { GitHubEvent } from "../types";
 
 type UseFailedWorkflowRunsResult = {
@@ -9,6 +10,7 @@ type UseFailedWorkflowRunsResult = {
 };
 
 export function useFailedWorkflowRuns(repoName: string): UseFailedWorkflowRunsResult {
+  const tick = useEventTick();
   const [failedWorkflows, setFailedWorkflows] = useState<GitHubEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -43,7 +45,7 @@ export function useFailedWorkflowRuns(repoName: string): UseFailedWorkflowRunsRe
     return () => {
       cancelled = true;
     };
-  }, [repoName]);
+  }, [repoName, tick]);
 
   return { failedWorkflows, isLoading, error };
 }
