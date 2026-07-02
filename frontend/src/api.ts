@@ -289,6 +289,30 @@ export async function getWorkflowRunTimeline(
   return response.json();
 }
 
+export type WorkflowExecutionTimeEntry = {
+  workflow_name: string;
+  avg_seconds: number;
+  run_count: number;
+};
+
+export async function getWorkflowExecutionTimes(
+  repoName?: string,
+  sinceDays?: number | null,
+): Promise<WorkflowExecutionTimeEntry[]> {
+  const params = new URLSearchParams();
+  if (repoName) params.append("repo_name", repoName);
+  if (sinceDays != null) params.append("since_days", String(sinceDays));
+
+  const query = params.toString();
+  const url = query
+    ? `${API_BASE_URL}/summary/workflow-execution-times?${query}`
+    : `${API_BASE_URL}/summary/workflow-execution-times`;
+
+  const response = await apiFetch(url);
+  if (!response.ok) throw new Error("Failed to fetch workflow execution times");
+  return response.json();
+}
+
 export type EventFilters = {
   event_type?: string;
   repo_name?: string;

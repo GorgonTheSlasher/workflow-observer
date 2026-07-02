@@ -247,6 +247,61 @@ def get_workflow_run_timeline(
 
     return [{"date": date, **counts} for date, counts in sorted(pivot.items())]
 
+def get_workflow_execution_times(
+    repo_name: str | None = None,
+    since_days: int | None = None,
+    db: Session = Depends(get_db),
+    installation_ids: list[int] | None = None,
+) -> list[dict]:
+    query = db.query(GitHubEvent.details_json).filter(
+        GitHubEvent.event_type == "workflow_run",
+        GitHubEvent.conclusion.in_(["success", "failure"]),
+    )
+
+    if installation_ids is not None:
+        query = query.filter(GitHubEvent.installation_id.in_(installation_ids))
+
+    if repo_name:
+        query = query.filter(GitHubEvent.repo_name == repo_name)
+
+    if since_days is not None:
+        cutoff = datetime.now(UTC) - timedelta(days=since_days)
+        query = query.filter(GitHubEvent.created_at >= cutoff)
+
+    durations: dict[str, list[float]] = defaultdict(list)
+
+    for (details_json,) in query.all():
+        workflow_run = (details_json or {}).get("workflow_run", {})
+        name = workflow_run.get("name") or "Unknown"
+        started_at = workflow_run.get("run_started_at")
+        updated_at = workflow_run.get("updated_at")
+
+        if not started_at or not updated_at:
+            continue
+
+        try:
+            start = datetime.fromisoformat(started_at.replace("Z", "+00:00"))
+            end = datetime.fromisoformat(updated_at.replace("Z", "+00:00"))
+            duration_seconds = (end - start).total_seconds()
+            if duration_seconds > 0:
+                durations[name].append(duration_seconds)
+        except (ValueError, AttributeError):
+            continue
+
+    return [
+        {
+            "workflow_name": name,
+            "avg_seconds": round(sum(times) / len(times), 1),
+            "run_count": len(times),
+        }
+        for name, times in sorted(
+            durations.items(),
+            key=lambda kv: sum(kv[1]) / len(kv[1]),
+            reverse=True,
+        )
+    ]
+
+
 def get_timeline(
     repo_name: str | None = None,
     since_days: int | None = None,

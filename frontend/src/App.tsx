@@ -21,6 +21,8 @@ import { useEventTypeBreakdown } from "./hooks/useEventTypeBreakdown";
 import { useWorkflowFailuresByName } from "./hooks/useWorkflowFailuresByName";
 import WorkflowFailuresByNameChart from "./components/WorkflowFailuresByNameChart";
 import { useWorkflowRunTimeline } from "./hooks/useWorkflowRunTimeline";
+import { useWorkflowExecutionTime } from "./hooks/useWorkflowExecutionTime";
+import WorkflowExecutionTimeChart from "./components/WorkflowExecutionTimeChart";
 import WorkflowRunTimelineChart from "./components/WorkflowRunTimelineChart";
 import { useWorkflowFailuresByBranch } from "./hooks/useWorkflowFailuresByBranch";
 import WorkflowFailuresByBranchChart from "./components/WorkflowFailuresByBranchChart";
@@ -157,6 +159,12 @@ function Dashboard() {
   } = useWorkflowFailuresByName(repoName, sinceDays);
 
   const {
+    executionTimes,
+    isLoading: isLoadingExecutionTimes,
+    error: executionTimesError,
+  } = useWorkflowExecutionTime(repoName, sinceDays);
+
+  const {
     workflowRunTimeline,
     isLoading: isLoadingWorkflowRunTimeline,
     error: workflowRunTimelineError,
@@ -178,6 +186,7 @@ function Dashboard() {
       eventTypeBreakdownError ??
       eventsTopActorsError ??
       workflowFailuresByNameError ??
+      executionTimesError ??
       workflowRunTimelineError ??
       workflowFailuresByBranchError ??
       eventsError ??
@@ -191,6 +200,7 @@ function Dashboard() {
       eventTypeBreakdownError,
       eventsTopActorsError,
       workflowFailuresByNameError,
+      executionTimesError,
       workflowRunTimelineError,
       workflowFailuresByBranchError,
       eventsError,
@@ -428,24 +438,28 @@ function Dashboard() {
         {activeView === "workflows" && (
           <div className="workflows-view">
             <div className="workflows-charts-row">
-              <WorkflowRunTimelineChart
-                data={workflowRunTimeline}
-                isLoading={isLoadingWorkflowRunTimeline}
+              <WorkflowFailuresByBranchChart
+                data={workflowFailuresByBranch}
+                isLoading={isLoadingWorkflowFailuresByBranch}
               />
               <WorkflowFailuresByNameChart
                 data={workflowFailuresByName}
                 isLoading={isLoadingWorkflowFailuresByName}
               />
+              <WorkflowExecutionTimeChart
+                data={executionTimes}
+                isLoading={isLoadingExecutionTimes}
+              />
             </div>
             <div className="workflows-bottom-row">
+              <WorkflowRunTimelineChart
+                data={workflowRunTimeline}
+                isLoading={isLoadingWorkflowRunTimeline}
+              />
               <RecentWorkflowFailuresWidget
                 failures={failedWorkflows}
                 limit={3}
                 isLoading={isLoadingFailures}
-              />
-              <WorkflowFailuresByBranchChart
-                data={workflowFailuresByBranch}
-                isLoading={isLoadingWorkflowFailuresByBranch}
               />
             </div>
           </div>
