@@ -289,6 +289,30 @@ export async function getWorkflowRunTimeline(
   return response.json();
 }
 
+export type PrCycleTimeEntry = {
+  date: string;
+  avg_hours: number;
+  count: number;
+};
+
+export async function getPrCycleTimes(
+  repoName?: string,
+  sinceDays?: number | null,
+): Promise<PrCycleTimeEntry[]> {
+  const params = new URLSearchParams();
+  if (repoName) params.append("repo_name", repoName);
+  if (sinceDays != null) params.append("since_days", String(sinceDays));
+
+  const query = params.toString();
+  const url = query
+    ? `${API_BASE_URL}/summary/pr-cycle-times?${query}`
+    : `${API_BASE_URL}/summary/pr-cycle-times`;
+
+  const response = await apiFetch(url);
+  if (!response.ok) throw new Error("Failed to fetch PR cycle times");
+  return response.json();
+}
+
 export type WorkflowExecutionTimeEntry = {
   workflow_name: string;
   avg_seconds: number;

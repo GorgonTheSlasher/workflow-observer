@@ -5,6 +5,8 @@ import EventTypeChart from "./components/EventTypeChart";
 import StatStrip from "./components/StatStrip";
 import TimelineChart from "./components/TimelineChart";
 import WorkflowHealthDonut from "./components/WorkflowHealthDonut";
+import { usePrCycleTimes } from "./hooks/usePrCycleTimes";
+import PrCycleTimeChart from "./components/PrCycleTimeChart";
 import TopActorsChart from "./components/TopActorsChart";
 import LoginPage from "./components/LoginPage";
 import { useAuth } from "./hooks/useAuth";
@@ -129,6 +131,12 @@ function Dashboard() {
   } = useWorkflowRunBreakdown(repoName, sinceDays);
 
   const {
+    prCycleTimes,
+    isLoading: isLoadingPrCycleTimes,
+    error: prCycleTimesError,
+  } = usePrCycleTimes(repoName, sinceDays);
+
+  const {
     timeline,
     isLoading: isLoadingTimeline,
     error: timelineError,
@@ -181,6 +189,7 @@ function Dashboard() {
       repositoriesError ??
       summaryError ??
       workflowRunBreakdownError ??
+      prCycleTimesError ??
       timelineError ??
       topActorsError ??
       eventTypeBreakdownError ??
@@ -195,6 +204,7 @@ function Dashboard() {
       repositoriesError,
       summaryError,
       workflowRunBreakdownError,
+      prCycleTimesError,
       timelineError,
       topActorsError,
       eventTypeBreakdownError,
@@ -345,13 +355,16 @@ function Dashboard() {
               <div className="summary-section__chart">
                 <TopActorsChart data={topActors} isLoading={isLoadingTopActors} />
               </div>
+              <div className="summary-section__chart">
+                <WorkflowHealthDonut
+                  workflowRunBreakdown={workflowRunBreakdown}
+                  isLoading={isLoadingWorkflowRunBreakdown}
+                />
+              </div>
             </div>
             <div className="summary-charts-row">
               <TimelineChart data={timeline} isLoading={isLoadingTimeline} />
-              <WorkflowHealthDonut
-                workflowRunBreakdown={workflowRunBreakdown}
-                isLoading={isLoadingWorkflowRunBreakdown}
-              />
+              <PrCycleTimeChart data={prCycleTimes} isLoading={isLoadingPrCycleTimes} />
             </div>
           </div>
         )}
@@ -458,7 +471,7 @@ function Dashboard() {
               />
               <RecentWorkflowFailuresWidget
                 failures={failedWorkflows}
-                limit={3}
+                limit={4}
                 isLoading={isLoadingFailures}
               />
             </div>

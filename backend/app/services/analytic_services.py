@@ -247,6 +247,57 @@ def get_workflow_run_timeline(
 
     return [{"date": date, **counts} for date, counts in sorted(pivot.items())]
 
+def get_pr_cycle_times(
+    repo_name: str | None = None,
+    since_days: int | None = None,
+    db: Session = Depends(get_db),
+    installation_ids: list[int] | None = None,
+) -> list[dict]:
+    query = db.query(GitHubEvent.details_json, GitHubEvent.created_at).filter(
+        GitHubEvent.event_type == "pull_request",
+        GitHubEvent.action == "closed",
+    )
+
+    if installation_ids is not None:
+        query = query.filter(GitHubEvent.installation_id.in_(installation_ids))
+
+    if repo_name:
+        query = query.filter(GitHubEvent.repo_name == repo_name)
+
+    if since_days is not None:
+        cutoff = datetime.now(UTC) - timedelta(days=since_days)
+        query = query.filter(GitHubEvent.created_at >= cutoff)
+
+    day_durations: dict[str, list[float]] = defaultdict(list)
+
+    for (details_json, created_at) in query.all():
+        pr = (details_json or {}).get("pull_request", {})
+        opened_at = pr.get("created_at")
+        closed_at = pr.get("closed_at") or pr.get("merged_at")
+
+        if not opened_at or not closed_at:
+            continue
+
+        try:
+            start = datetime.fromisoformat(opened_at.replace("Z", "+00:00"))
+            end = datetime.fromisoformat(closed_at.replace("Z", "+00:00"))
+            hours = (end - start).total_seconds() / 3600
+            if hours > 0:
+                date_str = created_at.strftime("%Y-%m-%d") if created_at else end.strftime("%Y-%m-%d")
+                day_durations[date_str].append(hours)
+        except (ValueError, AttributeError):
+            continue
+
+    return [
+        {
+            "date": date,
+            "avg_hours": round(sum(times) / len(times), 1),
+            "count": len(times),
+        }
+        for date, times in sorted(day_durations.items())
+    ]
+
+
 def get_workflow_execution_times(
     repo_name: str | None = None,
     since_days: int | None = None,

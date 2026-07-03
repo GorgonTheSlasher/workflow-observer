@@ -164,7 +164,8 @@ section {
 
 .summary-section {
   flex: 0 0 38%;
-  display: flex;
+  display: grid;
+  grid-template-columns: 35fr 35fr 30fr;
   gap: 1rem;
   align-items: stretch;
   margin-top: 0;
@@ -172,7 +173,6 @@ section {
 }
 
 .summary-section__left {
-  flex: 0 0 50%;
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -281,7 +281,6 @@ section {
 }
 
 .summary-section__chart {
-  flex: 1;
   display: flex;
   flex-direction: column;
 }
@@ -301,7 +300,7 @@ section {
 .summary-charts-row {
   flex: 1;
   display: grid;
-  grid-template-columns: 2fr 1fr;
+  grid-template-columns: 1fr 1fr;
   grid-template-rows: 1fr;
   gap: 1rem;
   margin-top: 1rem;
@@ -801,7 +800,7 @@ a.failure-widget__message:hover {
 }
 
 .workflows-charts-row {
-  flex: 1;
+  flex: 2;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1rem;
@@ -818,7 +817,7 @@ a.failure-widget__message:hover {
 }
 
 .workflows-bottom-row {
-  flex: 1;
+  flex: 3;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
