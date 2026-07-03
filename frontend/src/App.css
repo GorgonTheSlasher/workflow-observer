@@ -170,6 +170,7 @@ section {
   align-items: stretch;
   margin-top: 0;
   min-height: 0;
+  overflow: hidden;
 }
 
 .summary-section__left {
@@ -283,6 +284,8 @@ section {
 .summary-section__chart {
   display: flex;
   flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .summary-section__chart section,
