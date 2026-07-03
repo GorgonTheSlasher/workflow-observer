@@ -47,12 +47,18 @@ export default function WorkflowHealthDonut({
           <p className="chart-empty">No workflow run data available.</p>
         ) : (
           <div className="health-bar-wrapper">
-            {successRate !== null && (
-              <div className="health-bar__rate">
-                <span className="health-bar__rate-value">{successRate}%</span>
-                <span className="health-bar__rate-label">Success Rate</span>
+            <div className="health-bar__stats">
+              {successRate !== null && (
+                <div className="health-bar__stat">
+                  <span className="health-bar__stat-value">{successRate}%</span>
+                  <span className="health-bar__stat-label">Success Rate</span>
+                </div>
+              )}
+              <div className="health-bar__stat">
+                <span className="health-bar__stat-value">{total.toLocaleString()}</span>
+                <span className="health-bar__stat-label">Total Runs</span>
               </div>
-            )}
+            </div>
 
             <div className="health-bar__chart-wrapper">
               <ResponsiveContainer width="100%" height={44}>
@@ -96,12 +102,13 @@ export default function WorkflowHealthDonut({
               <span className="health-bar__legend-item">
                 <span className="health-bar__legend-swatch" style={{ background: "#8A93A3" }} />
                 Other ({other})
+                <span className="health-bar__info-anchor">
+                  ?
+                  <span className="health-bar__info-tooltip">
+                    Runs with a conclusion other than success or failure — includes cancelled, skipped, timed out, neutral, and action required.
+                  </span>
+                </span>
               </span>
-            </div>
-
-            <div className="health-bar__total">
-              <span className="health-bar__total-value">{total.toLocaleString()}</span>
-              <span className="health-bar__total-label">Total Runs</span>
             </div>
           </div>
         )}

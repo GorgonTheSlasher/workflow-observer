@@ -609,20 +609,26 @@ section {
   padding: 0.25rem 0;
 }
 
-.health-bar__rate {
+.health-bar__stats {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-end;
+}
+
+.health-bar__stat {
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
 }
 
-.health-bar__rate-value {
-  font-size: 2.8rem;
+.health-bar__stat-value {
+  font-size: 2.4rem;
   font-weight: 800;
   color: var(--accent);
   line-height: 1;
 }
 
-.health-bar__rate-label {
+.health-bar__stat-label {
   font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -658,25 +664,47 @@ section {
   flex-shrink: 0;
 }
 
-.health-bar__total {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-}
-
-.health-bar__total-value {
-  font-size: 1.4rem;
-  font-weight: 800;
-  color: var(--accent);
-  line-height: 1;
-}
-
-.health-bar__total-label {
-  font-size: 0.72rem;
+.health-bar__info-anchor {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: rgba(209, 227, 221, 0.15);
+  font-size: 0.65rem;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: rgba(209, 227, 221, 0.55);
+  color: rgba(209, 227, 221, 0.5);
+  cursor: help;
+  position: relative;
+  margin-left: 0.35rem;
+  flex-shrink: 0;
+}
+
+.health-bar__info-tooltip {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #32292F;
+  border: 1px solid rgba(209, 227, 221, 0.15);
+  border-radius: 6px;
+  padding: 0.5rem 0.65rem;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: rgba(209, 227, 221, 0.85);
+  width: 200px;
+  white-space: normal;
+  z-index: 100;
+  pointer-events: none;
+  line-height: 1.45;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+.health-bar__info-anchor:hover .health-bar__info-tooltip {
+  display: block;
 }
 
 /* ── Failure widget ───────────────────────────────────────────────────────── */
