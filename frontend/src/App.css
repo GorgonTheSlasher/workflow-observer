@@ -611,11 +611,12 @@ section {
 
 .health-bar__stats {
   display: flex;
-  gap: 1.5rem;
   align-items: flex-end;
+  padding: 0 0.75rem;
 }
 
 .health-bar__stat {
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
@@ -677,7 +678,6 @@ section {
   color: rgba(209, 227, 221, 0.5);
   cursor: help;
   position: relative;
-  margin-left: 0.35rem;
   flex-shrink: 0;
 }
 

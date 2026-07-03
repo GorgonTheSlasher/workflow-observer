@@ -12,10 +12,52 @@ type WorkflowHealthDonutProps = {
   isLoading?: boolean;
 };
 
+type BarPayloadEntry = {
+  dataKey?: string | number;
+  name?: string;
+  value?: number | [number, number];
+  fill?: string;
+};
+
 const CHART_THEME = {
-  text:    "#8A95A5",
+  text:    "#D1E3DD",
   tooltip: { background: "#32292F", border: "rgba(209, 227, 221, 0.15)" },
 };
+
+function BarTooltip({
+  active,
+  payload,
+  total,
+}: {
+  active?: boolean;
+  payload?: BarPayloadEntry[];
+  total: number;
+}) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div style={{
+      background: CHART_THEME.tooltip.background,
+      border: `1px solid ${CHART_THEME.tooltip.border}`,
+      borderRadius: 8,
+      padding: "8px 12px",
+      fontSize: "0.8rem",
+      color: CHART_THEME.text,
+      pointerEvents: "none",
+    }}>
+      {payload.map((entry) => {
+        const raw = entry.value;
+        const val = Array.isArray(raw) ? raw[1] - raw[0] : Number(raw ?? 0);
+        const pct = total > 0 ? Math.round((val / total) * 100) : 0;
+        return (
+          <div key={String(entry.dataKey)} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ width: 10, height: 10, borderRadius: "50%", background: entry.fill ?? "", flexShrink: 0, display: "inline-block" }} />
+            <span>{entry.name}: {val} ({pct}%)</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 export default function WorkflowHealthDonut({
   workflowRunBreakdown,
@@ -71,17 +113,14 @@ export default function WorkflowHealthDonut({
                   <XAxis type="number" domain={[0, total]} hide />
                   <YAxis type="category" hide />
                   <Tooltip
-                    contentStyle={{
-                      background: CHART_THEME.tooltip.background,
-                      border: `1px solid ${CHART_THEME.tooltip.border}`,
-                      borderRadius: 8,
-                      color: CHART_THEME.text,
-                    }}
                     cursor={false}
-                    formatter={(value, name) => [
-                      `${value} (${Math.round((Number(value) / total) * 100)}%)`,
-                      name,
-                    ]}
+                    content={({ active, payload }) => (
+                      <BarTooltip
+                        active={active}
+                        payload={payload as unknown as BarPayloadEntry[] | undefined}
+                        total={total}
+                      />
+                    )}
                   />
                   <Bar dataKey="success" stackId="a" fill="#00F6ED" name="Success" />
                   <Bar dataKey="failure" stackId="a" fill="#FFB800" name="Failure" />
