@@ -1,6 +1,8 @@
 import {
-  PieChart,
-  Pie,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
@@ -24,11 +26,7 @@ export default function WorkflowHealthDonut({
   const total = completed + other;
   const successRate = completed > 0 ? Math.round((success / completed) * 100) : null;
 
-  const pieData = [
-    { name: "Success", value: success, fill: "#FFB800" },
-    { name: "Failure", value: failure, fill: "#8A95A5" },
-    { name: "Other", value: other, fill: "#000000" },
-  ].filter((d) => d.value > 0);
+  const barData = [{ success, failure, other }];
 
   if (isLoading) {
     return (
@@ -48,65 +46,62 @@ export default function WorkflowHealthDonut({
         {total === 0 ? (
           <p className="chart-empty">No workflow run data available.</p>
         ) : (
-          <div className="donut-wrapper">
-            <div className="donut-chart-area">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
-                  <Pie
-                    data={pieData}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    innerRadius="52%"
-                    outerRadius="78%"
-                    strokeWidth={0}
-                    startAngle={90}
-                    endAngle={-270}
-                  />
+          <div className="health-bar-wrapper">
+            {successRate !== null && (
+              <div className="health-bar__rate">
+                <span className="health-bar__rate-value">{successRate}%</span>
+                <span className="health-bar__rate-label">Success Rate</span>
+              </div>
+            )}
+
+            <div className="health-bar__chart-wrapper">
+              <ResponsiveContainer width="100%" height={44}>
+                <BarChart
+                  data={barData}
+                  layout="vertical"
+                  margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
+                  barSize={44}
+                >
+                  <XAxis type="number" domain={[0, total]} hide />
+                  <YAxis type="category" hide />
                   <Tooltip
-                    position={{ x: 0, y: 0 }}
-                    wrapperStyle={{ pointerEvents: "none", zIndex: 1 }}
                     contentStyle={{
                       background: CHART_THEME.tooltip.background,
                       border: `1px solid ${CHART_THEME.tooltip.border}`,
                       borderRadius: 8,
                       color: CHART_THEME.text,
                     }}
+                    cursor={false}
                     formatter={(value, name) => [
                       `${value} (${Math.round((Number(value) / total) * 100)}%)`,
                       name,
                     ]}
                   />
-                </PieChart>
+                  <Bar dataKey="success" stackId="a" fill="#00F6ED" name="Success" />
+                  <Bar dataKey="failure" stackId="a" fill="#FFB800" name="Failure" />
+                  <Bar dataKey="other" stackId="a" fill="#8A93A3" name="Other" />
+                </BarChart>
               </ResponsiveContainer>
-
-              {successRate !== null && (
-                <div className="donut-center" aria-label={`${successRate}% success rate`}>
-                  <span className="donut-center__rate">{successRate}%</span>
-                  <span className="donut-center__label">Success Rate</span>
-                </div>
-              )}
             </div>
 
-            <div className="donut-total">
-              <span className="donut-total__value">{total.toLocaleString()}</span>
-              <span className="donut-total__label">Total Runs</span>
-            </div>
-
-            <div className="donut-legend">
-              <span className="donut-legend__item">
-                <span className="donut-legend__swatch" style={{ background: "#00F6ED" }} />
+            <div className="health-bar__legend">
+              <span className="health-bar__legend-item">
+                <span className="health-bar__legend-swatch" style={{ background: "#00F6ED" }} />
                 Success ({success})
               </span>
-              <span className="donut-legend__item">
-                <span className="donut-legend__swatch" style={{ background: "#FFB800" }} />
+              <span className="health-bar__legend-item">
+                <span className="health-bar__legend-swatch" style={{ background: "#FFB800" }} />
                 Failure ({failure})
               </span>
-              <span className="donut-legend__item">
-                <span className="donut-legend__swatch" style={{ background: "#8A93A3" }} />
+              <span className="health-bar__legend-item">
+                <span className="health-bar__legend-swatch" style={{ background: "#8A93A3" }} />
                 Other ({other})
               </span>
+            </div>
+
+            <div className="health-bar__total">
+              <span className="health-bar__total-value">{total.toLocaleString()}</span>
+              <span className="health-bar__total-label">Total Runs</span>
             </div>
           </div>
         )}
