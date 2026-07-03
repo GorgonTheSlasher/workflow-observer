@@ -85,8 +85,8 @@ export default function PrCycleTimeChart({
                     color: CHART_THEME.text,
                   }}
                   labelStyle={{ color: CHART_THEME.text }}
-                  formatter={(value: number, _name, props) => [
-                    `${formatHours(value)} (${props.payload.count} PR${props.payload.count !== 1 ? "s" : ""})`,
+                  formatter={(value, _name, props) => [
+                    `${formatHours(Number(value))} (${props.payload.count} PR${props.payload.count !== 1 ? "s" : ""})`,
                     "Avg cycle time",
                   ]}
                 />
