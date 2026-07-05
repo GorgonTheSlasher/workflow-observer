@@ -1001,3 +1001,120 @@ button:disabled {
     padding: 0.75rem 0;
   }
 }
+
+/* ── DORA view ───────────────────────────────────────────────────────────── */
+
+.dora-view {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  padding-bottom: 1rem;
+}
+
+.dora-tiles {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-shrink: 0;
+}
+
+.dora-tile {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.dora-tile--loading {
+  font-size: 0.75rem;
+  color: rgba(209, 227, 221, 0.4);
+  align-items: center;
+  justify-content: center;
+  min-height: 110px;
+}
+
+.dora-tile__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.dora-tile__name {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #8A95A5;
+}
+
+.dora-tile__badge {
+  font-size: 0.62rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  padding: 0.18rem 0.55rem;
+  border-radius: 4px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.dora-tile__value-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+
+.dora-tile__value {
+  font-size: 2.4rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.dora-tile__unit {
+  font-size: 0.85rem;
+  color: rgba(209, 227, 221, 0.5);
+}
+
+.dora-tile__description {
+  font-size: 0.75rem;
+  color: rgba(209, 227, 221, 0.5);
+  line-height: 1.4;
+  margin: 0;
+}
+
+.dora-tile__bands {
+  font-size: 0.68rem;
+  color: rgba(209, 227, 221, 0.3);
+  margin: 0;
+  letter-spacing: 0.01em;
+}
+
+.dora-charts {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  min-height: 0;
+}
+
+.dora-charts > section {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.dora-charts .chart-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}

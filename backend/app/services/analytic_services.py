@@ -353,6 +353,153 @@ def get_workflow_execution_times(
     ]
 
 
+def get_dora_metrics(
+    repo_name: str | None = None,
+    since_days: int | None = None,
+    db: Session = Depends(get_db),
+    installation_ids: list[int] | None = None,
+) -> dict:
+    cutoff = datetime.now(UTC) - timedelta(days=since_days) if since_days is not None else None
+
+    # ── All workflow run events ───────────────────────────────────────────────
+    wf_q = db.query(
+        GitHubEvent.created_at,
+        GitHubEvent.branch,
+        GitHubEvent.conclusion,
+        GitHubEvent.commit_sha,
+        GitHubEvent.details_json,
+    ).filter(GitHubEvent.event_type == "workflow_run")
+
+    if installation_ids is not None:
+        wf_q = wf_q.filter(GitHubEvent.installation_id.in_(installation_ids))
+    if repo_name:
+        wf_q = wf_q.filter(GitHubEvent.repo_name == repo_name)
+    if cutoff:
+        wf_q = wf_q.filter(GitHubEvent.created_at >= cutoff)
+
+    wf_rows = wf_q.order_by(GitHubEvent.created_at).all()
+
+    # ── Deploy Frequency ─────────────────────────────────────────────────────
+    deploy_rows = [r for r in wf_rows if r.conclusion == "success" and r.branch in ("main", "master")]
+
+    deploy_by_day: dict[str, int] = defaultdict(int)
+    for r in deploy_rows:
+        if r.created_at:
+            deploy_by_day[r.created_at.strftime("%Y-%m-%d")] += 1
+    deploy_trend = [{"date": d, "value": c} for d, c in sorted(deploy_by_day.items())]
+
+    if deploy_rows:
+        if since_days:
+            deploy_per_day = len(deploy_rows) / since_days
+        else:
+            dates = [r.created_at for r in deploy_rows if r.created_at]
+            span = max(1, (max(dates) - min(dates)).days + 1) if len(dates) > 1 else 1
+            deploy_per_day = len(deploy_rows) / span
+    else:
+        deploy_per_day = 0.0
+
+    # ── Change Failure Rate ──────────────────────────────────────────────────
+    completed = [r for r in wf_rows if r.conclusion in ("success", "failure")]
+    cfr_pct = (sum(1 for r in completed if r.conclusion == "failure") / len(completed) * 100) if completed else 0.0
+
+    cfr_by_day: dict[str, dict] = defaultdict(lambda: {"total": 0, "failed": 0})
+    for r in completed:
+        if r.created_at:
+            d = r.created_at.strftime("%Y-%m-%d")
+            cfr_by_day[d]["total"] += 1
+            if r.conclusion == "failure":
+                cfr_by_day[d]["failed"] += 1
+    cfr_trend = [
+        {"date": d, "value": round(v["failed"] / v["total"] * 100, 1)}
+        for d, v in sorted(cfr_by_day.items()) if v["total"] > 0
+    ]
+
+    # ── MTTR ─────────────────────────────────────────────────────────────────
+    groups: dict[tuple, list] = defaultdict(list)
+    for r in wf_rows:
+        wf_name = (r.details_json or {}).get("workflow_run", {}).get("name", "")
+        groups[(r.branch or "", wf_name)].append(r)
+
+    mttr_by_day: dict[str, list[float]] = defaultdict(list)
+    for group in groups.values():
+        last_fail_time = None
+        for r in group:
+            if r.conclusion == "failure" and r.created_at:
+                last_fail_time = r.created_at
+            elif r.conclusion == "success" and last_fail_time is not None and r.created_at:
+                delta_h = (r.created_at - last_fail_time).total_seconds() / 3600
+                mttr_by_day[last_fail_time.strftime("%Y-%m-%d")].append(delta_h)
+                last_fail_time = None
+
+    mttr_trend = [{"date": d, "value": round(sum(ts) / len(ts), 1)} for d, ts in sorted(mttr_by_day.items())]
+    all_mttr = [h for ts in mttr_by_day.values() for h in ts]
+    avg_mttr = round(sum(all_mttr) / len(all_mttr), 1) if all_mttr else None
+
+    # ── Lead Time for Changes ─────────────────────────────────────────────────
+    push_q = db.query(GitHubEvent.commit_sha, GitHubEvent.created_at).filter(
+        GitHubEvent.event_type == "push",
+    )
+    if installation_ids is not None:
+        push_q = push_q.filter(GitHubEvent.installation_id.in_(installation_ids))
+    if repo_name:
+        push_q = push_q.filter(GitHubEvent.repo_name == repo_name)
+
+    push_sha_map: dict[str, datetime] = {}
+    for sha, created_at in push_q.all():
+        if sha and created_at:
+            push_sha_map[sha] = created_at
+
+    lt_by_day: dict[str, list[float]] = defaultdict(list)
+    for r in deploy_rows:
+        if not r.commit_sha or not r.created_at:
+            continue
+        push_time = push_sha_map.get(r.commit_sha)
+        if push_time is None:
+            continue
+        updated_at_str = (r.details_json or {}).get("workflow_run", {}).get("updated_at")
+        if not updated_at_str:
+            continue
+        try:
+            completed_at = datetime.fromisoformat(updated_at_str.replace("Z", "+00:00"))
+            tz_push = push_time.replace(tzinfo=UTC) if push_time.tzinfo is None else push_time
+            lead_h = (completed_at - tz_push).total_seconds() / 3600
+            if lead_h >= 0:
+                lt_by_day[completed_at.strftime("%Y-%m-%d")].append(lead_h)
+        except (ValueError, AttributeError):
+            continue
+
+    lt_trend = [{"date": d, "value": round(sum(ts) / len(ts), 1)} for d, ts in sorted(lt_by_day.items())]
+    all_lt = [h for ts in lt_by_day.values() for h in ts]
+    avg_lt = round(sum(all_lt) / len(all_lt), 1) if all_lt else None
+
+    # ── DORA band ratings ─────────────────────────────────────────────────────
+    def rate_deploy(v: float) -> str:
+        if v >= 1: return "elite"
+        if v >= 1 / 7: return "high"
+        if v >= 1 / 30: return "medium"
+        return "low"
+
+    def rate_cfr(v: float) -> str:
+        if v <= 5: return "elite"
+        if v <= 10: return "high"
+        if v <= 15: return "medium"
+        return "low"
+
+    def rate_hours(v: float | None) -> str:
+        if v is None: return "low"
+        if v < 1: return "elite"
+        if v < 24: return "high"
+        if v < 168: return "medium"
+        return "low"
+
+    return {
+        "deploy_frequency": {"value": round(deploy_per_day, 2), "rating": rate_deploy(deploy_per_day), "trend": deploy_trend},
+        "change_failure_rate": {"value": round(cfr_pct, 1), "rating": rate_cfr(cfr_pct), "trend": cfr_trend},
+        "mttr": {"value": avg_mttr, "rating": rate_hours(avg_mttr), "trend": mttr_trend},
+        "lead_time": {"value": avg_lt, "rating": rate_hours(avg_lt), "trend": lt_trend},
+    }
+
+
 def get_timeline(
     repo_name: str | None = None,
     since_days: int | None = None,

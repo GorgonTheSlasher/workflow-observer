@@ -28,9 +28,11 @@ import WorkflowExecutionTimeChart from "./components/WorkflowExecutionTimeChart"
 import WorkflowRunTimelineChart from "./components/WorkflowRunTimelineChart";
 import { useWorkflowFailuresByBranch } from "./hooks/useWorkflowFailuresByBranch";
 import WorkflowFailuresByBranchChart from "./components/WorkflowFailuresByBranchChart";
+import { useDora } from "./hooks/useDora";
+import DoraView from "./components/DoraView";
 import "./App.css";
 
-type ActiveView = "summary" | "events" | "workflows";
+type ActiveView = "summary" | "events" | "workflows" | "dora";
 
 const DATE_OPTIONS = [
   { label: "All time", value: null },
@@ -69,6 +71,16 @@ function WorkflowsIcon() {
       <circle cx="15" cy="14" r="2" />
       <line x1="5" y1="8.3" x2="13" y2="5" />
       <line x1="5" y1="9.7" x2="13" y2="13" />
+    </svg>
+  );
+}
+
+function DoraIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+      <circle cx="9" cy="9" r="7.5" />
+      <circle cx="9" cy="9" r="3.5" />
+      <circle cx="9" cy="9" r="1" fill="currentColor" stroke="none" />
     </svg>
   );
 }
@@ -184,6 +196,12 @@ function Dashboard() {
     error: workflowFailuresByBranchError,
   } = useWorkflowFailuresByBranch(repoName, sinceDays);
 
+  const {
+    dora,
+    isLoading: isLoadingDora,
+    error: doraError,
+  } = useDora(repoName, sinceDays);
+
   const error = useMemo(
     () =>
       repositoriesError ??
@@ -198,6 +216,7 @@ function Dashboard() {
       executionTimesError ??
       workflowRunTimelineError ??
       workflowFailuresByBranchError ??
+      doraError ??
       eventsError ??
       failedWorkflowsError,
     [
@@ -213,6 +232,7 @@ function Dashboard() {
       executionTimesError,
       workflowRunTimelineError,
       workflowFailuresByBranchError,
+      doraError,
       eventsError,
       failedWorkflowsError,
     ]
@@ -258,6 +278,14 @@ function Dashboard() {
           >
             <WorkflowsIcon />
             {sidebarOpen && <span>Workflow Runs</span>}
+          </button>
+          <button
+            className={`sidebar__nav-item${activeView === "dora" ? " sidebar__nav-item--active" : ""}`}
+            onClick={() => handleViewChange("dora")}
+            aria-label="DORA Metrics"
+          >
+            <DoraIcon />
+            {sidebarOpen && <span>DORA Metrics</span>}
           </button>
         </nav>
       </aside>
@@ -476,6 +504,10 @@ function Dashboard() {
               />
             </div>
           </div>
+        )}
+
+        {activeView === "dora" && (
+          <DoraView data={dora} isLoading={isLoadingDora} />
         )}
       </main>
     </div>

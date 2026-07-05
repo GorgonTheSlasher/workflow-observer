@@ -337,6 +337,35 @@ export async function getWorkflowExecutionTimes(
   return response.json();
 }
 
+export type DoraRating = "elite" | "high" | "medium" | "low";
+
+export type DoraMetric = {
+  value: number | null;
+  rating: DoraRating;
+  trend: { date: string; value: number }[];
+};
+
+export type DoraMetrics = {
+  deploy_frequency: DoraMetric;
+  change_failure_rate: DoraMetric;
+  mttr: DoraMetric;
+  lead_time: DoraMetric;
+};
+
+export async function getDora(
+  repoName?: string,
+  sinceDays?: number | null,
+): Promise<DoraMetrics> {
+  const params = new URLSearchParams();
+  if (repoName) params.append("repo_name", repoName);
+  if (sinceDays != null) params.append("since_days", String(sinceDays));
+  const query = params.toString();
+  const url = query ? `${API_BASE_URL}/summary/dora?${query}` : `${API_BASE_URL}/summary/dora`;
+  const response = await apiFetch(url);
+  if (!response.ok) throw new Error("Failed to fetch DORA metrics");
+  return response.json();
+}
+
 export type EventFilters = {
   event_type?: string;
   repo_name?: string;
