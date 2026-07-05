@@ -474,22 +474,32 @@ def get_dora_metrics(
 
     # ── DORA band ratings ─────────────────────────────────────────────────────
     def rate_deploy(v: float) -> str:
-        if v >= 1: return "elite"
-        if v >= 1 / 7: return "high"
-        if v >= 1 / 30: return "medium"
+        if v >= 1:
+            return "elite"
+        if v >= 1 / 7:
+            return "high"
+        if v >= 1 / 30:
+            return "medium"
         return "low"
 
     def rate_cfr(v: float) -> str:
-        if v <= 5: return "elite"
-        if v <= 10: return "high"
-        if v <= 15: return "medium"
+        if v <= 5:
+            return "elite"
+        if v <= 10:
+            return "high"
+        if v <= 15:
+            return "medium"
         return "low"
 
     def rate_hours(v: float | None) -> str:
-        if v is None: return "low"
-        if v < 1: return "elite"
-        if v < 24: return "high"
-        if v < 168: return "medium"
+        if v is None:
+            return "low"
+        if v < 1:
+            return "elite"
+        if v < 24:
+            return "high"
+        if v < 168:
+            return "medium"
         return "low"
 
     return {
