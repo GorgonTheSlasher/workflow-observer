@@ -1096,6 +1096,13 @@ button:disabled {
   letter-spacing: 0.01em;
 }
 
+.dora-tile__direction {
+  font-size: 0.68rem;
+  color: rgba(209, 227, 221, 0.35);
+  margin: 0;
+  font-style: italic;
+}
+
 .dora-charts {
   flex: 1;
   display: grid;

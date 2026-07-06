@@ -66,9 +66,10 @@ type TileProps = {
   displayValue: string;
   rating: DoraRating;
   bands: string;
+  direction: "higher" | "lower";
 };
 
-function DoraTile({ name, description, displayValue, unit, rating, bands }: TileProps) {
+function DoraTile({ name, description, displayValue, unit, rating, bands, direction }: TileProps) {
   const color = RATING_COLOR[rating];
   return (
     <div className="dora-tile">
@@ -89,6 +90,9 @@ function DoraTile({ name, description, displayValue, unit, rating, bands }: Tile
       </div>
       <p className="dora-tile__description">{description}</p>
       <p className="dora-tile__bands">{bands}</p>
+      <p className="dora-tile__direction">
+        {direction === "higher" ? "↑ Higher is better" : "↓ Lower is better"}
+      </p>
     </div>
   );
 }
@@ -135,6 +139,7 @@ export default function DoraView({ data, isLoading }: DoraViewProps) {
       unit: "/ day",
       rating: df.rating,
       bands: "Elite ≥1/day · High ≥1/wk · Medium ≥1/mo",
+      direction: "higher",
     },
     {
       name: "Change Failure Rate",
@@ -144,6 +149,7 @@ export default function DoraView({ data, isLoading }: DoraViewProps) {
       unit: "",
       rating: cfr.rating,
       bands: "Elite ≤5% · High ≤10% · Medium ≤15%",
+      direction: "lower",
     },
     {
       name: "Mean Time to Recovery",
@@ -153,6 +159,7 @@ export default function DoraView({ data, isLoading }: DoraViewProps) {
       unit: mttr.value != null ? "avg" : "",
       rating: mttr.rating,
       bands: "Elite <1h · High <1d · Medium <1wk",
+      direction: "lower",
     },
     {
       name: "Lead Time for Changes",
@@ -162,6 +169,7 @@ export default function DoraView({ data, isLoading }: DoraViewProps) {
       unit: lt.value != null ? "avg" : "",
       rating: lt.rating,
       bands: "Elite <1h · High <1d · Medium <1wk",
+      direction: "lower",
     },
   ];
 
