@@ -13,6 +13,7 @@ import type { WorkflowFailuresByBranchEntry } from "../api";
 type WorkflowFailuresByBranchChartProps = {
   data: WorkflowFailuresByBranchEntry[];
   isLoading?: boolean;
+  onDrillDown?: (branch: string) => void;
 };
 
 const CHART_THEME = {
@@ -25,6 +26,7 @@ const CHART_THEME = {
 export default function WorkflowFailuresByBranchChart({
   data,
   isLoading = false,
+  onDrillDown,
 }: WorkflowFailuresByBranchChartProps) {
   const yAxisWidth = data.length
     ? Math.min(Math.max(...data.map((d) => d.branch.length)) * 7 + 16, 220)
@@ -84,6 +86,8 @@ export default function WorkflowFailuresByBranchChart({
                   dataKey="count"
                   radius={[0, 4, 4, 0]}
                   fill={CHART_THEME.bar}
+                  style={onDrillDown ? { cursor: "pointer" } : undefined}
+                  onClick={onDrillDown ? (d) => onDrillDown((d as unknown as { branch: string }).branch) : undefined}
                   shape={(props: BarShapeProps) => (
                     <Rectangle {...props} fillOpacity={1 - props.index * 0.15} />
                   )}

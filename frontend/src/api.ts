@@ -371,6 +371,8 @@ export type EventFilters = {
   repo_name?: string;
   actor?: string;
   conclusion?: string;
+  branch?: string;
+  workflow_name?: string;
   search?: string;
   since_days?: number;
   limit?: number;

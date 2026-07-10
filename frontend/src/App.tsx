@@ -95,6 +95,9 @@ function Dashboard() {
   const [search, setSearch] = useState("");
   const [sinceDays, setSinceDays] = useState<number | null>(null);
   const [page, setPage] = useState(0);
+  const [drillBranch, setDrillBranch] = useState("");
+  const [drillConclusion, setDrillConclusion] = useState("");
+  const [drillWorkflowName, setDrillWorkflowName] = useState("");
 
   const {
     repositories,
@@ -110,11 +113,14 @@ function Dashboard() {
       repo_name: repoName,
       actor,
       search,
+      branch: drillBranch || undefined,
+      conclusion: drillConclusion || undefined,
+      workflow_name: drillWorkflowName || undefined,
       since_days: sinceDays ?? undefined,
       limit: 25,
       offset: page * 25,
     }),
-    [eventType, repoName, actor, search, sinceDays, page]
+    [eventType, repoName, actor, search, drillBranch, drillConclusion, drillWorkflowName, sinceDays, page]
   );
 
   const {
@@ -241,6 +247,28 @@ function Dashboard() {
   function handleViewChange(view: ActiveView) {
     setActiveView(view);
     setPage(0);
+  }
+
+  function navigateToEvents(filters: {
+    event_type?: EventTypeFilter;
+    actor?: string;
+    branch?: string;
+    conclusion?: string;
+    workflow_name?: string;
+  }) {
+    if (filters.event_type !== undefined) setEventType(filters.event_type);
+    if (filters.actor !== undefined) setActor(filters.actor);
+    if (filters.branch !== undefined) setDrillBranch(filters.branch);
+    if (filters.conclusion !== undefined) setDrillConclusion(filters.conclusion);
+    if (filters.workflow_name !== undefined) setDrillWorkflowName(filters.workflow_name);
+    setPage(0);
+    handleViewChange("events");
+  }
+
+  function clearDrillFilters() {
+    setDrillBranch("");
+    setDrillConclusion("");
+    setDrillWorkflowName("");
   }
 
   return (
@@ -381,7 +409,11 @@ function Dashboard() {
                 <RecentActivityFeed />
               </div>
               <div className="summary-section__chart">
-                <TopActorsChart data={topActors} isLoading={isLoadingTopActors} />
+                <TopActorsChart
+                  data={topActors}
+                  isLoading={isLoadingTopActors}
+                  onDrillDown={(a) => navigateToEvents({ actor: a })}
+                />
               </div>
               <div className="summary-section__chart">
                 <WorkflowHealthDonut
@@ -400,9 +432,41 @@ function Dashboard() {
         {activeView === "events" && (
           <div className="events-view">
             <div className="events-charts-row">
-              <EventTypeChart data={eventTypeBreakdown} isLoading={isLoadingEventTypeBreakdown} />
-              <TopActorsChart data={eventsTopActors} isLoading={isLoadingEventsTopActors} />
+              <EventTypeChart
+                data={eventTypeBreakdown}
+                isLoading={isLoadingEventTypeBreakdown}
+                onDrillDown={(et) => navigateToEvents({ event_type: et as EventTypeFilter })}
+              />
+              <TopActorsChart
+                data={eventsTopActors}
+                isLoading={isLoadingEventsTopActors}
+                onDrillDown={(a) => navigateToEvents({ actor: a })}
+              />
             </div>
+
+            {(drillBranch || drillConclusion || drillWorkflowName) && (
+              <div className="events-drill-chips">
+                <span className="events-drill-chips__label">Filtered by:</span>
+                {drillConclusion && (
+                  <button className="drill-chip" onClick={() => setDrillConclusion("")}>
+                    {drillConclusion} ×
+                  </button>
+                )}
+                {drillBranch && (
+                  <button className="drill-chip" onClick={() => setDrillBranch("")}>
+                    branch: {drillBranch} ×
+                  </button>
+                )}
+                {drillWorkflowName && (
+                  <button className="drill-chip" onClick={() => setDrillWorkflowName("")}>
+                    workflow: {drillWorkflowName} ×
+                  </button>
+                )}
+                <button className="drill-chip drill-chip--clear" onClick={clearDrillFilters}>
+                  Clear all ×
+                </button>
+              </div>
+            )}
 
             <section className="events-section">
               <h2>Events</h2>
@@ -482,10 +546,12 @@ function Dashboard() {
               <WorkflowFailuresByBranchChart
                 data={workflowFailuresByBranch}
                 isLoading={isLoadingWorkflowFailuresByBranch}
+                onDrillDown={(b) => navigateToEvents({ event_type: "workflow_run", conclusion: "failure", branch: b })}
               />
               <WorkflowFailuresByNameChart
                 data={workflowFailuresByName}
                 isLoading={isLoadingWorkflowFailuresByName}
+                onDrillDown={(n) => navigateToEvents({ event_type: "workflow_run", conclusion: "failure", workflow_name: n })}
               />
               <WorkflowExecutionTimeChart
                 data={executionTimes}

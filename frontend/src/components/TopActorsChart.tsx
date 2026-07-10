@@ -13,6 +13,7 @@ import type { TopActorEntry } from "../api";
 type TopActorsChartProps = {
   data: TopActorEntry[];
   isLoading?: boolean;
+  onDrillDown?: (actor: string) => void;
 };
 
 const CHART_THEME = {
@@ -25,6 +26,7 @@ const CHART_THEME = {
 export default function TopActorsChart({
   data,
   isLoading = false,
+  onDrillDown,
 }: TopActorsChartProps) {
   const yAxisWidth = data.length
     ? Math.min(Math.max(...data.map((d) => d.actor.length)) * 7 + 16, 220)
@@ -83,6 +85,8 @@ export default function TopActorsChart({
                   dataKey="count"
                   radius={[0, 4, 4, 0]}
                   fill={CHART_THEME.bar}
+                  style={onDrillDown ? { cursor: "pointer" } : undefined}
+                  onClick={onDrillDown ? (d) => onDrillDown((d as unknown as { actor: string }).actor) : undefined}
                   shape={(props: BarShapeProps) => (
                     <Rectangle {...props} fillOpacity={1 - props.index * 0.15} />
                   )}

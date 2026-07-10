@@ -14,6 +14,8 @@ def get_filtered_events(
     repo_name: str | None = None,
     actor: str | None = None,
     conclusion: str | None = None,
+    branch: str | None = None,
+    workflow_name: str | None = None,
     search: str | None = None,
     since_days: int | None = None,
     limit: int = 100,
@@ -38,6 +40,14 @@ def get_filtered_events(
 
     if conclusion:
         query = query.filter(GitHubEvent.conclusion == conclusion)
+
+    if branch:
+        query = query.filter(GitHubEvent.branch == branch)
+
+    if workflow_name:
+        query = query.filter(
+            GitHubEvent.details_json["workflow_run"]["name"].astext == workflow_name
+        )
 
     if search:
         pattern = f"%{search}%"

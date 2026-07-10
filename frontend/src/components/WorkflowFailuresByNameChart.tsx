@@ -13,6 +13,7 @@ import type { WorkflowFailuresByNameEntry } from "../api";
 type WorkflowFailuresByNameChartProps = {
   data: WorkflowFailuresByNameEntry[];
   isLoading?: boolean;
+  onDrillDown?: (workflowName: string) => void;
 };
 
 const CHART_THEME = {
@@ -25,6 +26,7 @@ const CHART_THEME = {
 export default function WorkflowFailuresByNameChart({
   data,
   isLoading = false,
+  onDrillDown,
 }: WorkflowFailuresByNameChartProps) {
   const yAxisWidth = data.length
     ? Math.min(Math.max(...data.map((d) => d.workflow_name.length)) * 7 + 16, 220)
@@ -84,6 +86,8 @@ export default function WorkflowFailuresByNameChart({
                   dataKey="count"
                   radius={[0, 4, 4, 0]}
                   fill={CHART_THEME.bar}
+                  style={onDrillDown ? { cursor: "pointer" } : undefined}
+                  onClick={onDrillDown ? (d) => onDrillDown((d as unknown as { workflow_name: string }).workflow_name) : undefined}
                   shape={(props: BarShapeProps) => (
                     <Rectangle {...props} fillOpacity={1 - props.index * 0.15} />
                   )}

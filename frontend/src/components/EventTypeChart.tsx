@@ -14,6 +14,7 @@ import type { EventTypeBreakdownEntry } from "../api";
 type EventTypeChartProps = {
   data: EventTypeBreakdownEntry[];
   isLoading?: boolean;
+  onDrillDown?: (eventType: string) => void;
 };
 
 const EVENT_COLORS: Record<string, string> = {
@@ -37,6 +38,7 @@ function formatType(type: string): string {
 export default function EventTypeChart({
   data,
   isLoading = false,
+  onDrillDown,
 }: EventTypeChartProps) {
   if (isLoading) {
     return (
@@ -86,6 +88,8 @@ export default function EventTypeChart({
                 <Bar
                   dataKey="count"
                   radius={[4, 4, 0, 0]}
+                  style={onDrillDown ? { cursor: "pointer" } : undefined}
+                  onClick={onDrillDown ? (d) => onDrillDown((d as unknown as { event_type: string }).event_type) : undefined}
                   shape={(props: BarShapeProps) => {
                     const eventType = props.payload?.event_type as string | undefined;
                     return (

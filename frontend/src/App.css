@@ -901,6 +901,49 @@ a.failure-widget__message:hover {
   min-height: 0;
 }
 
+.events-drill-chips {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  flex-shrink: 0;
+}
+
+.events-drill-chips__label {
+  font-size: 0.75rem;
+  color: rgba(209, 227, 221, 0.5);
+  margin-right: 0.25rem;
+}
+
+.drill-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid rgba(0, 246, 237, 0.4);
+  background: rgba(0, 246, 237, 0.08);
+  color: #00F6ED;
+  transition: background 0.15s;
+}
+
+.drill-chip:hover {
+  background: rgba(0, 246, 237, 0.16);
+}
+
+.drill-chip--clear {
+  border-color: rgba(209, 227, 221, 0.25);
+  background: transparent;
+  color: rgba(209, 227, 221, 0.6);
+}
+
+.drill-chip--clear:hover {
+  background: rgba(209, 227, 221, 0.08);
+}
+
 .events-section {
   flex: 1;
   display: flex;
