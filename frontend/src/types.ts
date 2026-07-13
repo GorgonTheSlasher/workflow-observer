@@ -11,4 +11,5 @@ export type GitHubEvent = {
   html_url?: string | null;
   created_at: string;
   workflow_name?: string | null;
+  details_json?: Record<string, unknown> | null;
 };

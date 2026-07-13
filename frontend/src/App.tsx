@@ -30,6 +30,8 @@ import { useWorkflowFailuresByBranch } from "./hooks/useWorkflowFailuresByBranch
 import WorkflowFailuresByBranchChart from "./components/WorkflowFailuresByBranchChart";
 import { useDora } from "./hooks/useDora";
 import DoraView from "./components/DoraView";
+import EventDetailPanel from "./components/EventDetailPanel";
+import type { GitHubEvent } from "./types";
 import "./App.css";
 
 type ActiveView = "summary" | "events" | "workflows" | "dora";
@@ -98,6 +100,7 @@ function Dashboard() {
   const [drillBranch, setDrillBranch] = useState("");
   const [drillConclusion, setDrillConclusion] = useState("");
   const [drillWorkflowName, setDrillWorkflowName] = useState("");
+  const [selectedEvent, setSelectedEvent] = useState<GitHubEvent | null>(null);
 
   const {
     repositories,
@@ -513,7 +516,11 @@ function Dashboard() {
                     </thead>
                     <tbody>
                       {events.map((event) => (
-                        <tr key={event.id}>
+                        <tr
+                          key={event.id}
+                          className="events-table__row--clickable"
+                          onClick={() => setSelectedEvent(event)}
+                        >
                           <td>{event.event_type}</td>
                           <td>{event.action ?? "-"}</td>
                           <td>{event.repo_name}</td>
@@ -523,7 +530,12 @@ function Dashboard() {
                           <td>{event.conclusion ?? "-"}</td>
                           <td>
                             {event.html_url ? (
-                              <a href={event.html_url} target="_blank" rel="noreferrer">
+                              <a
+                                href={event.html_url}
+                                target="_blank"
+                                rel="noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                              >
                                 View
                               </a>
                             ) : (
@@ -576,6 +588,8 @@ function Dashboard() {
           <DoraView data={dora} isLoading={isLoadingDora} />
         )}
       </main>
+
+      <EventDetailPanel event={selectedEvent} onClose={() => setSelectedEvent(null)} />
     </div>
   );
 }
