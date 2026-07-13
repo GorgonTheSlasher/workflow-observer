@@ -409,3 +409,66 @@ export async function getEvents(
 
   return response.json();
 }
+
+// ── Issues ────────────────────────────────────────────────────────────────────
+
+export type IssueStats = {
+  opened: number;
+  closed: number;
+  close_rate: number | null;
+  avg_close_time: number | null;
+};
+
+export type IssueActivityEntry = {
+  date: string;
+  opened: number;
+  closed: number;
+};
+
+export type IssueLabelEntry = {
+  label: string;
+  count: number;
+};
+
+export type IssueResolutionEntry = {
+  date: string;
+  avg_hours: number;
+};
+
+function issueParams(repoName?: string, sinceDays?: number | null): string {
+  const p = new URLSearchParams();
+  if (repoName) p.set("repo_name", repoName);
+  if (sinceDays != null) p.set("since_days", String(sinceDays));
+  const q = p.toString();
+  return q ? `?${q}` : "";
+}
+
+export async function getIssueStats(repoName?: string, sinceDays?: number | null): Promise<IssueStats> {
+  const r = await apiFetch(`${API_BASE_URL}/summary/issues/stats${issueParams(repoName, sinceDays)}`);
+  if (!r.ok) throw new Error("Failed to fetch issue stats");
+  return r.json();
+}
+
+export async function getIssueActivity(repoName?: string, sinceDays?: number | null): Promise<IssueActivityEntry[]> {
+  const r = await apiFetch(`${API_BASE_URL}/summary/issues/activity${issueParams(repoName, sinceDays)}`);
+  if (!r.ok) throw new Error("Failed to fetch issue activity");
+  return r.json();
+}
+
+export async function getIssueLabels(repoName?: string, sinceDays?: number | null): Promise<IssueLabelEntry[]> {
+  const r = await apiFetch(`${API_BASE_URL}/summary/issues/labels${issueParams(repoName, sinceDays)}`);
+  if (!r.ok) throw new Error("Failed to fetch issue labels");
+  return r.json();
+}
+
+export async function getIssueResolutionTrend(repoName?: string, sinceDays?: number | null): Promise<IssueResolutionEntry[]> {
+  const r = await apiFetch(`${API_BASE_URL}/summary/issues/resolution-trend${issueParams(repoName, sinceDays)}`);
+  if (!r.ok) throw new Error("Failed to fetch issue resolution trend");
+  return r.json();
+}
+
+export async function getIssueReporters(repoName?: string, sinceDays?: number | null): Promise<TopActorEntry[]> {
+  const r = await apiFetch(`${API_BASE_URL}/summary/issues/reporters${issueParams(repoName, sinceDays)}`);
+  if (!r.ok) throw new Error("Failed to fetch issue reporters");
+  return r.json();
+}

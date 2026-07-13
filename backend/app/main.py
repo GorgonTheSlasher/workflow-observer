@@ -14,7 +14,7 @@ from app.config import settings
 from app.database import get_db, SessionLocal
 from app.event_dispatcher import dispatch_github_webhook
 from app.models import GitHubEvent, UserAccount
-from app.services.analytic_services import get_filtered_events, get_timeline, get_top_actors, get_event_type_breakdown, get_workflow_failures_by_name, get_workflow_failures_by_branch, get_workflow_run_timeline, get_workflow_execution_times, get_pr_cycle_times, get_dora_metrics
+from app.services.analytic_services import get_filtered_events, get_timeline, get_top_actors, get_event_type_breakdown, get_workflow_failures_by_name, get_workflow_failures_by_branch, get_workflow_run_timeline, get_workflow_execution_times, get_pr_cycle_times, get_dora_metrics, get_issue_stats, get_issue_activity_timeline, get_issue_labels, get_issue_resolution_trend, get_issue_reporters
 from app.services.auth_services import register_new_user, user_login, get_current_user, get_github_authorize_url, login_with_github
 from app.services.installation_services import get_user_installation_ids
 from app.schemas import AuthCredentials
@@ -381,6 +381,76 @@ def get_event_timeline(
     current_user: dict = Depends(get_current_user),
 ):
     return get_timeline(
+        db=db,
+        repo_name=repo_name,
+        since_days=since_days,
+        installation_ids=get_user_installation_ids(current_user["id"], db),
+    )
+
+@app.get("/summary/issues/stats")
+def get_issue_stats_summary(
+    repo_name: str | None = None,
+    since_days: int | None = None,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    return get_issue_stats(
+        db=db,
+        repo_name=repo_name,
+        since_days=since_days,
+        installation_ids=get_user_installation_ids(current_user["id"], db),
+    )
+
+@app.get("/summary/issues/activity")
+def get_issue_activity_summary(
+    repo_name: str | None = None,
+    since_days: int | None = None,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    return get_issue_activity_timeline(
+        db=db,
+        repo_name=repo_name,
+        since_days=since_days,
+        installation_ids=get_user_installation_ids(current_user["id"], db),
+    )
+
+@app.get("/summary/issues/labels")
+def get_issue_labels_summary(
+    repo_name: str | None = None,
+    since_days: int | None = None,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    return get_issue_labels(
+        db=db,
+        repo_name=repo_name,
+        since_days=since_days,
+        installation_ids=get_user_installation_ids(current_user["id"], db),
+    )
+
+@app.get("/summary/issues/resolution-trend")
+def get_issue_resolution_trend_summary(
+    repo_name: str | None = None,
+    since_days: int | None = None,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    return get_issue_resolution_trend(
+        db=db,
+        repo_name=repo_name,
+        since_days=since_days,
+        installation_ids=get_user_installation_ids(current_user["id"], db),
+    )
+
+@app.get("/summary/issues/reporters")
+def get_issue_reporters_summary(
+    repo_name: str | None = None,
+    since_days: int | None = None,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    return get_issue_reporters(
         db=db,
         repo_name=repo_name,
         since_days=since_days,

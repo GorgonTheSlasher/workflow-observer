@@ -550,3 +550,177 @@ def get_timeline(
             pivot[date_str][event_type] += 1
 
     return [{"date": date, **counts} for date, counts in sorted(pivot.items())]
+
+
+# ── Issues analytics ──────────────────────────────────────────────────────────
+
+def _apply_base_filters(query, repo_name, since_days, installation_ids):
+    if installation_ids is not None:
+        query = query.filter(GitHubEvent.installation_id.in_(installation_ids))
+    if repo_name:
+        query = query.filter(GitHubEvent.repo_name == repo_name)
+    if since_days is not None:
+        cutoff = datetime.now(UTC) - timedelta(days=since_days)
+        query = query.filter(GitHubEvent.created_at >= cutoff)
+    return query
+
+
+def get_issue_stats(
+    repo_name: str | None = None,
+    since_days: int | None = None,
+    db: Session = Depends(get_db),
+    installation_ids: list[int] | None = None,
+) -> dict:
+    query = db.query(GitHubEvent).filter(
+        GitHubEvent.event_type == "issues",
+        GitHubEvent.action.in_(["opened", "closed"]),
+    )
+    query = _apply_base_filters(query, repo_name, since_days, installation_ids)
+    events = query.order_by(GitHubEvent.created_at).all()
+
+    opened_count = sum(1 for e in events if e.action == "opened")
+    closed_count = sum(1 for e in events if e.action == "closed")
+    close_rate = round(closed_count / opened_count * 100, 1) if opened_count > 0 else None
+
+    opened_times: dict[int, datetime] = {}
+    close_durations: list[float] = []
+    for e in events:
+        num = (e.details_json or {}).get("issue", {}).get("number")
+        if num is None:
+            continue
+        if e.action == "opened":
+            opened_times[num] = e.created_at
+        elif e.action == "closed" and num in opened_times:
+            hours = (e.created_at - opened_times[num]).total_seconds() / 3600
+            if hours >= 0:
+                close_durations.append(hours)
+
+    avg_close_time = round(sum(close_durations) / len(close_durations), 1) if close_durations else None
+
+    return {
+        "opened": opened_count,
+        "closed": closed_count,
+        "close_rate": close_rate,
+        "avg_close_time": avg_close_time,
+    }
+
+
+def get_issue_activity_timeline(
+    repo_name: str | None = None,
+    since_days: int | None = None,
+    db: Session = Depends(get_db),
+    installation_ids: list[int] | None = None,
+) -> list[dict]:
+    query = db.query(GitHubEvent.action, GitHubEvent.created_at).filter(
+        GitHubEvent.event_type == "issues",
+        GitHubEvent.action.in_(["opened", "closed"]),
+    )
+    query = _apply_base_filters(query, repo_name, since_days, installation_ids)
+
+    by_day: dict[str, dict[str, int]] = defaultdict(lambda: {"opened": 0, "closed": 0})
+    for action, created_at in query.all():
+        if created_at is not None:
+            day = created_at.strftime("%Y-%m-%d")
+            by_day[day][action] += 1
+
+    return [
+        {"date": day, "opened": counts["opened"], "closed": counts["closed"]}
+        for day, counts in sorted(by_day.items())
+    ]
+
+
+def get_issue_labels(
+    repo_name: str | None = None,
+    since_days: int | None = None,
+    db: Session = Depends(get_db),
+    installation_ids: list[int] | None = None,
+) -> list[dict]:
+    query = db.query(GitHubEvent.details_json).filter(
+        GitHubEvent.event_type == "issues",
+        GitHubEvent.action == "opened",
+    )
+    query = _apply_base_filters(query, repo_name, since_days, installation_ids)
+
+    counts: dict[str, int] = defaultdict(int)
+    for (details_json,) in query.all():
+        labels = (details_json or {}).get("issue", {}).get("labels", [])
+        for label in labels:
+            name = label.get("name") if isinstance(label, dict) else None
+            if name:
+                counts[name] += 1
+
+    return [
+        {"label": name, "count": count}
+        for name, count in sorted(counts.items(), key=lambda kv: kv[1], reverse=True)
+    ][:15]
+
+
+def get_issue_resolution_trend(
+    repo_name: str | None = None,
+    since_days: int | None = None,
+    db: Session = Depends(get_db),
+    installation_ids: list[int] | None = None,
+) -> list[dict]:
+    # Load ALL opened events (no date filter) to pair with any close in the window
+    opened_query = db.query(GitHubEvent.details_json, GitHubEvent.created_at).filter(
+        GitHubEvent.event_type == "issues",
+        GitHubEvent.action == "opened",
+    )
+    if installation_ids is not None:
+        opened_query = opened_query.filter(GitHubEvent.installation_id.in_(installation_ids))
+    if repo_name:
+        opened_query = opened_query.filter(GitHubEvent.repo_name == repo_name)
+
+    opened_times: dict[int, datetime] = {}
+    for details_json, created_at in opened_query.all():
+        num = (details_json or {}).get("issue", {}).get("number")
+        if num is not None and created_at is not None:
+            opened_times[num] = created_at
+
+    closed_query = db.query(GitHubEvent.details_json, GitHubEvent.created_at).filter(
+        GitHubEvent.event_type == "issues",
+        GitHubEvent.action == "closed",
+    )
+    closed_query = _apply_base_filters(closed_query, repo_name, since_days, installation_ids)
+
+    by_day: dict[str, list[float]] = defaultdict(list)
+    for details_json, closed_at in closed_query.all():
+        num = (details_json or {}).get("issue", {}).get("number")
+        if num is None or num not in opened_times or closed_at is None:
+            continue
+        hours = (closed_at - opened_times[num]).total_seconds() / 3600
+        if hours >= 0:
+            day = closed_at.strftime("%Y-%m-%d")
+            by_day[day].append(hours)
+
+    return [
+        {"date": day, "avg_hours": round(sum(hrs) / len(hrs), 1)}
+        for day, hrs in sorted(by_day.items())
+    ]
+
+
+def get_issue_reporters(
+    repo_name: str | None = None,
+    since_days: int | None = None,
+    db: Session = Depends(get_db),
+    installation_ids: list[int] | None = None,
+    limit: int = 10,
+) -> list[dict]:
+    query = db.query(
+        GitHubEvent.actor,
+        func.count(GitHubEvent.id).label("count"),
+    ).filter(
+        GitHubEvent.event_type == "issues",
+        GitHubEvent.action == "opened",
+        GitHubEvent.actor.isnot(None),
+    )
+    query = _apply_base_filters(query, repo_name, since_days, installation_ids)
+
+    rows = (
+        query
+        .group_by(GitHubEvent.actor)
+        .order_by(func.count(GitHubEvent.id).desc())
+        .limit(limit)
+        .all()
+    )
+    return [{"actor": actor, "count": count} for actor, count in rows]

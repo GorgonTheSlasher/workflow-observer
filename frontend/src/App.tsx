@@ -30,11 +30,13 @@ import { useWorkflowFailuresByBranch } from "./hooks/useWorkflowFailuresByBranch
 import WorkflowFailuresByBranchChart from "./components/WorkflowFailuresByBranchChart";
 import { useDora } from "./hooks/useDora";
 import DoraView from "./components/DoraView";
+import { useIssues } from "./hooks/useIssues";
+import IssuesView from "./components/IssuesView";
 import EventDetailPanel from "./components/EventDetailPanel";
 import type { GitHubEvent } from "./types";
 import "./App.css";
 
-type ActiveView = "summary" | "events" | "workflows" | "dora";
+type ActiveView = "summary" | "events" | "workflows" | "dora" | "issues";
 
 const DATE_OPTIONS = [
   { label: "All time", value: null },
@@ -83,6 +85,16 @@ function DoraIcon() {
       <circle cx="9" cy="9" r="7.5" />
       <circle cx="9" cy="9" r="3.5" />
       <circle cx="9" cy="9" r="1" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+function IssuesIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+      <circle cx="9" cy="9" r="7.5" />
+      <line x1="9" y1="5.5" x2="9" y2="9.5" strokeLinecap="round" />
+      <circle cx="9" cy="12" r="0.75" fill="currentColor" stroke="none" />
     </svg>
   );
 }
@@ -211,6 +223,16 @@ function Dashboard() {
     error: doraError,
   } = useDora(repoName, sinceDays);
 
+  const {
+    stats: issueStats,
+    activity: issueActivity,
+    labels: issueLabels,
+    resolutionTrend: issueResolutionTrend,
+    reporters: issueReporters,
+    isLoading: isLoadingIssues,
+    error: issuesError,
+  } = useIssues(repoName, sinceDays);
+
   const error = useMemo(
     () =>
       repositoriesError ??
@@ -226,6 +248,7 @@ function Dashboard() {
       workflowRunTimelineError ??
       workflowFailuresByBranchError ??
       doraError ??
+      issuesError ??
       eventsError ??
       failedWorkflowsError,
     [
@@ -242,6 +265,7 @@ function Dashboard() {
       workflowRunTimelineError,
       workflowFailuresByBranchError,
       doraError,
+      issuesError,
       eventsError,
       failedWorkflowsError,
     ]
@@ -317,6 +341,14 @@ function Dashboard() {
           >
             <DoraIcon />
             {sidebarOpen && <span>DORA Metrics</span>}
+          </button>
+          <button
+            className={`sidebar__nav-item${activeView === "issues" ? " sidebar__nav-item--active" : ""}`}
+            onClick={() => handleViewChange("issues")}
+            aria-label="Issues"
+          >
+            <IssuesIcon />
+            {sidebarOpen && <span>Issues</span>}
           </button>
         </nav>
       </aside>
@@ -586,6 +618,21 @@ function Dashboard() {
 
         {activeView === "dora" && (
           <DoraView data={dora} isLoading={isLoadingDora} />
+        )}
+
+        {activeView === "issues" && (
+          <IssuesView
+            stats={issueStats}
+            activity={issueActivity}
+            labels={issueLabels}
+            resolutionTrend={issueResolutionTrend}
+            reporters={issueReporters}
+            isLoading={isLoadingIssues}
+            onDrillDown={(filters) => navigateToEvents({
+              event_type: filters.event_type as EventTypeFilter | undefined,
+              actor: filters.actor,
+            })}
+          />
         )}
       </main>
 
