@@ -12,7 +12,8 @@ export function useEventTypeBreakdown(
   repoName: string,
   eventType: string,
   actor: string,
-  sinceDays?: number | null,
+  startDate?: string | null,
+  endDate?: string | null,
 ): UseEventTypeBreakdownResult {
   const tick = useEventTick();
   const [eventTypeBreakdown, setEventTypeBreakdown] = useState<EventTypeBreakdownEntry[]>([]);
@@ -27,7 +28,7 @@ export function useEventTypeBreakdown(
       setError(null);
 
       try {
-        const data = await getEventTypeBreakdown(repoName, eventType, actor, sinceDays);
+        const data = await getEventTypeBreakdown(repoName, eventType, actor, startDate, endDate);
         if (!cancelled) setEventTypeBreakdown(data);
       } catch (err) {
         if (!cancelled) setError((err as Error).message);
@@ -41,7 +42,7 @@ export function useEventTypeBreakdown(
     return () => {
       cancelled = true;
     };
-  }, [repoName, eventType, actor, sinceDays, tick]);
+  }, [repoName, eventType, actor, startDate, endDate, tick]);
 
   return { eventTypeBreakdown, isLoading, error };
 }

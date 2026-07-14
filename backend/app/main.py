@@ -21,6 +21,18 @@ from app.schemas import AuthCredentials
 
 from app.alerts import send_slack_alert
 
+def _parse_date(s: str | None) -> datetime | None:
+    if s is None:
+        return None
+    return datetime.strptime(s, "%Y-%m-%d").replace(tzinfo=UTC)
+
+def _parse_end_date(s: str | None) -> datetime | None:
+    """End date is exclusive upper bound — advance to start of next day."""
+    if s is None:
+        return None
+    return datetime.strptime(s, "%Y-%m-%d").replace(tzinfo=UTC) + timedelta(days=1)
+
+
 app = FastAPI(
     title="GitHub Workflow Observer",
 )
@@ -130,7 +142,8 @@ def get_events(
     branch: str | None = None,
     workflow_name: str | None = None,
     search: str | None = None,
-    since_days: int | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
     limit: int = 100,
     offset: int = 0,
     db: Session = Depends(get_db),
@@ -145,7 +158,8 @@ def get_events(
         branch=branch,
         workflow_name=workflow_name,
         search=search,
-        since_days=since_days,
+        start_date=_parse_date(start_date),
+        end_date=_parse_end_date(end_date),
         limit=limit,
         offset=offset,
         installation_ids=get_user_installation_ids(current_user["id"], db),
@@ -156,7 +170,8 @@ def get_events(
 def get_workflow_runs(
     repo_name: str | None = None,
     result: str | None = None,
-    since_days: int | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
@@ -175,9 +190,12 @@ def get_workflow_runs(
         base_query = base_query.filter(GitHubEvent.installation_id.in_(installation_ids))
     if repo_name:
         base_query = base_query.filter(GitHubEvent.repo_name == repo_name)
-    if since_days is not None:
-        cutoff = datetime.now(UTC) - timedelta(days=since_days)
-        base_query = base_query.filter(GitHubEvent.created_at >= cutoff)
+    parsed_start = _parse_date(start_date)
+    parsed_end = _parse_end_date(end_date)
+    if parsed_start is not None:
+        base_query = base_query.filter(GitHubEvent.created_at >= parsed_start)
+    if parsed_end is not None:
+        base_query = base_query.filter(GitHubEvent.created_at < parsed_end)
 
     total_workflows = base_query.count()
 
@@ -255,7 +273,8 @@ def get_recent_events(
 def get_top_actors_summary(
     repo_name: str | None = None,
     limit: int = 5,
-    since_days: int | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
     event_type: str | None = None,
     actor: str | None = None,
     db: Session = Depends(get_db),
@@ -265,7 +284,8 @@ def get_top_actors_summary(
         db=db,
         repo_name=repo_name,
         limit=limit,
-        since_days=since_days,
+        start_date=_parse_date(start_date),
+        end_date=_parse_end_date(end_date),
         event_type=event_type,
         actor=actor,
         installation_ids=get_user_installation_ids(current_user["id"], db),
@@ -276,7 +296,8 @@ def get_event_type_breakdown_summary(
     repo_name: str | None = None,
     event_type: str | None = None,
     actor: str | None = None,
-    since_days: int | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
@@ -285,175 +306,200 @@ def get_event_type_breakdown_summary(
         repo_name=repo_name,
         event_type=event_type,
         actor=actor,
-        since_days=since_days,
+        start_date=_parse_date(start_date),
+        end_date=_parse_end_date(end_date),
         installation_ids=get_user_installation_ids(current_user["id"], db),
     )
 
 @app.get("/summary/workflow-failures-by-name")
 def get_workflow_failures_by_name_summary(
     repo_name: str | None = None,
-    since_days: int | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
     return get_workflow_failures_by_name(
         db=db,
         repo_name=repo_name,
-        since_days=since_days,
+        start_date=_parse_date(start_date),
+        end_date=_parse_end_date(end_date),
         installation_ids=get_user_installation_ids(current_user["id"], db),
     )
 
 @app.get("/summary/workflow-failures-by-branch")
 def get_workflow_failures_by_branch_summary(
     repo_name: str | None = None,
-    since_days: int | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
     return get_workflow_failures_by_branch(
         db=db,
         repo_name=repo_name,
-        since_days=since_days,
+        start_date=_parse_date(start_date),
+        end_date=_parse_end_date(end_date),
         installation_ids=get_user_installation_ids(current_user["id"], db),
     )
 
 @app.get("/summary/pr-cycle-times")
 def get_pr_cycle_times_summary(
     repo_name: str | None = None,
-    since_days: int | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
     return get_pr_cycle_times(
         db=db,
         repo_name=repo_name,
-        since_days=since_days,
+        start_date=_parse_date(start_date),
+        end_date=_parse_end_date(end_date),
         installation_ids=get_user_installation_ids(current_user["id"], db),
     )
 
 @app.get("/summary/dora")
 def get_dora_metrics_summary(
     repo_name: str | None = None,
-    since_days: int | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
     return get_dora_metrics(
         db=db,
         repo_name=repo_name,
-        since_days=since_days,
+        start_date=_parse_date(start_date),
+        end_date=_parse_end_date(end_date),
         installation_ids=get_user_installation_ids(current_user["id"], db),
     )
 
 @app.get("/summary/workflow-execution-times")
 def get_workflow_execution_times_summary(
     repo_name: str | None = None,
-    since_days: int | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
     return get_workflow_execution_times(
         db=db,
         repo_name=repo_name,
-        since_days=since_days,
+        start_date=_parse_date(start_date),
+        end_date=_parse_end_date(end_date),
         installation_ids=get_user_installation_ids(current_user["id"], db),
     )
 
 @app.get("/summary/workflow-runs/timeline")
 def get_workflow_run_timeline_summary(
     repo_name: str | None = None,
-    since_days: int | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
     return get_workflow_run_timeline(
         db=db,
         repo_name=repo_name,
-        since_days=since_days,
+        start_date=_parse_date(start_date),
+        end_date=_parse_end_date(end_date),
         installation_ids=get_user_installation_ids(current_user["id"], db),
     )
 
 @app.get("/summary/timeline")
 def get_event_timeline(
     repo_name: str | None = None,
-    since_days: int | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
     return get_timeline(
         db=db,
         repo_name=repo_name,
-        since_days=since_days,
+        start_date=_parse_date(start_date),
+        end_date=_parse_end_date(end_date),
         installation_ids=get_user_installation_ids(current_user["id"], db),
     )
 
 @app.get("/summary/issues/stats")
 def get_issue_stats_summary(
     repo_name: str | None = None,
-    since_days: int | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
     return get_issue_stats(
         db=db,
         repo_name=repo_name,
-        since_days=since_days,
+        start_date=_parse_date(start_date),
+        end_date=_parse_end_date(end_date),
         installation_ids=get_user_installation_ids(current_user["id"], db),
     )
 
 @app.get("/summary/issues/activity")
 def get_issue_activity_summary(
     repo_name: str | None = None,
-    since_days: int | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
     return get_issue_activity_timeline(
         db=db,
         repo_name=repo_name,
-        since_days=since_days,
+        start_date=_parse_date(start_date),
+        end_date=_parse_end_date(end_date),
         installation_ids=get_user_installation_ids(current_user["id"], db),
     )
 
 @app.get("/summary/issues/labels")
 def get_issue_labels_summary(
     repo_name: str | None = None,
-    since_days: int | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
     return get_issue_labels(
         db=db,
         repo_name=repo_name,
-        since_days=since_days,
+        start_date=_parse_date(start_date),
+        end_date=_parse_end_date(end_date),
         installation_ids=get_user_installation_ids(current_user["id"], db),
     )
 
 @app.get("/summary/issues/resolution-trend")
 def get_issue_resolution_trend_summary(
     repo_name: str | None = None,
-    since_days: int | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
     return get_issue_resolution_trend(
         db=db,
         repo_name=repo_name,
-        since_days=since_days,
+        start_date=_parse_date(start_date),
+        end_date=_parse_end_date(end_date),
         installation_ids=get_user_installation_ids(current_user["id"], db),
     )
 
 @app.get("/summary/issues/reporters")
 def get_issue_reporters_summary(
     repo_name: str | None = None,
-    since_days: int | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
     return get_issue_reporters(
         db=db,
         repo_name=repo_name,
-        since_days=since_days,
+        start_date=_parse_date(start_date),
+        end_date=_parse_end_date(end_date),
         installation_ids=get_user_installation_ids(current_user["id"], db),
     )
 

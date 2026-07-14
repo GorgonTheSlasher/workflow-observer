@@ -10,7 +10,8 @@ type UseWorkflowRunTimelineResult = {
 
 export function useWorkflowRunTimeline(
   repoName: string,
-  sinceDays?: number | null,
+  startDate?: string | null,
+  endDate?: string | null,
 ): UseWorkflowRunTimelineResult {
   const tick = useEventTick();
   const [workflowRunTimeline, setWorkflowRunTimeline] = useState<WorkflowRunTimelineEntry[]>([]);
@@ -25,7 +26,7 @@ export function useWorkflowRunTimeline(
       setError(null);
 
       try {
-        const data = await getWorkflowRunTimeline(repoName, sinceDays);
+        const data = await getWorkflowRunTimeline(repoName, startDate, endDate);
         if (!cancelled) setWorkflowRunTimeline(data);
       } catch (err) {
         if (!cancelled) setError((err as Error).message);
@@ -39,7 +40,7 @@ export function useWorkflowRunTimeline(
     return () => {
       cancelled = true;
     };
-  }, [repoName, sinceDays, tick]);
+  }, [repoName, startDate, endDate, tick]);
 
   return { workflowRunTimeline, isLoading, error };
 }

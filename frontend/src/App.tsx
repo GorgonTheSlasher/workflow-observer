@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import DateRangePicker from "./components/DateRangePicker";
 import RecentWorkflowFailuresWidget from "./components/RecentWorkflowFailuresWidget";
 import RecentActivityFeed from "./components/RecentActivityFeed";
 import EventTypeChart from "./components/EventTypeChart";
@@ -37,14 +38,6 @@ import type { GitHubEvent } from "./types";
 import "./App.css";
 
 type ActiveView = "summary" | "events" | "workflows" | "dora" | "issues";
-
-const DATE_OPTIONS = [
-  { label: "All time", value: null },
-  { label: "Today", value: 1 },
-  { label: "7 days", value: 7 },
-  { label: "30 days", value: 30 },
-  { label: "90 days", value: 90 },
-] as const;
 
 function SummaryIcon() {
   return (
@@ -107,7 +100,8 @@ function Dashboard() {
   const [eventType, setEventType] = useState<EventTypeFilter>("");
   const [actor, setActor] = useState("");
   const [search, setSearch] = useState("");
-  const [sinceDays, setSinceDays] = useState<number | null>(null);
+  const [startDate, setStartDate] = useState<string | null>(null);
+  const [endDate, setEndDate] = useState<string | null>(null);
   const [page, setPage] = useState(0);
   const [drillBranch, setDrillBranch] = useState("");
   const [drillConclusion, setDrillConclusion] = useState("");
@@ -131,11 +125,12 @@ function Dashboard() {
       branch: drillBranch || undefined,
       conclusion: drillConclusion || undefined,
       workflow_name: drillWorkflowName || undefined,
-      since_days: sinceDays ?? undefined,
+      start_date: startDate ?? undefined,
+      end_date: endDate ?? undefined,
       limit: 25,
       offset: page * 25,
     }),
-    [eventType, repoName, actor, search, drillBranch, drillConclusion, drillWorkflowName, sinceDays, page]
+    [eventType, repoName, actor, search, drillBranch, drillConclusion, drillWorkflowName, startDate, endDate, page]
   );
 
   const {
@@ -161,67 +156,67 @@ function Dashboard() {
     workflowRunBreakdown,
     isLoading: isLoadingWorkflowRunBreakdown,
     error: workflowRunBreakdownError,
-  } = useWorkflowRunBreakdown(repoName, sinceDays);
+  } = useWorkflowRunBreakdown(repoName, startDate, endDate);
 
   const {
     prCycleTimes,
     isLoading: isLoadingPrCycleTimes,
     error: prCycleTimesError,
-  } = usePrCycleTimes(repoName, sinceDays);
+  } = usePrCycleTimes(repoName, startDate, endDate);
 
   const {
     timeline,
     isLoading: isLoadingTimeline,
     error: timelineError,
-  } = useTimeline(repoName, sinceDays);
+  } = useTimeline(repoName, startDate, endDate);
 
   const {
     topActors,
     isLoading: isLoadingTopActors,
     error: topActorsError,
-  } = useTopActors(repoName, sinceDays);
+  } = useTopActors(repoName, startDate, endDate);
 
   const {
     eventTypeBreakdown,
     isLoading: isLoadingEventTypeBreakdown,
     error: eventTypeBreakdownError,
-  } = useEventTypeBreakdown(repoName, eventType, actor, sinceDays);
+  } = useEventTypeBreakdown(repoName, eventType, actor, startDate, endDate);
 
   const {
     topActors: eventsTopActors,
     isLoading: isLoadingEventsTopActors,
     error: eventsTopActorsError,
-  } = useTopActors(repoName, sinceDays, eventType, actor);
+  } = useTopActors(repoName, startDate, endDate, eventType, actor);
 
   const {
     workflowFailuresByName,
     isLoading: isLoadingWorkflowFailuresByName,
     error: workflowFailuresByNameError,
-  } = useWorkflowFailuresByName(repoName, sinceDays);
+  } = useWorkflowFailuresByName(repoName, startDate, endDate);
 
   const {
     executionTimes,
     isLoading: isLoadingExecutionTimes,
     error: executionTimesError,
-  } = useWorkflowExecutionTime(repoName, sinceDays);
+  } = useWorkflowExecutionTime(repoName, startDate, endDate);
 
   const {
     workflowRunTimeline,
     isLoading: isLoadingWorkflowRunTimeline,
     error: workflowRunTimelineError,
-  } = useWorkflowRunTimeline(repoName, sinceDays);
+  } = useWorkflowRunTimeline(repoName, startDate, endDate);
 
   const {
     workflowFailuresByBranch,
     isLoading: isLoadingWorkflowFailuresByBranch,
     error: workflowFailuresByBranchError,
-  } = useWorkflowFailuresByBranch(repoName, sinceDays);
+  } = useWorkflowFailuresByBranch(repoName, startDate, endDate);
 
   const {
     dora,
     isLoading: isLoadingDora,
     error: doraError,
-  } = useDora(repoName, sinceDays);
+  } = useDora(repoName, startDate, endDate);
 
   const {
     stats: issueStats,
@@ -231,7 +226,7 @@ function Dashboard() {
     reporters: issueReporters,
     isLoading: isLoadingIssues,
     error: issuesError,
-  } = useIssues(repoName, sinceDays);
+  } = useIssues(repoName, startDate, endDate);
 
   const error = useMemo(
     () =>
@@ -407,19 +402,15 @@ function Dashboard() {
               />
             )}
 
-            <select
-              className="app-header__select"
-              value={sinceDays ?? ""}
-              onChange={(e) => {
-                const raw = e.target.value;
-                setSinceDays(raw === "" ? null : Number(raw));
+            <DateRangePicker
+              startDate={startDate}
+              endDate={endDate}
+              onChange={({ startDate: s, endDate: e }) => {
+                setStartDate(s);
+                setEndDate(e);
                 setPage(0);
               }}
-            >
-              {DATE_OPTIONS.map((opt) => (
-                <option key={opt.label} value={opt.value ?? ""}>{opt.label}</option>
-              ))}
-            </select>
+            />
 
             <button
               className="app-header__connect"

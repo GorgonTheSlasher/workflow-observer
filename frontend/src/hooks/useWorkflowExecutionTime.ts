@@ -10,7 +10,8 @@ type UseWorkflowExecutionTimeResult = {
 
 export function useWorkflowExecutionTime(
   repoName: string,
-  sinceDays?: number | null,
+  startDate?: string | null,
+  endDate?: string | null,
 ): UseWorkflowExecutionTimeResult {
   const tick = useEventTick();
   const [executionTimes, setExecutionTimes] = useState<WorkflowExecutionTimeEntry[]>([]);
@@ -25,7 +26,7 @@ export function useWorkflowExecutionTime(
       setError(null);
 
       try {
-        const data = await getWorkflowExecutionTimes(repoName, sinceDays);
+        const data = await getWorkflowExecutionTimes(repoName, startDate, endDate);
         if (!cancelled) setExecutionTimes(data);
       } catch (err) {
         if (!cancelled) setError((err as Error).message);
@@ -39,7 +40,7 @@ export function useWorkflowExecutionTime(
     return () => {
       cancelled = true;
     };
-  }, [repoName, sinceDays, tick]);
+  }, [repoName, startDate, endDate, tick]);
 
   return { executionTimes, isLoading, error };
 }

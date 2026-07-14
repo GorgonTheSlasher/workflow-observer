@@ -23,7 +23,7 @@ type UseIssuesResult = {
   error: string | null;
 };
 
-export function useIssues(repoName: string, sinceDays?: number | null): UseIssuesResult {
+export function useIssues(repoName: string, startDate?: string | null, endDate?: string | null): UseIssuesResult {
   const tick = useEventTick();
   const [stats, setStats] = useState<IssueStats | null>(null);
   const [activity, setActivity] = useState<IssueActivityEntry[]>([]);
@@ -41,11 +41,11 @@ export function useIssues(repoName: string, sinceDays?: number | null): UseIssue
       setError(null);
       try {
         const [s, a, l, r, rep] = await Promise.all([
-          getIssueStats(repoName, sinceDays),
-          getIssueActivity(repoName, sinceDays),
-          getIssueLabels(repoName, sinceDays),
-          getIssueResolutionTrend(repoName, sinceDays),
-          getIssueReporters(repoName, sinceDays),
+          getIssueStats(repoName, startDate, endDate),
+          getIssueActivity(repoName, startDate, endDate),
+          getIssueLabels(repoName, startDate, endDate),
+          getIssueResolutionTrend(repoName, startDate, endDate),
+          getIssueReporters(repoName, startDate, endDate),
         ]);
         if (!cancelled) {
           setStats(s);
@@ -63,7 +63,7 @@ export function useIssues(repoName: string, sinceDays?: number | null): UseIssue
 
     load();
     return () => { cancelled = true; };
-  }, [repoName, sinceDays, tick]);
+  }, [repoName, startDate, endDate, tick]);
 
   return { stats, activity, labels, resolutionTrend, reporters, isLoading, error };
 }

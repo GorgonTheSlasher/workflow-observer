@@ -123,11 +123,13 @@ export async function getRecentEvents(limit = 10): Promise<GitHubEvent[]> {
 export async function getWorkflowRuns(
   repoName: string,
   result: WorkflowRunResult,
-  sinceDays?: number | null,
+  startDate?: string | null,
+  endDate?: string | null,
 ): Promise<WorkflowRunsSummary> {
   const params = new URLSearchParams({ result });
   if (repoName) params.append("repo_name", repoName);
-  if (sinceDays != null) params.append("since_days", String(sinceDays));
+  if (startDate) params.append("start_date", startDate);
+  if (endDate) params.append("end_date", endDate);
 
   const response = await apiFetch(
     `${API_BASE_URL}/summary/events/workflow-runs?${params}`
@@ -159,10 +161,12 @@ export type TimelineEntry = {
 
 export async function getTimeline(
   repoName: string,
-  sinceDays?: number | null,
+  startDate?: string | null,
+  endDate?: string | null,
 ): Promise<TimelineEntry[]> {
   const params = new URLSearchParams({ repo_name: repoName });
-  if (sinceDays != null) params.append("since_days", String(sinceDays));
+  if (startDate) params.append("start_date", startDate);
+  if (endDate) params.append("end_date", endDate);
 
   const response = await apiFetch(`${API_BASE_URL}/summary/timeline?${params}`);
   if (!response.ok) throw new Error("Failed to fetch timeline");
@@ -177,13 +181,15 @@ export type TopActorEntry = {
 export async function getTopActors(
   repoName: string,
   limit = 5,
-  sinceDays?: number | null,
+  startDate?: string | null,
+  endDate?: string | null,
   eventType?: string,
   actor?: string,
 ): Promise<TopActorEntry[]> {
   const params = new URLSearchParams({ limit: String(limit) });
   if (repoName) params.append("repo_name", repoName);
-  if (sinceDays != null) params.append("since_days", String(sinceDays));
+  if (startDate) params.append("start_date", startDate);
+  if (endDate) params.append("end_date", endDate);
   if (eventType) params.append("event_type", eventType);
   if (actor) params.append("actor", actor);
   const response = await apiFetch(`${API_BASE_URL}/summary/top-actors?${params}`);
@@ -200,13 +206,15 @@ export async function getEventTypeBreakdown(
   repoName?: string,
   eventType?: string,
   actor?: string,
-  sinceDays?: number | null,
+  startDate?: string | null,
+  endDate?: string | null,
 ): Promise<EventTypeBreakdownEntry[]> {
   const params = new URLSearchParams();
   if (repoName) params.append("repo_name", repoName);
   if (eventType) params.append("event_type", eventType);
   if (actor) params.append("actor", actor);
-  if (sinceDays != null) params.append("since_days", String(sinceDays));
+  if (startDate) params.append("start_date", startDate);
+  if (endDate) params.append("end_date", endDate);
 
   const query = params.toString();
   const url = query
@@ -225,11 +233,13 @@ export type WorkflowFailuresByNameEntry = {
 
 export async function getWorkflowFailuresByName(
   repoName?: string,
-  sinceDays?: number | null,
+  startDate?: string | null,
+  endDate?: string | null,
 ): Promise<WorkflowFailuresByNameEntry[]> {
   const params = new URLSearchParams();
   if (repoName) params.append("repo_name", repoName);
-  if (sinceDays != null) params.append("since_days", String(sinceDays));
+  if (startDate) params.append("start_date", startDate);
+  if (endDate) params.append("end_date", endDate);
 
   const query = params.toString();
   const url = query
@@ -248,11 +258,13 @@ export type WorkflowFailuresByBranchEntry = {
 
 export async function getWorkflowFailuresByBranch(
   repoName?: string,
-  sinceDays?: number | null,
+  startDate?: string | null,
+  endDate?: string | null,
 ): Promise<WorkflowFailuresByBranchEntry[]> {
   const params = new URLSearchParams();
   if (repoName) params.append("repo_name", repoName);
-  if (sinceDays != null) params.append("since_days", String(sinceDays));
+  if (startDate) params.append("start_date", startDate);
+  if (endDate) params.append("end_date", endDate);
 
   const query = params.toString();
   const url = query
@@ -273,11 +285,13 @@ export type WorkflowRunTimelineEntry = {
 
 export async function getWorkflowRunTimeline(
   repoName?: string,
-  sinceDays?: number | null,
+  startDate?: string | null,
+  endDate?: string | null,
 ): Promise<WorkflowRunTimelineEntry[]> {
   const params = new URLSearchParams();
   if (repoName) params.append("repo_name", repoName);
-  if (sinceDays != null) params.append("since_days", String(sinceDays));
+  if (startDate) params.append("start_date", startDate);
+  if (endDate) params.append("end_date", endDate);
 
   const query = params.toString();
   const url = query
@@ -297,11 +311,13 @@ export type PrCycleTimeEntry = {
 
 export async function getPrCycleTimes(
   repoName?: string,
-  sinceDays?: number | null,
+  startDate?: string | null,
+  endDate?: string | null,
 ): Promise<PrCycleTimeEntry[]> {
   const params = new URLSearchParams();
   if (repoName) params.append("repo_name", repoName);
-  if (sinceDays != null) params.append("since_days", String(sinceDays));
+  if (startDate) params.append("start_date", startDate);
+  if (endDate) params.append("end_date", endDate);
 
   const query = params.toString();
   const url = query
@@ -321,11 +337,13 @@ export type WorkflowExecutionTimeEntry = {
 
 export async function getWorkflowExecutionTimes(
   repoName?: string,
-  sinceDays?: number | null,
+  startDate?: string | null,
+  endDate?: string | null,
 ): Promise<WorkflowExecutionTimeEntry[]> {
   const params = new URLSearchParams();
   if (repoName) params.append("repo_name", repoName);
-  if (sinceDays != null) params.append("since_days", String(sinceDays));
+  if (startDate) params.append("start_date", startDate);
+  if (endDate) params.append("end_date", endDate);
 
   const query = params.toString();
   const url = query
@@ -354,11 +372,13 @@ export type DoraMetrics = {
 
 export async function getDora(
   repoName?: string,
-  sinceDays?: number | null,
+  startDate?: string | null,
+  endDate?: string | null,
 ): Promise<DoraMetrics> {
   const params = new URLSearchParams();
   if (repoName) params.append("repo_name", repoName);
-  if (sinceDays != null) params.append("since_days", String(sinceDays));
+  if (startDate) params.append("start_date", startDate);
+  if (endDate) params.append("end_date", endDate);
   const query = params.toString();
   const url = query ? `${API_BASE_URL}/summary/dora?${query}` : `${API_BASE_URL}/summary/dora`;
   const response = await apiFetch(url);
@@ -374,7 +394,8 @@ export type EventFilters = {
   branch?: string;
   workflow_name?: string;
   search?: string;
-  since_days?: number;
+  start_date?: string;
+  end_date?: string;
   limit?: number;
   offset?: number;
 };
@@ -435,40 +456,41 @@ export type IssueResolutionEntry = {
   avg_hours: number;
 };
 
-function issueParams(repoName?: string, sinceDays?: number | null): string {
+function issueParams(repoName?: string, startDate?: string | null, endDate?: string | null): string {
   const p = new URLSearchParams();
   if (repoName) p.set("repo_name", repoName);
-  if (sinceDays != null) p.set("since_days", String(sinceDays));
+  if (startDate) p.set("start_date", startDate);
+  if (endDate) p.set("end_date", endDate);
   const q = p.toString();
   return q ? `?${q}` : "";
 }
 
-export async function getIssueStats(repoName?: string, sinceDays?: number | null): Promise<IssueStats> {
-  const r = await apiFetch(`${API_BASE_URL}/summary/issues/stats${issueParams(repoName, sinceDays)}`);
+export async function getIssueStats(repoName?: string, startDate?: string | null, endDate?: string | null): Promise<IssueStats> {
+  const r = await apiFetch(`${API_BASE_URL}/summary/issues/stats${issueParams(repoName, startDate, endDate)}`);
   if (!r.ok) throw new Error("Failed to fetch issue stats");
   return r.json();
 }
 
-export async function getIssueActivity(repoName?: string, sinceDays?: number | null): Promise<IssueActivityEntry[]> {
-  const r = await apiFetch(`${API_BASE_URL}/summary/issues/activity${issueParams(repoName, sinceDays)}`);
+export async function getIssueActivity(repoName?: string, startDate?: string | null, endDate?: string | null): Promise<IssueActivityEntry[]> {
+  const r = await apiFetch(`${API_BASE_URL}/summary/issues/activity${issueParams(repoName, startDate, endDate)}`);
   if (!r.ok) throw new Error("Failed to fetch issue activity");
   return r.json();
 }
 
-export async function getIssueLabels(repoName?: string, sinceDays?: number | null): Promise<IssueLabelEntry[]> {
-  const r = await apiFetch(`${API_BASE_URL}/summary/issues/labels${issueParams(repoName, sinceDays)}`);
+export async function getIssueLabels(repoName?: string, startDate?: string | null, endDate?: string | null): Promise<IssueLabelEntry[]> {
+  const r = await apiFetch(`${API_BASE_URL}/summary/issues/labels${issueParams(repoName, startDate, endDate)}`);
   if (!r.ok) throw new Error("Failed to fetch issue labels");
   return r.json();
 }
 
-export async function getIssueResolutionTrend(repoName?: string, sinceDays?: number | null): Promise<IssueResolutionEntry[]> {
-  const r = await apiFetch(`${API_BASE_URL}/summary/issues/resolution-trend${issueParams(repoName, sinceDays)}`);
+export async function getIssueResolutionTrend(repoName?: string, startDate?: string | null, endDate?: string | null): Promise<IssueResolutionEntry[]> {
+  const r = await apiFetch(`${API_BASE_URL}/summary/issues/resolution-trend${issueParams(repoName, startDate, endDate)}`);
   if (!r.ok) throw new Error("Failed to fetch issue resolution trend");
   return r.json();
 }
 
-export async function getIssueReporters(repoName?: string, sinceDays?: number | null): Promise<TopActorEntry[]> {
-  const r = await apiFetch(`${API_BASE_URL}/summary/issues/reporters${issueParams(repoName, sinceDays)}`);
+export async function getIssueReporters(repoName?: string, startDate?: string | null, endDate?: string | null): Promise<TopActorEntry[]> {
+  const r = await apiFetch(`${API_BASE_URL}/summary/issues/reporters${issueParams(repoName, startDate, endDate)}`);
   if (!r.ok) throw new Error("Failed to fetch issue reporters");
   return r.json();
 }

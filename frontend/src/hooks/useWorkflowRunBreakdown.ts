@@ -16,7 +16,8 @@ type UseWorkflowRunBreakdownResult = {
 
 export function useWorkflowRunBreakdown(
   repoName: string,
-  sinceDays?: number | null,
+  startDate?: string | null,
+  endDate?: string | null,
 ): UseWorkflowRunBreakdownResult {
   const tick = useEventTick();
   const [workflowRunBreakdown, setWorkflowRunBreakdown] =
@@ -37,8 +38,8 @@ export function useWorkflowRunBreakdown(
 
       try {
         const [successSummary, failureSummary] = await Promise.all([
-          getWorkflowRuns(repoName, "success", sinceDays),
-          getWorkflowRuns(repoName, "failure", sinceDays),
+          getWorkflowRuns(repoName, "success", startDate, endDate),
+          getWorkflowRuns(repoName, "failure", startDate, endDate),
         ]);
 
         if (!cancelled) {
@@ -64,7 +65,7 @@ export function useWorkflowRunBreakdown(
     return () => {
       cancelled = true;
     };
-  }, [repoName, sinceDays, tick]);
+  }, [repoName, startDate, endDate, tick]);
 
   return { workflowRunBreakdown, isLoading, error };
 }

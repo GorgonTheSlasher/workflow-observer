@@ -10,7 +10,8 @@ type UseWorkflowFailuresByBranchResult = {
 
 export function useWorkflowFailuresByBranch(
   repoName: string,
-  sinceDays?: number | null,
+  startDate?: string | null,
+  endDate?: string | null,
 ): UseWorkflowFailuresByBranchResult {
   const tick = useEventTick();
   const [workflowFailuresByBranch, setWorkflowFailuresByBranch] = useState<WorkflowFailuresByBranchEntry[]>([]);
@@ -25,7 +26,7 @@ export function useWorkflowFailuresByBranch(
       setError(null);
 
       try {
-        const data = await getWorkflowFailuresByBranch(repoName, sinceDays);
+        const data = await getWorkflowFailuresByBranch(repoName, startDate, endDate);
         if (!cancelled) setWorkflowFailuresByBranch(data);
       } catch (err) {
         if (!cancelled) setError((err as Error).message);
@@ -39,7 +40,7 @@ export function useWorkflowFailuresByBranch(
     return () => {
       cancelled = true;
     };
-  }, [repoName, sinceDays, tick]);
+  }, [repoName, startDate, endDate, tick]);
 
   return { workflowFailuresByBranch, isLoading, error };
 }

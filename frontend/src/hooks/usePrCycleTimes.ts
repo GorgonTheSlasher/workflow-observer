@@ -10,7 +10,8 @@ type UsePrCycleTimesResult = {
 
 export function usePrCycleTimes(
   repoName: string,
-  sinceDays?: number | null,
+  startDate?: string | null,
+  endDate?: string | null,
 ): UsePrCycleTimesResult {
   const tick = useEventTick();
   const [prCycleTimes, setPrCycleTimes] = useState<PrCycleTimeEntry[]>([]);
@@ -25,7 +26,7 @@ export function usePrCycleTimes(
       setError(null);
 
       try {
-        const data = await getPrCycleTimes(repoName, sinceDays);
+        const data = await getPrCycleTimes(repoName, startDate, endDate);
         if (!cancelled) setPrCycleTimes(data);
       } catch (err) {
         if (!cancelled) setError((err as Error).message);
@@ -39,7 +40,7 @@ export function usePrCycleTimes(
     return () => {
       cancelled = true;
     };
-  }, [repoName, sinceDays, tick]);
+  }, [repoName, startDate, endDate, tick]);
 
   return { prCycleTimes, isLoading, error };
 }

@@ -10,7 +10,8 @@ type UseTimelineResult = {
 
 export function useTimeline(
   repoName: string,
-  sinceDays: number | null,
+  startDate: string | null,
+  endDate: string | null,
 ): UseTimelineResult {
   const tick = useEventTick();
   const [timeline, setTimeline] = useState<TimelineEntry[]>([]);
@@ -26,7 +27,7 @@ export function useTimeline(
       setError(null);
 
       try {
-        const data = await getTimeline(repoName, sinceDays);
+        const data = await getTimeline(repoName, startDate, endDate);
         if (!cancelled) setTimeline(data);
       } catch (err) {
         if (!cancelled) setError((err as Error).message);
@@ -40,7 +41,7 @@ export function useTimeline(
     return () => {
       cancelled = true;
     };
-  }, [repoName, sinceDays, tick]);
+  }, [repoName, startDate, endDate, tick]);
 
   return { timeline, isLoading, error };
 }

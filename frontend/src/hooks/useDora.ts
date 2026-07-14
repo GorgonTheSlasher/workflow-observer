@@ -8,7 +8,7 @@ type UseDoraResult = {
   error: string | null;
 };
 
-export function useDora(repoName: string, sinceDays?: number | null): UseDoraResult {
+export function useDora(repoName: string, startDate?: string | null, endDate?: string | null): UseDoraResult {
   const tick = useEventTick();
   const [dora, setDora] = useState<DoraMetrics | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -21,7 +21,7 @@ export function useDora(repoName: string, sinceDays?: number | null): UseDoraRes
       setIsLoading(true);
       setError(null);
       try {
-        const data = await getDora(repoName, sinceDays);
+        const data = await getDora(repoName, startDate, endDate);
         if (!cancelled) setDora(data);
       } catch (err) {
         if (!cancelled) setError((err as Error).message);
@@ -32,7 +32,7 @@ export function useDora(repoName: string, sinceDays?: number | null): UseDoraRes
 
     load();
     return () => { cancelled = true; };
-  }, [repoName, sinceDays, tick]);
+  }, [repoName, startDate, endDate, tick]);
 
   return { dora, isLoading, error };
 }

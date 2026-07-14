@@ -10,7 +10,8 @@ type UseWorkflowFailuresByNameResult = {
 
 export function useWorkflowFailuresByName(
   repoName: string,
-  sinceDays?: number | null,
+  startDate?: string | null,
+  endDate?: string | null,
 ): UseWorkflowFailuresByNameResult {
   const tick = useEventTick();
   const [workflowFailuresByName, setWorkflowFailuresByName] = useState<WorkflowFailuresByNameEntry[]>([]);
@@ -25,7 +26,7 @@ export function useWorkflowFailuresByName(
       setError(null);
 
       try {
-        const data = await getWorkflowFailuresByName(repoName, sinceDays);
+        const data = await getWorkflowFailuresByName(repoName, startDate, endDate);
         if (!cancelled) setWorkflowFailuresByName(data);
       } catch (err) {
         if (!cancelled) setError((err as Error).message);
@@ -39,7 +40,7 @@ export function useWorkflowFailuresByName(
     return () => {
       cancelled = true;
     };
-  }, [repoName, sinceDays, tick]);
+  }, [repoName, startDate, endDate, tick]);
 
   return { workflowFailuresByName, isLoading, error };
 }

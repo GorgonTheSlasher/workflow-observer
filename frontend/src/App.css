@@ -1482,3 +1482,149 @@ button:disabled {
   flex-direction: column;
   min-height: 0;
 }
+
+/* ── Date Range Picker ───────────────────────────────────────────────────── */
+
+.drp-root {
+  position: relative;
+}
+
+.drp-trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.65rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 0.82rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.drp-trigger:hover {
+  background: var(--input-bg);
+}
+
+.drp-caret {
+  transition: transform 0.15s;
+  opacity: 0.6;
+}
+
+.drp-caret--open {
+  transform: rotate(180deg);
+}
+
+.drp-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 100;
+  background: #1e1e2e;
+  border: 1px solid rgba(209, 227, 221, 0.15);
+  border-radius: 10px;
+  width: 220px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+
+.drp-presets {
+  list-style: none;
+  margin: 0;
+  padding: 0.4rem 0;
+}
+
+.drp-preset {
+  width: 100%;
+  display: block;
+  padding: 0.55rem 1rem;
+  border: none;
+  border-radius: 0;
+  background: none;
+  color: rgba(209, 227, 221, 0.8);
+  font-size: 0.84rem;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.drp-preset:hover {
+  background: rgba(209, 227, 221, 0.08);
+  color: #D1E3DD;
+}
+
+.drp-preset--active {
+  color: #00F6ED;
+  font-weight: 600;
+}
+
+.drp-divider {
+  height: 1px;
+  background: rgba(209, 227, 221, 0.1);
+  margin: 0;
+}
+
+.drp-custom {
+  padding: 0.75rem 1rem;
+}
+
+.drp-custom__label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: rgba(209, 227, 221, 0.4);
+  margin: 0 0 0.6rem;
+}
+
+.drp-custom__fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.65rem;
+}
+
+.drp-custom__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.drp-custom__field label {
+  font-size: 0.72rem;
+  color: rgba(209, 227, 221, 0.5);
+}
+
+.drp-custom__field input[type="date"] {
+  padding: 0.3rem 0.5rem;
+  background: rgba(209, 227, 221, 0.06);
+  border: 1px solid rgba(209, 227, 221, 0.15);
+  border-radius: 5px;
+  color: #D1E3DD;
+  font-size: 0.82rem;
+  width: 100%;
+  color-scheme: dark;
+}
+
+.drp-custom__field input[type="date"]:focus {
+  outline: none;
+  border-color: rgba(0, 246, 237, 0.5);
+}
+
+.drp-apply {
+  width: 100%;
+  padding: 0.45rem;
+  background: rgba(0, 246, 237, 0.12);
+  border: 1px solid rgba(0, 246, 237, 0.35);
+  border-radius: 6px;
+  color: #00F6ED;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.drp-apply:hover {
+  background: rgba(0, 246, 237, 0.2);
+}

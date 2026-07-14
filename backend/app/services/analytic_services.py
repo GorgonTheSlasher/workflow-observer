@@ -1,5 +1,5 @@
 from collections import defaultdict
-from datetime import datetime, UTC, timedelta
+from datetime import datetime, UTC
 
 from fastapi import Depends
 from sqlalchemy import func, or_
@@ -17,7 +17,8 @@ def get_filtered_events(
     branch: str | None = None,
     workflow_name: str | None = None,
     search: str | None = None,
-    since_days: int | None = None,
+    start_date: datetime | None = None,
+    end_date: datetime | None = None,
     limit: int = 100,
     offset: int = 0,
     db: Session = Depends(get_db),
@@ -60,9 +61,10 @@ def get_filtered_events(
             )
         )
 
-    if since_days is not None:
-        cutoff = datetime.now(UTC) - timedelta(days=since_days)
-        query = query.filter(GitHubEvent.created_at >= cutoff)
+    if start_date is not None:
+        query = query.filter(GitHubEvent.created_at >= start_date)
+    if end_date is not None:
+        query = query.filter(GitHubEvent.created_at < end_date)
 
     total = query.count()
 
@@ -82,7 +84,8 @@ _TIMELINE_EVENT_TYPES = ["push", "pull_request", "workflow_run", "issues", "memb
 def get_top_actors(
     repo_name: str | None = None,
     limit: int = 5,
-    since_days: int | None = None,
+    start_date: datetime | None = None,
+    end_date: datetime | None = None,
     event_type: str | None = None,
     actor: str | None = None,
     db: Session = Depends(get_db),
@@ -105,9 +108,10 @@ def get_top_actors(
     if actor:
         query = query.filter(GitHubEvent.actor == actor)
 
-    if since_days is not None:
-        cutoff = datetime.now(UTC) - timedelta(days=since_days)
-        query = query.filter(GitHubEvent.created_at >= cutoff)
+    if start_date is not None:
+        query = query.filter(GitHubEvent.created_at >= start_date)
+    if end_date is not None:
+        query = query.filter(GitHubEvent.created_at < end_date)
 
     rows = (
         query
@@ -123,7 +127,8 @@ def get_event_type_breakdown(
     repo_name: str | None = None,
     event_type: str | None = None,
     actor: str | None = None,
-    since_days: int | None = None,
+    start_date: datetime | None = None,
+    end_date: datetime | None = None,
     db: Session = Depends(get_db),
     installation_ids: list[int] | None = None,
 ) -> list[dict]:
@@ -144,9 +149,10 @@ def get_event_type_breakdown(
     if actor:
         query = query.filter(GitHubEvent.actor == actor)
 
-    if since_days is not None:
-        cutoff = datetime.now(UTC) - timedelta(days=since_days)
-        query = query.filter(GitHubEvent.created_at >= cutoff)
+    if start_date is not None:
+        query = query.filter(GitHubEvent.created_at >= start_date)
+    if end_date is not None:
+        query = query.filter(GitHubEvent.created_at < end_date)
 
     rows = (
         query
@@ -159,7 +165,8 @@ def get_event_type_breakdown(
 
 def get_workflow_failures_by_name(
     repo_name: str | None = None,
-    since_days: int | None = None,
+    start_date: datetime | None = None,
+    end_date: datetime | None = None,
     db: Session = Depends(get_db),
     installation_ids: list[int] | None = None,
 ) -> list[dict]:
@@ -174,9 +181,10 @@ def get_workflow_failures_by_name(
     if repo_name:
         query = query.filter(GitHubEvent.repo_name == repo_name)
 
-    if since_days is not None:
-        cutoff = datetime.now(UTC) - timedelta(days=since_days)
-        query = query.filter(GitHubEvent.created_at >= cutoff)
+    if start_date is not None:
+        query = query.filter(GitHubEvent.created_at >= start_date)
+    if end_date is not None:
+        query = query.filter(GitHubEvent.created_at < end_date)
 
     counts: dict[str, int] = defaultdict(int)
     for (details_json,) in query.all():
@@ -191,7 +199,8 @@ def get_workflow_failures_by_name(
 
 def get_workflow_failures_by_branch(
     repo_name: str | None = None,
-    since_days: int | None = None,
+    start_date: datetime | None = None,
+    end_date: datetime | None = None,
     db: Session = Depends(get_db),
     installation_ids: list[int] | None = None,
 ) -> list[dict]:
@@ -209,9 +218,10 @@ def get_workflow_failures_by_branch(
     if repo_name:
         query = query.filter(GitHubEvent.repo_name == repo_name)
 
-    if since_days is not None:
-        cutoff = datetime.now(UTC) - timedelta(days=since_days)
-        query = query.filter(GitHubEvent.created_at >= cutoff)
+    if start_date is not None:
+        query = query.filter(GitHubEvent.created_at >= start_date)
+    if end_date is not None:
+        query = query.filter(GitHubEvent.created_at < end_date)
 
     rows = (
         query
@@ -224,7 +234,8 @@ def get_workflow_failures_by_branch(
 
 def get_workflow_run_timeline(
     repo_name: str | None = None,
-    since_days: int | None = None,
+    start_date: datetime | None = None,
+    end_date: datetime | None = None,
     db: Session = Depends(get_db),
     installation_ids: list[int] | None = None,
 ) -> list[dict]:
@@ -238,9 +249,10 @@ def get_workflow_run_timeline(
     if repo_name:
         query = query.filter(GitHubEvent.repo_name == repo_name)
 
-    if since_days is not None:
-        cutoff = datetime.now(UTC) - timedelta(days=since_days)
-        query = query.filter(GitHubEvent.created_at >= cutoff)
+    if start_date is not None:
+        query = query.filter(GitHubEvent.created_at >= start_date)
+    if end_date is not None:
+        query = query.filter(GitHubEvent.created_at < end_date)
 
     pivot: dict[str, dict[str, int]] = defaultdict(lambda: {"success": 0, "failure": 0, "other": 0})
 
@@ -259,7 +271,8 @@ def get_workflow_run_timeline(
 
 def get_pr_cycle_times(
     repo_name: str | None = None,
-    since_days: int | None = None,
+    start_date: datetime | None = None,
+    end_date: datetime | None = None,
     db: Session = Depends(get_db),
     installation_ids: list[int] | None = None,
 ) -> list[dict]:
@@ -274,9 +287,10 @@ def get_pr_cycle_times(
     if repo_name:
         query = query.filter(GitHubEvent.repo_name == repo_name)
 
-    if since_days is not None:
-        cutoff = datetime.now(UTC) - timedelta(days=since_days)
-        query = query.filter(GitHubEvent.created_at >= cutoff)
+    if start_date is not None:
+        query = query.filter(GitHubEvent.created_at >= start_date)
+    if end_date is not None:
+        query = query.filter(GitHubEvent.created_at < end_date)
 
     day_durations: dict[str, list[float]] = defaultdict(list)
 
@@ -310,7 +324,8 @@ def get_pr_cycle_times(
 
 def get_workflow_execution_times(
     repo_name: str | None = None,
-    since_days: int | None = None,
+    start_date: datetime | None = None,
+    end_date: datetime | None = None,
     db: Session = Depends(get_db),
     installation_ids: list[int] | None = None,
 ) -> list[dict]:
@@ -325,9 +340,10 @@ def get_workflow_execution_times(
     if repo_name:
         query = query.filter(GitHubEvent.repo_name == repo_name)
 
-    if since_days is not None:
-        cutoff = datetime.now(UTC) - timedelta(days=since_days)
-        query = query.filter(GitHubEvent.created_at >= cutoff)
+    if start_date is not None:
+        query = query.filter(GitHubEvent.created_at >= start_date)
+    if end_date is not None:
+        query = query.filter(GitHubEvent.created_at < end_date)
 
     durations: dict[str, list[float]] = defaultdict(list)
 
@@ -365,12 +381,11 @@ def get_workflow_execution_times(
 
 def get_dora_metrics(
     repo_name: str | None = None,
-    since_days: int | None = None,
+    start_date: datetime | None = None,
+    end_date: datetime | None = None,
     db: Session = Depends(get_db),
     installation_ids: list[int] | None = None,
 ) -> dict:
-    cutoff = datetime.now(UTC) - timedelta(days=since_days) if since_days is not None else None
-
     # ── All workflow run events ───────────────────────────────────────────────
     wf_q = db.query(
         GitHubEvent.created_at,
@@ -384,8 +399,10 @@ def get_dora_metrics(
         wf_q = wf_q.filter(GitHubEvent.installation_id.in_(installation_ids))
     if repo_name:
         wf_q = wf_q.filter(GitHubEvent.repo_name == repo_name)
-    if cutoff:
-        wf_q = wf_q.filter(GitHubEvent.created_at >= cutoff)
+    if start_date is not None:
+        wf_q = wf_q.filter(GitHubEvent.created_at >= start_date)
+    if end_date is not None:
+        wf_q = wf_q.filter(GitHubEvent.created_at < end_date)
 
     wf_rows = wf_q.order_by(GitHubEvent.created_at).all()
 
@@ -399,12 +416,14 @@ def get_dora_metrics(
     deploy_trend = [{"date": d, "value": c} for d, c in sorted(deploy_by_day.items())]
 
     if deploy_rows:
-        if since_days:
-            deploy_per_day = len(deploy_rows) / since_days
+        if start_date is not None and end_date is not None:
+            span = max(1, (end_date - start_date).days)
+        elif start_date is not None:
+            span = max(1, (datetime.now(UTC) - start_date).days + 1)
         else:
             dates = [r.created_at for r in deploy_rows if r.created_at]
             span = max(1, (max(dates) - min(dates)).days + 1) if len(dates) > 1 else 1
-            deploy_per_day = len(deploy_rows) / span
+        deploy_per_day = len(deploy_rows) / span
     else:
         deploy_per_day = 0.0
 
@@ -522,7 +541,8 @@ def get_dora_metrics(
 
 def get_timeline(
     repo_name: str | None = None,
-    since_days: int | None = None,
+    start_date: datetime | None = None,
+    end_date: datetime | None = None,
     db: Session = Depends(get_db),
     installation_ids: list[int] | None = None,
 ) -> list[dict]:
@@ -534,9 +554,10 @@ def get_timeline(
     if repo_name:
         query = query.filter(GitHubEvent.repo_name == repo_name)
 
-    if since_days is not None:
-        cutoff = datetime.now(UTC) - timedelta(days=since_days)
-        query = query.filter(GitHubEvent.created_at >= cutoff)
+    if start_date is not None:
+        query = query.filter(GitHubEvent.created_at >= start_date)
+    if end_date is not None:
+        query = query.filter(GitHubEvent.created_at < end_date)
 
     rows = query.all()
 
@@ -554,20 +575,22 @@ def get_timeline(
 
 # ── Issues analytics ──────────────────────────────────────────────────────────
 
-def _apply_base_filters(query, repo_name, since_days, installation_ids):
+def _apply_base_filters(query, repo_name, start_date, end_date, installation_ids):
     if installation_ids is not None:
         query = query.filter(GitHubEvent.installation_id.in_(installation_ids))
     if repo_name:
         query = query.filter(GitHubEvent.repo_name == repo_name)
-    if since_days is not None:
-        cutoff = datetime.now(UTC) - timedelta(days=since_days)
-        query = query.filter(GitHubEvent.created_at >= cutoff)
+    if start_date is not None:
+        query = query.filter(GitHubEvent.created_at >= start_date)
+    if end_date is not None:
+        query = query.filter(GitHubEvent.created_at < end_date)
     return query
 
 
 def get_issue_stats(
     repo_name: str | None = None,
-    since_days: int | None = None,
+    start_date: datetime | None = None,
+    end_date: datetime | None = None,
     db: Session = Depends(get_db),
     installation_ids: list[int] | None = None,
 ) -> dict:
@@ -575,7 +598,7 @@ def get_issue_stats(
         GitHubEvent.event_type == "issues",
         GitHubEvent.action.in_(["opened", "closed"]),
     )
-    query = _apply_base_filters(query, repo_name, since_days, installation_ids)
+    query = _apply_base_filters(query, repo_name, start_date, end_date, installation_ids)
     events = query.order_by(GitHubEvent.created_at).all()
 
     opened_count = sum(1 for e in events if e.action == "opened")
@@ -607,7 +630,8 @@ def get_issue_stats(
 
 def get_issue_activity_timeline(
     repo_name: str | None = None,
-    since_days: int | None = None,
+    start_date: datetime | None = None,
+    end_date: datetime | None = None,
     db: Session = Depends(get_db),
     installation_ids: list[int] | None = None,
 ) -> list[dict]:
@@ -615,7 +639,7 @@ def get_issue_activity_timeline(
         GitHubEvent.event_type == "issues",
         GitHubEvent.action.in_(["opened", "closed"]),
     )
-    query = _apply_base_filters(query, repo_name, since_days, installation_ids)
+    query = _apply_base_filters(query, repo_name, start_date, end_date, installation_ids)
 
     by_day: dict[str, dict[str, int]] = defaultdict(lambda: {"opened": 0, "closed": 0})
     for action, created_at in query.all():
@@ -631,7 +655,8 @@ def get_issue_activity_timeline(
 
 def get_issue_labels(
     repo_name: str | None = None,
-    since_days: int | None = None,
+    start_date: datetime | None = None,
+    end_date: datetime | None = None,
     db: Session = Depends(get_db),
     installation_ids: list[int] | None = None,
 ) -> list[dict]:
@@ -639,7 +664,7 @@ def get_issue_labels(
         GitHubEvent.event_type == "issues",
         GitHubEvent.action == "opened",
     )
-    query = _apply_base_filters(query, repo_name, since_days, installation_ids)
+    query = _apply_base_filters(query, repo_name, start_date, end_date, installation_ids)
 
     counts: dict[str, int] = defaultdict(int)
     for (details_json,) in query.all():
@@ -657,7 +682,8 @@ def get_issue_labels(
 
 def get_issue_resolution_trend(
     repo_name: str | None = None,
-    since_days: int | None = None,
+    start_date: datetime | None = None,
+    end_date: datetime | None = None,
     db: Session = Depends(get_db),
     installation_ids: list[int] | None = None,
 ) -> list[dict]:
@@ -681,7 +707,7 @@ def get_issue_resolution_trend(
         GitHubEvent.event_type == "issues",
         GitHubEvent.action == "closed",
     )
-    closed_query = _apply_base_filters(closed_query, repo_name, since_days, installation_ids)
+    closed_query = _apply_base_filters(closed_query, repo_name, start_date, end_date, installation_ids)
 
     by_day: dict[str, list[float]] = defaultdict(list)
     for details_json, closed_at in closed_query.all():
@@ -701,7 +727,8 @@ def get_issue_resolution_trend(
 
 def get_issue_reporters(
     repo_name: str | None = None,
-    since_days: int | None = None,
+    start_date: datetime | None = None,
+    end_date: datetime | None = None,
     db: Session = Depends(get_db),
     installation_ids: list[int] | None = None,
     limit: int = 10,
@@ -714,7 +741,7 @@ def get_issue_reporters(
         GitHubEvent.action == "opened",
         GitHubEvent.actor.isnot(None),
     )
-    query = _apply_base_filters(query, repo_name, since_days, installation_ids)
+    query = _apply_base_filters(query, repo_name, start_date, end_date, installation_ids)
 
     rows = (
         query
