@@ -537,8 +537,8 @@ export type AlertRule = {
 
 export type AlertRuleCreate = {
   rule_type: string;
-  repo_filter?: string | null;
-  webhook_url?: string | null;
+  repo_filter: string;
+  webhook_url: string;
   enabled?: boolean;
 };
 

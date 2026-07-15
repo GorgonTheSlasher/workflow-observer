@@ -14,13 +14,17 @@ VALID_RULE_TYPES = {"workflow_failure", "workflow_recovery", "force_push", "new_
 
 class AlertRuleCreate(BaseModel):
     rule_type: str
-    repo_filter: str | None = None
-    webhook_url: str | None = None
+    repo_filter: str
+    webhook_url: str
     enabled: bool = True
 
     def model_post_init(self, __context):
         if self.rule_type not in VALID_RULE_TYPES:
             raise ValueError(f"rule_type must be one of: {', '.join(sorted(VALID_RULE_TYPES))}")
+        if not self.repo_filter.strip():
+            raise ValueError("repo_filter is required")
+        if not self.webhook_url.strip():
+            raise ValueError("webhook_url is required")
 
 
 class AlertRuleUpdate(BaseModel):

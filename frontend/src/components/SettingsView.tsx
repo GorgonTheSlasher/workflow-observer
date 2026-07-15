@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getMe, type UserProfile, type AlertRuleCreate } from "../api";
+import { getMe, getRepositories, type UserProfile, type AlertRuleCreate } from "../api";
 import { useAlertRules } from "../hooks/useAlertRules";
 
 const RULE_TYPE_LABELS: Record<string, string> = {
@@ -78,6 +78,7 @@ function AccountPanel() {
 
 function AlertRulesPanel() {
   const { rules, isLoading, error, addRule, toggleRule, removeRule } = useAlertRules();
+  const [repos, setRepos] = useState<string[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [formRuleType, setFormRuleType] = useState("workflow_failure");
   const [formRepoFilter, setFormRepoFilter] = useState("");
@@ -85,6 +86,20 @@ function AlertRulesPanel() {
   const [formBusy, setFormBusy] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      try {
+        const data = await getRepositories();
+        if (!cancelled) setRepos(data);
+      } catch {
+        // non-fatal — form will still render, just without the dropdown populated
+      }
+    }
+    load();
+    return () => { cancelled = true; };
+  }, []);
 
   function openForm() {
     setFormRuleType("workflow_failure");
@@ -101,12 +116,20 @@ function AlertRulesPanel() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!formRepoFilter) {
+      setFormError("Please select a repository.");
+      return;
+    }
+    if (!formWebhookUrl.trim()) {
+      setFormError("Webhook URL is required.");
+      return;
+    }
     setFormBusy(true);
     setFormError(null);
     const data: AlertRuleCreate = {
       rule_type: formRuleType,
-      repo_filter: formRepoFilter.trim() || null,
-      webhook_url: formWebhookUrl.trim() || null,
+      repo_filter: formRepoFilter,
+      webhook_url: formWebhookUrl.trim(),
     };
     try {
       await addRule(data);
@@ -163,27 +186,24 @@ function AlertRulesPanel() {
               </select>
             </div>
             <div className="rule-form__field">
-              <label className="rule-form__label">
-                Repository Filter{" "}
-                <span className="rule-form__opt">(optional)</span>
-              </label>
-              <input
-                className="rule-form__input"
-                type="text"
-                placeholder="owner/repo — leave blank to match all repositories"
+              <label className="rule-form__label">Repository</label>
+              <select
+                className="rule-form__select"
                 value={formRepoFilter}
                 onChange={(e) => setFormRepoFilter(e.target.value)}
-              />
+              >
+                <option value="" disabled>Select a repository…</option>
+                {repos.map((repo) => (
+                  <option key={repo} value={repo}>{repo}</option>
+                ))}
+              </select>
             </div>
             <div className="rule-form__field">
-              <label className="rule-form__label">
-                Webhook URL{" "}
-                <span className="rule-form__opt">(optional)</span>
-              </label>
+              <label className="rule-form__label">Slack Webhook URL</label>
               <input
                 className="rule-form__input"
                 type="url"
-                placeholder="Overrides the default SLACK_WEBHOOK_URL"
+                placeholder="https://hooks.slack.com/services/…"
                 value={formWebhookUrl}
                 onChange={(e) => setFormWebhookUrl(e.target.value)}
               />
@@ -208,8 +228,8 @@ function AlertRulesPanel() {
           <div className="rules-empty">
             <p>No alert rules configured yet.</p>
             <p>
-              Add a rule to start receiving Slack notifications for workflow failures,
-              force pushes, and more.
+              Add a rule to start receiving Slack notifications for workflow failures, force
+              pushes, and more. Each rule targets a specific repository and Slack channel.
             </p>
           </div>
         ) : (
