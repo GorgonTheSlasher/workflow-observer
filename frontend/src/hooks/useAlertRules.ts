@@ -14,20 +14,27 @@ export function useAlertRules() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    load();
-  }, []);
+    let cancelled = false;
 
-  async function load() {
-    setIsLoading(true);
-    setError(null);
-    try {
-      setRules(await getAlertRules());
-    } catch (e) {
-      setError((e as Error).message);
-    } finally {
-      setIsLoading(false);
+    async function load() {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const data = await getAlertRules();
+        if (!cancelled) setRules(data);
+      } catch (e) {
+        if (!cancelled) setError((e as Error).message);
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
     }
-  }
+
+    load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   async function addRule(data: AlertRuleCreate): Promise<void> {
     const rule = await createAlertRule(data);

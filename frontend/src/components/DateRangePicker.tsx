@@ -53,12 +53,6 @@ export default function DateRangePicker({ startDate, endDate, onChange }: Props)
   const [customEnd, setCustomEnd] = useState(endDate ?? "");
   const ref = useRef<HTMLDivElement>(null);
 
-  // Sync local custom fields when external value changes (e.g. preset click)
-  useEffect(() => {
-    setCustomStart(startDate ?? "");
-    setCustomEnd(endDate ?? "");
-  }, [startDate, endDate]);
-
   // Close on outside click
   useEffect(() => {
     if (!open) return;
@@ -83,7 +77,13 @@ export default function DateRangePicker({ startDate, endDate, onChange }: Props)
 
   return (
     <div className="drp-root" ref={ref}>
-      <button className="drp-trigger" onClick={() => setOpen((o) => !o)}>
+      <button className="drp-trigger" onClick={() => {
+        if (!open) {
+          setCustomStart(startDate ?? "");
+          setCustomEnd(endDate ?? "");
+        }
+        setOpen((o) => !o);
+      }}>
         <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
           <rect x="1" y="2" width="14" height="13" rx="2" stroke="currentColor" strokeWidth="1.5"/>
           <path d="M5 1v2M11 1v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
