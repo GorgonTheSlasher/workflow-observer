@@ -3,7 +3,7 @@ import json
 from fastapi import Request
 from sqlalchemy.orm import Session
 
-from app.alerts import should_alert_on_event, format_workflow_failure_alert, send_slack_alert
+from app.alerts import get_alerts_for_event, send_slack_alert
 from app.event_handlers import EVENT_HANDLERS
 from app.services.event_services import verify_signature, save_event
 from app.services.installation_services import delete_installation
@@ -67,14 +67,8 @@ async def dispatch_github_webhook(
 
     await broadcaster.publish({"event_type": x_github_event})
 
-    should_alert = should_alert_on_event(
-        x_github_event,
-        event_data,
-    )
-
-    if should_alert:
-        message = format_workflow_failure_alert(event_data)
-        send_slack_alert(message)
+    for alert_payload in get_alerts_for_event(x_github_event, event_data, saved_event, db):
+        send_slack_alert(alert_payload)
 
     return {
         "success": True,

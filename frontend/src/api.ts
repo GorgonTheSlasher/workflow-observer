@@ -13,6 +13,18 @@ async function apiFetch(url: string): Promise<Response> {
   return response;
 }
 
+async function apiMutate(url: string, method: string, body?: unknown): Promise<Response> {
+  const headers: Record<string, string> = { ...authHeaders() as Record<string, string> };
+  if (body !== undefined) headers["Content-Type"] = "application/json";
+  const response = await fetch(url, {
+    method,
+    headers,
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+  });
+  if (response.status === 401) notifyUnauthorized();
+  return response;
+}
+
 async function readErrorDetail(response: Response, fallback: string): Promise<string> {
   const data = await response.json().catch(() => null);
   return data?.detail ?? fallback;
@@ -493,4 +505,62 @@ export async function getIssueReporters(repoName?: string, startDate?: string | 
   const r = await apiFetch(`${API_BASE_URL}/summary/issues/reporters${issueParams(repoName, startDate, endDate)}`);
   if (!r.ok) throw new Error("Failed to fetch issue reporters");
   return r.json();
+}
+
+// ── Profile ────────────────────────────────────────────────────────────────────
+
+export type UserProfile = {
+  id: number;
+  email: string | null;
+  github_username: string | null;
+  created_at: string | null;
+};
+
+export async function getMe(): Promise<UserProfile> {
+  const r = await apiFetch(`${API_BASE_URL}/auth/me`);
+  if (!r.ok) throw new Error("Failed to fetch profile");
+  return r.json();
+}
+
+// ── Alert Rules ────────────────────────────────────────────────────────────────
+
+export type AlertRule = {
+  id: number;
+  user_id: number;
+  rule_type: string;
+  repo_filter: string | null;
+  webhook_url: string | null;
+  enabled: boolean;
+  created_at: string;
+  updated_at: string | null;
+};
+
+export type AlertRuleCreate = {
+  rule_type: string;
+  repo_filter?: string | null;
+  webhook_url?: string | null;
+  enabled?: boolean;
+};
+
+export async function getAlertRules(): Promise<AlertRule[]> {
+  const r = await apiFetch(`${API_BASE_URL}/settings/alert-rules`);
+  if (!r.ok) throw new Error("Failed to fetch alert rules");
+  return r.json();
+}
+
+export async function createAlertRule(data: AlertRuleCreate): Promise<AlertRule> {
+  const r = await apiMutate(`${API_BASE_URL}/settings/alert-rules`, "POST", data);
+  if (!r.ok) throw new Error(await readErrorDetail(r, "Failed to create alert rule"));
+  return r.json();
+}
+
+export async function toggleAlertRule(id: number): Promise<AlertRule> {
+  const r = await apiMutate(`${API_BASE_URL}/settings/alert-rules/${id}/toggle`, "PATCH");
+  if (!r.ok) throw new Error("Failed to toggle alert rule");
+  return r.json();
+}
+
+export async function deleteAlertRule(id: number): Promise<void> {
+  const r = await apiMutate(`${API_BASE_URL}/settings/alert-rules/${id}`, "DELETE");
+  if (!r.ok) throw new Error("Failed to delete alert rule");
 }

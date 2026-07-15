@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import DateRangePicker from "./components/DateRangePicker";
+import SettingsView from "./components/SettingsView";
 import RecentWorkflowFailuresWidget from "./components/RecentWorkflowFailuresWidget";
 import RecentActivityFeed from "./components/RecentActivityFeed";
 import EventTypeChart from "./components/EventTypeChart";
@@ -37,7 +38,7 @@ import EventDetailPanel from "./components/EventDetailPanel";
 import type { GitHubEvent } from "./types";
 import "./App.css";
 
-type ActiveView = "summary" | "events" | "workflows" | "dora" | "issues";
+type ActiveView = "summary" | "events" | "workflows" | "dora" | "issues" | "settings";
 
 function SummaryIcon() {
   return (
@@ -88,6 +89,15 @@ function IssuesIcon() {
       <circle cx="9" cy="9" r="7.5" />
       <line x1="9" y1="5.5" x2="9" y2="9.5" strokeLinecap="round" />
       <circle cx="9" cy="12" r="0.75" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+function SettingsIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+      <circle cx="9" cy="9" r="2.5" />
+      <path d="M9 1.5v2M9 14.5v2M1.5 9h2M14.5 9h2M3.6 3.6l1.4 1.4M13 13l1.4 1.4M3.6 14.4l1.4-1.4M13 5l1.4-1.4" strokeLinecap="round" />
     </svg>
   );
 }
@@ -344,6 +354,14 @@ function Dashboard() {
           >
             <IssuesIcon />
             {sidebarOpen && <span>Issues</span>}
+          </button>
+          <button
+            className={`sidebar__nav-item sidebar__nav-item--bottom${activeView === "settings" ? " sidebar__nav-item--active" : ""}`}
+            onClick={() => handleViewChange("settings")}
+            aria-label="Settings"
+          >
+            <SettingsIcon />
+            {sidebarOpen && <span>Settings</span>}
           </button>
         </nav>
       </aside>
@@ -625,6 +643,8 @@ function Dashboard() {
             })}
           />
         )}
+
+        {activeView === "settings" && <SettingsView />}
       </main>
 
       <EventDetailPanel event={selectedEvent} onClose={() => setSelectedEvent(null)} />

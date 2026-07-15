@@ -169,4 +169,5 @@ def get_current_user(
         "id": existing.id,
         "email": existing.email,
         "github_username": existing.github_username,
+        "created_at": existing.created_at.isoformat() if existing.created_at else None,
     }

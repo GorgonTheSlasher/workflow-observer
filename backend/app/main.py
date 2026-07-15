@@ -17,9 +17,10 @@ from app.models import GitHubEvent, UserAccount
 from app.services.analytic_services import get_filtered_events, get_timeline, get_top_actors, get_event_type_breakdown, get_workflow_failures_by_name, get_workflow_failures_by_branch, get_workflow_run_timeline, get_workflow_execution_times, get_pr_cycle_times, get_dora_metrics, get_issue_stats, get_issue_activity_timeline, get_issue_labels, get_issue_resolution_trend, get_issue_reporters
 from app.services.auth_services import register_new_user, user_login, get_current_user, get_github_authorize_url, login_with_github
 from app.services.installation_services import get_user_installation_ids
-from app.schemas import AuthCredentials
+from app.services.alert_rule_services import get_rules_for_user, create_rule, update_rule, delete_rule, toggle_rule
+from app.schemas import AuthCredentials, AlertRuleCreate, AlertRuleUpdate, AlertRuleResponse
 
-from app.alerts import send_slack_alert
+from app.alerts import send_slack_alert, format_test_alert
 
 def _parse_date(s: str | None) -> datetime | None:
     if s is None:
@@ -539,8 +540,55 @@ async def event_stream(token: str):
 # Route for debugging without having to push to test repo
 @app.post("/test-alert")
 def test_alert(current_user: dict = Depends(get_current_user)):
-    send_slack_alert("Test alert from Workflow Observer")
+    send_slack_alert(format_test_alert())
     return {"success": True}
+
+
+# ── Alert Rules ───────────────────────────────────────────────────────────────
+
+@app.get("/settings/alert-rules", response_model=list[AlertRuleResponse])
+def list_alert_rules(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    return get_rules_for_user(current_user["id"], db)
+
+
+@app.post("/settings/alert-rules", response_model=AlertRuleResponse, status_code=201)
+def create_alert_rule(
+    body: AlertRuleCreate,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    return create_rule(current_user["id"], body, db)
+
+
+@app.patch("/settings/alert-rules/{rule_id}", response_model=AlertRuleResponse)
+def update_alert_rule(
+    rule_id: int,
+    body: AlertRuleUpdate,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    return update_rule(rule_id, current_user["id"], body, db)
+
+
+@app.patch("/settings/alert-rules/{rule_id}/toggle", response_model=AlertRuleResponse)
+def toggle_alert_rule(
+    rule_id: int,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    return toggle_rule(rule_id, current_user["id"], db)
+
+
+@app.delete("/settings/alert-rules/{rule_id}", status_code=204)
+def delete_alert_rule(
+    rule_id: int,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    delete_rule(rule_id, current_user["id"], db)
 
 
 @app.post("/auth/register")
@@ -573,7 +621,7 @@ def github_app_auth(code: str, installation_id: int | None = None, db: Session =
 
 #=======================Debug===========================#
 
-@app.post("/auth/me")
+@app.get("/auth/me")
 def get_me(current_user: dict = Depends(get_current_user)):
     return current_user
 
