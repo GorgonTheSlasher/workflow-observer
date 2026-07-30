@@ -31,12 +31,13 @@ def create_rule(user_id: int, data: AlertRuleCreate, db: Session) -> Alert_Rules
 def update_rule(rule_id: int, user_id: int, data: AlertRuleUpdate, db: Session) -> Alert_Rules:
     rule = _get_owned_rule(rule_id, user_id, db)
 
-    if data.enabled is not None:
+    # Use model_fields_set to distinguish "not provided" from "explicitly set to null"
+    if "enabled" in data.model_fields_set and data.enabled is not None:
         rule.enabled = data.enabled
-    if data.repo_filter is not None:
-        rule.repo_filter = data.repo_filter
-    if data.webhook_url is not None:
-        rule.webhook_url = data.webhook_url
+    if "repo_filter" in data.model_fields_set:
+        rule.repo_filter = data.repo_filter  # null clears back to "all repos"
+    if "webhook_url" in data.model_fields_set:
+        rule.webhook_url = data.webhook_url  # null clears back to global webhook
 
     db.commit()
     db.refresh(rule)

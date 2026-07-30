@@ -4,7 +4,7 @@ import requests
 from sqlalchemy.orm import Session
 
 from app.config import settings
-from app.models import GitHubEvent
+from app.models import Alert_Rules, GitHubEvent, Installation
 
 SLACK_WEBHOOK_URL = settings.SLACK_WEBHOOK_URL
 
@@ -13,13 +13,14 @@ _MAIN_BRANCHES = {"main", "master"}
 
 # ── Transport ─────────────────────────────────────────────────────────────────
 
-def send_slack_alert(payload: dict) -> None:
-    if not SLACK_WEBHOOK_URL:
-        print("SLACK_WEBHOOK_URL not configured. Skipping alert.")
+def send_slack_alert(payload: dict, webhook_url: str | None = None) -> None:
+    url = webhook_url or SLACK_WEBHOOK_URL
+    if not url:
+        print("No Slack webhook URL configured. Skipping alert.")
         return
 
     try:
-        response = requests.post(SLACK_WEBHOOK_URL, json=payload, timeout=10)
+        response = requests.post(url, json=payload, timeout=10)
     except requests.RequestException:
         print("Unable to reach Slack server")
         return
@@ -91,7 +92,11 @@ def _get_recovery_info(
     A recovery is when the current successful run follows a failure on the
     same repo + branch + workflow name.
     """
-    if not (event_type == "workflow_run" and event_data.get("conclusion") == "success"):
+    if not (
+        event_type == "workflow_run"
+        and event_data.get("status") == "completed"
+        and event_data.get("conclusion") == "success"
+    ):
         return False, None
 
     repo_name = event_data.get("repo_name")
@@ -110,7 +115,7 @@ def _get_recovery_info(
             GitHubEvent.conclusion.in_(["success", "failure"]),
         )
         .order_by(GitHubEvent.created_at.desc())
-        .limit(10)
+        .limit(50)
         .all()
     )
 
@@ -353,26 +358,85 @@ def format_test_alert() -> dict:
 
 # ── Main entry point ──────────────────────────────────────────────────────────
 
+def _get_user_id_for_installation(installation_id: int | None, db: Session) -> int | None:
+    if installation_id is None:
+        return None
+    row = db.query(Installation).filter(
+        Installation.github_installation_id == installation_id
+    ).first()
+    return row.user_id if row else None
+
+
+def _legacy_alerts(
+    event_type: str,
+    event_data: dict,
+    saved_event: GitHubEvent,
+    db: Session,
+) -> list[tuple[dict, str | None]]:
+    """Fallback for non-App webhooks where no user/installation context exists."""
+    alerts: list[tuple[dict, str | None]] = []
+    if _is_workflow_failure(event_type, event_data):
+        alerts.append((format_workflow_failure_alert(event_data), None))
+    is_recovery, downtime_hours = _get_recovery_info(event_type, event_data, saved_event, db)
+    if is_recovery:
+        alerts.append((format_workflow_recovery_alert(event_data, downtime_hours), None))
+    if _is_force_push_to_main(event_type, event_data):
+        alerts.append((format_force_push_alert(event_data), None))
+    if _is_new_member(event_type, event_data):
+        alerts.append((format_new_member_alert(event_data), None))
+    return alerts
+
+
 def get_alerts_for_event(
     event_type: str,
     event_data: dict,
     saved_event: GitHubEvent,
     db: Session,
-) -> list[dict]:
-    """Returns all Block Kit payloads that should be sent for this event."""
-    alerts = []
+) -> list[tuple[dict, str | None]]:
+    """
+    Returns (payload, webhook_url) pairs for every alert that should fire.
+    webhook_url being None means the caller should use the global SLACK_WEBHOOK_URL.
+    Consults Alert_Rules to gate by enabled status, repo scope, and rule type.
+    Falls back to legacy global-webhook behaviour when no installation user is found.
+    """
+    user_id = _get_user_id_for_installation(saved_event.installation_id, db)
 
-    if _is_workflow_failure(event_type, event_data):
-        alerts.append(format_workflow_failure_alert(event_data))
+    if user_id is None:
+        return _legacy_alerts(event_type, event_data, saved_event, db)
 
-    is_recovery, downtime_hours = _get_recovery_info(event_type, event_data, saved_event, db)
-    if is_recovery:
-        alerts.append(format_workflow_recovery_alert(event_data, downtime_hours))
+    rules = (
+        db.query(Alert_Rules)
+        .filter(Alert_Rules.user_id == user_id, Alert_Rules.enabled.is_(True))
+        .all()
+    )
 
-    if _is_force_push_to_main(event_type, event_data):
-        alerts.append(format_force_push_alert(event_data))
+    if not rules:
+        return []
 
-    if _is_new_member(event_type, event_data):
-        alerts.append(format_new_member_alert(event_data))
+    repo_name = event_data.get("repo_name")
+    recovery_result: tuple[bool, float | None] | None = None
+    alerts: list[tuple[dict, str | None]] = []
+
+    for rule in rules:
+        if rule.repo_filter and rule.repo_filter != repo_name:
+            continue
+
+        payload: dict | None = None
+
+        if rule.rule_type == "workflow_failure" and _is_workflow_failure(event_type, event_data):
+            payload = format_workflow_failure_alert(event_data)
+        elif rule.rule_type == "workflow_recovery":
+            if recovery_result is None:
+                recovery_result = _get_recovery_info(event_type, event_data, saved_event, db)
+            is_recovery, downtime_hours = recovery_result
+            if is_recovery:
+                payload = format_workflow_recovery_alert(event_data, downtime_hours)
+        elif rule.rule_type == "force_push" and _is_force_push_to_main(event_type, event_data):
+            payload = format_force_push_alert(event_data)
+        elif rule.rule_type == "new_member" and _is_new_member(event_type, event_data):
+            payload = format_new_member_alert(event_data)
+
+        if payload is not None:
+            alerts.append((payload, rule.webhook_url))
 
     return alerts

@@ -85,6 +85,7 @@ function AlertRulesPanel() {
   const [formWebhookUrl, setFormWebhookUrl] = useState("");
   const [formBusy, setFormBusy] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [mutationError, setMutationError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
 
   useEffect(() => {
@@ -116,20 +117,12 @@ function AlertRulesPanel() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!formRepoFilter) {
-      setFormError("Please select a repository.");
-      return;
-    }
-    if (!formWebhookUrl.trim()) {
-      setFormError("Webhook URL is required.");
-      return;
-    }
     setFormBusy(true);
     setFormError(null);
     const data: AlertRuleCreate = {
       rule_type: formRuleType,
-      repo_filter: formRepoFilter,
-      webhook_url: formWebhookUrl.trim(),
+      repo_filter: formRepoFilter || null,
+      webhook_url: formWebhookUrl.trim() || null,
     };
     try {
       await addRule(data);
@@ -143,8 +136,11 @@ function AlertRulesPanel() {
 
   async function handleDelete(id: number) {
     setDeletingId(id);
+    setMutationError(null);
     try {
       await removeRule(id);
+    } catch (e) {
+      setMutationError((e as Error).message);
     } finally {
       setDeletingId(null);
     }
@@ -192,14 +188,16 @@ function AlertRulesPanel() {
                 value={formRepoFilter}
                 onChange={(e) => setFormRepoFilter(e.target.value)}
               >
-                <option value="" disabled>Select a repository…</option>
+                <option value="">All repositories</option>
                 {repos.map((repo) => (
                   <option key={repo} value={repo}>{repo}</option>
                 ))}
               </select>
             </div>
             <div className="rule-form__field">
-              <label className="rule-form__label">Slack Webhook URL</label>
+              <label className="rule-form__label">
+                Slack Webhook URL <span className="rule-form__opt">(optional — uses global webhook if blank)</span>
+              </label>
               <input
                 className="rule-form__input"
                 type="url"
@@ -219,6 +217,8 @@ function AlertRulesPanel() {
             </div>
           </form>
         )}
+
+        {mutationError && <p className="rule-form__error">{mutationError}</p>}
 
         {isLoading ? (
           <p className="settings-placeholder">Loading…</p>
@@ -258,7 +258,9 @@ function AlertRulesPanel() {
                     <input
                       type="checkbox"
                       checked={rule.enabled}
-                      onChange={() => toggleRule(rule.id)}
+                      onChange={() => {
+                        toggleRule(rule.id).catch((e) => setMutationError((e as Error).message));
+                      }}
                     />
                     <span className="toggle__track" />
                   </label>

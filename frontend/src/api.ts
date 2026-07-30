@@ -537,8 +537,8 @@ export type AlertRule = {
 
 export type AlertRuleCreate = {
   rule_type: string;
-  repo_filter: string;
-  webhook_url: string;
+  repo_filter?: string | null;  // null = match all repos
+  webhook_url?: string | null;  // null = use global SLACK_WEBHOOK_URL
   enabled?: boolean;
 };
 

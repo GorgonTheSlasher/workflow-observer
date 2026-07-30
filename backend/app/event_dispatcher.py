@@ -67,8 +67,8 @@ async def dispatch_github_webhook(
 
     await broadcaster.publish({"event_type": x_github_event})
 
-    for alert_payload in get_alerts_for_event(x_github_event, event_data, saved_event, db):
-        send_slack_alert(alert_payload)
+    for alert_payload, webhook_url in get_alerts_for_event(x_github_event, event_data, saved_event, db):
+        send_slack_alert(alert_payload, webhook_url)
 
     return {
         "success": True,
