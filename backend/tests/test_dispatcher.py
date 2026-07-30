@@ -14,6 +14,7 @@ class FakeRequest:
 
 class FakeSavedEvent:
     id = 123
+    installation_id = None
 
 
 @pytest.mark.anyio
