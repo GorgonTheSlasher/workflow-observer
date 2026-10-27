@@ -1,6 +1,6 @@
 def handle_issues_event(payload: dict):
     action = payload.get("action")
-    issues = payload.get("issues", {})
+    issue = payload.get("issue", {})
     repo = payload.get("repository", {})
     sender = payload.get("sender", {})
 
@@ -9,11 +9,11 @@ def handle_issues_event(payload: dict):
         "action": action,
         "repo_name": repo.get("full_name"),
         "actor": sender.get("login"),
-        "branch": repo.get("head_branch"),
-        "status": issues.get("status"),
-        "conclusion": issues.get("conclusion"),
-        "commit_sha": issues.get("head_sha"),
-        "html_url": repo.get("html_url"),
+        "branch": None,
+        "status": issue.get("status"),
+        "conclusion": issue.get("conclusion"),
+        "commit_sha": None,
+        "html_url": issue.get("html_url") or repo.get("html_url"),
 
         "details_json": payload,
     }

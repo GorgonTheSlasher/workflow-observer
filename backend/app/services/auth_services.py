@@ -18,6 +18,7 @@ bearer_scheme = HTTPBearer()
 GITHUB_AUTHORIZE_URL = "https://github.com/login/oauth/authorize"
 GITHUB_TOKEN_URL = "https://github.com/login/oauth/access_token"
 GITHUB_USER_API_URL = "https://api.github.com/user"
+GITHUB_USER_INSTALLATIONS_URL = "https://api.github.com/user/installations"
 
 
 def _issue_jwt(user_id: int) -> str:
@@ -82,6 +83,34 @@ def get_github_authorize_url() -> str:
     }
     return f"{GITHUB_AUTHORIZE_URL}?{urlencode(params)}"
 
+def user_can_access_installation(github_access_token: str, installation_id: int) -> bool:
+
+    '''The installation_id in the setup callback is a plain query param and can be forged.
+    Confirm it against the installations GitHub says this user can access before linking it.'''
+
+    url = f"{GITHUB_USER_INSTALLATIONS_URL}?per_page=100"
+
+    while url:
+        response = requests.get(
+            url,
+            headers={
+                "Authorization": f"Bearer {github_access_token}",
+                "Accept": "application/vnd.github+json",
+            },
+            timeout=10,
+        )
+
+        if not response.ok:
+            return False
+
+        installations = response.json().get("installations", [])
+        if any(inst.get("id") == installation_id for inst in installations):
+            return True
+
+        url = response.links.get("next", {}).get("url")
+
+    return False
+
 def login_with_github(
         code: str,
         db: Session = Depends(get_db),
@@ -141,6 +170,9 @@ def login_with_github(
         raise HTTPException(status_code=401, detail="Account not active")
 
     if installation_id:
+        if not user_can_access_installation(github_access_token, installation_id):
+            raise HTTPException(status_code=403, detail="Installation does not belong to this user")
+
         link_installation(installation_id=installation_id, user_id=existing.id, db=db)
 
     return _issue_jwt(existing.id)
@@ -169,5 +201,32 @@ def get_current_user(
         "id": existing.id,
         "email": existing.email,
         "github_username": existing.github_username,
+        "is_demo": existing.is_demo,
         "created_at": existing.created_at.isoformat() if existing.created_at else None,
     }
+
+def get_current_non_demo_user(current_user: dict = Depends(get_current_user)):
+
+    '''The demo account is shared by every visitor, so it can't change settings or send Slack messages'''
+
+    if current_user["is_demo"]:
+        raise HTTPException(status_code=403, detail="Not available in the demo account")
+
+    return current_user
+
+def login_demo(db: Session) -> str:
+
+    '''Issues a token for the shared demo account, creating it on first use'''
+
+    if not settings.DEMO_INSTALLATION_IDS:
+        raise HTTPException(status_code=404, detail="Demo is not configured")
+
+    demo_user = db.query(UserAccount).filter(UserAccount.is_demo.is_(True)).first()
+
+    if not demo_user:
+        demo_user = UserAccount(github_username="demo", is_demo=True)
+        db.add(demo_user)
+        db.commit()
+        db.refresh(demo_user)
+
+    return _issue_jwt(demo_user.id)

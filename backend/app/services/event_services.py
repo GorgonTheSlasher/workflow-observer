@@ -26,11 +26,18 @@ def verify_signature(payload_body: bytes, signature_header: str, secret: str) ->
     if not hmac.compare_digest(expected_signature, signature_header):
         raise HTTPException(status_code=403, detail="Invalid signature")
 
+def get_event_by_delivery_id(db: Session, delivery_id: str) -> GitHubEvent | None:
+
+    '''Looks up an already-processed webhook by its X-GitHub-Delivery GUID'''
+
+    return db.query(GitHubEvent).filter(GitHubEvent.delivery_id == delivery_id).first()
+
 def save_event(
     db: Session,
     event_type: str,
     data: dict[str, object],
     installation_id: int | None = None,
+    delivery_id: str | None = None,
 ) -> GitHubEvent:
 
     '''Filters data from github event to match db model and saves it to the database'''
@@ -47,6 +54,7 @@ def save_event(
         html_url=data.get("html_url"),
         details_json=data.get("details_json"),
         installation_id=installation_id,
+        delivery_id=delivery_id,
     )
 
     db.add(event)

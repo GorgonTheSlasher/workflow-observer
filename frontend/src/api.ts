@@ -27,7 +27,12 @@ async function apiMutate(url: string, method: string, body?: unknown): Promise<R
 
 async function readErrorDetail(response: Response, fallback: string): Promise<string> {
   const data = await response.json().catch(() => null);
-  return data?.detail ?? fallback;
+  const detail = data?.detail;
+  // FastAPI validation errors (422) return detail as a list of { msg } objects
+  if (Array.isArray(detail)) {
+    return detail.map((d) => String(d?.msg ?? "").replace(/^Value error, /, "")).join("; ") || fallback;
+  }
+  return detail ?? fallback;
 }
 
 export function getGithubLoginUrl(): string {
@@ -54,6 +59,16 @@ export async function loginUser(email: string, password: string): Promise<AuthRe
 
   if (!response.ok) {
     throw new Error(await readErrorDetail(response, "Login failed"));
+  }
+
+  return response.json();
+}
+
+export async function loginDemo(): Promise<AuthResponse> {
+  const response = await fetch(`${API_BASE_URL}/auth/demo`, { method: "POST" });
+
+  if (!response.ok) {
+    throw new Error(await readErrorDetail(response, "Demo is unavailable right now"));
   }
 
   return response.json();
@@ -375,8 +390,15 @@ export type DoraMetric = {
   trend: { date: string; value: number }[];
 };
 
+export type DeployFrequencyMetric = DoraMetric & {
+  // Workflow names counted as deployments
+  workflows: string[];
+  // True when some repo has no deploy-like workflow, so all its main/master runs were counted
+  fallback: boolean;
+};
+
 export type DoraMetrics = {
-  deploy_frequency: DoraMetric;
+  deploy_frequency: DeployFrequencyMetric;
   change_failure_rate: DoraMetric;
   mttr: DoraMetric;
   lead_time: DoraMetric;
@@ -513,6 +535,8 @@ export type UserProfile = {
   id: number;
   email: string | null;
   github_username: string | null;
+  is_demo: boolean;
+  viewing_demo_data: boolean;
   created_at: string | null;
 };
 

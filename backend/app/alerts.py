@@ -20,7 +20,8 @@ def send_slack_alert(payload: dict, webhook_url: str | None = None) -> None:
         return
 
     try:
-        response = requests.post(url, json=payload, timeout=10)
+        # Don't follow redirects: the URL was validated as Slack, a redirect could point anywhere
+        response = requests.post(url, json=payload, timeout=10, allow_redirects=False)
     except requests.RequestException:
         print("Unable to reach Slack server")
         return

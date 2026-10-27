@@ -1,6 +1,7 @@
 def handle_pull_request_event(payload: dict):
     action = payload.get("action")
     pull_request = payload.get("pull_request", {})
+    head = pull_request.get("head") or {}
     repo = payload.get("repository", {})
     sender = payload.get("sender", {})
 
@@ -9,11 +10,11 @@ def handle_pull_request_event(payload: dict):
         "action": action,
         "repo_name": repo.get("full_name"),
         "actor": sender.get("login"),
-        "branch": repo.get("head_branch"),
+        "branch": head.get("ref"),
         "status": pull_request.get("status"),
         "conclusion": pull_request.get("conclusion"),
-        "commit_sha": pull_request.get("head_sha"),
-        "html_url": repo.get("html_url"),
+        "commit_sha": head.get("sha"),
+        "html_url": pull_request.get("html_url") or repo.get("html_url"),
 
         "details_json": payload
     }

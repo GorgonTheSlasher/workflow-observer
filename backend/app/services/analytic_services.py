@@ -1,3 +1,4 @@
+import re
 from collections import defaultdict
 from datetime import datetime, UTC
 
@@ -47,7 +48,8 @@ def get_filtered_events(
 
     if workflow_name:
         query = query.filter(
-            GitHubEvent.details_json["workflow_run"]["name"].astext == workflow_name
+            # Tuple path + as_string() is portable; .astext only exists on the Postgres JSON type
+            GitHubEvent.details_json[("workflow_run", "name")].as_string() == workflow_name
         )
 
     if search:
@@ -379,6 +381,34 @@ def get_workflow_execution_times(
     ]
 
 
+_MAIN_BRANCHES = ("main", "master")
+
+# Workflow names treated as deployments, e.g. "Deploy", "Release", "Publish to npm", "CI/CD"
+_DEPLOY_WORKFLOW_PATTERN = re.compile(r"deploy|release|publish|\bcd\b", re.IGNORECASE)
+
+
+def _run_workflow_name(row) -> str:
+    return ((row.details_json or {}).get("workflow_run") or {}).get("name") or ""
+
+
+def _is_deploy_workflow(name: str) -> bool:
+    return bool(_DEPLOY_WORKFLOW_PATTERN.search(name))
+
+
+def _as_utc(dt: datetime) -> datetime:
+    # Stored datetimes come back naive but are UTC
+    return dt.replace(tzinfo=UTC) if dt.tzinfo is None else dt
+
+
+def _parse_github_time(value: str | None) -> datetime | None:
+    if not value:
+        return None
+    try:
+        return _as_utc(datetime.fromisoformat(value.replace("Z", "+00:00")))
+    except (ValueError, AttributeError):
+        return None
+
+
 def get_dora_metrics(
     repo_name: str | None = None,
     start_date: datetime | None = None,
@@ -389,6 +419,7 @@ def get_dora_metrics(
     # ── All workflow run events ───────────────────────────────────────────────
     wf_q = db.query(
         GitHubEvent.created_at,
+        GitHubEvent.repo_name,
         GitHubEvent.branch,
         GitHubEvent.conclusion,
         GitHubEvent.commit_sha,
@@ -406,9 +437,24 @@ def get_dora_metrics(
 
     wf_rows = wf_q.order_by(GitHubEvent.created_at).all()
 
-    # ── Deploy Frequency ─────────────────────────────────────────────────────
-    deploy_rows = [r for r in wf_rows if r.conclusion == "success" and r.branch in ("main", "master")]
+    # ── Deployments ──────────────────────────────────────────────────────────
+    # A deployment is a run of a deploy-like workflow on main/master. Counting every workflow
+    # on main would count CI, lint etc. as deploys too. Repos with no deploy-like workflow
+    # fall back to all main/master runs, decided per repo so mixed repos stay accurate.
+    main_runs = [r for r in wf_rows if r.branch in _MAIN_BRANCHES]
+    repos_with_deploy_workflow = {
+        r.repo_name for r in main_runs if _is_deploy_workflow(_run_workflow_name(r))
+    }
+    deploy_attempts = [
+        r for r in main_runs
+        if r.conclusion in ("success", "failure")
+        and (r.repo_name not in repos_with_deploy_workflow or _is_deploy_workflow(_run_workflow_name(r)))
+    ]
+    deploy_rows = [r for r in deploy_attempts if r.conclusion == "success"]
+    deploy_workflows = sorted({_run_workflow_name(r) for r in deploy_attempts if _run_workflow_name(r)})
+    deploy_fallback = any(r.repo_name not in repos_with_deploy_workflow for r in deploy_attempts)
 
+    # ── Deploy Frequency ─────────────────────────────────────────────────────
     deploy_by_day: dict[str, int] = defaultdict(int)
     for r in deploy_rows:
         if r.created_at:
@@ -428,11 +474,13 @@ def get_dora_metrics(
         deploy_per_day = 0.0
 
     # ── Change Failure Rate ──────────────────────────────────────────────────
-    completed = [r for r in wf_rows if r.conclusion in ("success", "failure")]
-    cfr_pct = (sum(1 for r in completed if r.conclusion == "failure") / len(completed) * 100) if completed else 0.0
+    # Share of deployments that failed. CI failures on feature branches are not failed changes.
+    cfr_pct = (
+        sum(1 for r in deploy_attempts if r.conclusion == "failure") / len(deploy_attempts) * 100
+    ) if deploy_attempts else 0.0
 
     cfr_by_day: dict[str, dict] = defaultdict(lambda: {"total": 0, "failed": 0})
-    for r in completed:
+    for r in deploy_attempts:
         if r.created_at:
             d = r.created_at.strftime("%Y-%m-%d")
             cfr_by_day[d]["total"] += 1
@@ -444,58 +492,94 @@ def get_dora_metrics(
     ]
 
     # ── MTTR ─────────────────────────────────────────────────────────────────
+    # Time from the first failed deployment in a streak to the next successful one. Grouped
+    # per repo and workflow so one repo's success does not close another repo's incident.
     groups: dict[tuple, list] = defaultdict(list)
-    for r in wf_rows:
-        wf_name = (r.details_json or {}).get("workflow_run", {}).get("name", "")
-        groups[(r.branch or "", wf_name)].append(r)
+    for r in deploy_attempts:
+        groups[(r.repo_name, _run_workflow_name(r))].append(r)
 
     mttr_by_day: dict[str, list[float]] = defaultdict(list)
     for group in groups.values():
-        last_fail_time = None
+        failed_since = None
         for r in group:
-            if r.conclusion == "failure" and r.created_at:
-                last_fail_time = r.created_at
-            elif r.conclusion == "success" and last_fail_time is not None and r.created_at:
-                delta_h = (r.created_at - last_fail_time).total_seconds() / 3600
-                mttr_by_day[last_fail_time.strftime("%Y-%m-%d")].append(delta_h)
-                last_fail_time = None
+            if not r.created_at:
+                continue
+            if r.conclusion == "failure" and failed_since is None:
+                failed_since = r.created_at
+            elif r.conclusion == "success" and failed_since is not None:
+                delta_h = (r.created_at - failed_since).total_seconds() / 3600
+                mttr_by_day[failed_since.strftime("%Y-%m-%d")].append(delta_h)
+                failed_since = None
 
     mttr_trend = [{"date": d, "value": round(sum(ts) / len(ts), 1)} for d, ts in sorted(mttr_by_day.items())]
     all_mttr = [h for ts in mttr_by_day.values() for h in ts]
     avg_mttr = round(sum(all_mttr) / len(all_mttr), 1) if all_mttr else None
 
     # ── Lead Time for Changes ─────────────────────────────────────────────────
-    push_q = db.query(GitHubEvent.commit_sha, GitHubEvent.created_at).filter(
-        GitHubEvent.event_type == "push",
+    # From a change's first commit to its successful deployment. For a merged PR that is the
+    # first push to its branch; for a direct push to main it is the push itself. Pushes and PRs
+    # are not date filtered, since a change deployed in the window may have started before it.
+    push_q = db.query(
+        GitHubEvent.repo_name, GitHubEvent.branch, GitHubEvent.commit_sha, GitHubEvent.created_at,
+    ).filter(GitHubEvent.event_type == "push")
+    pr_q = db.query(GitHubEvent.repo_name, GitHubEvent.details_json).filter(
+        GitHubEvent.event_type == "pull_request",
+        GitHubEvent.action == "closed",
     )
     if installation_ids is not None:
         push_q = push_q.filter(GitHubEvent.installation_id.in_(installation_ids))
+        pr_q = pr_q.filter(GitHubEvent.installation_id.in_(installation_ids))
     if repo_name:
         push_q = push_q.filter(GitHubEvent.repo_name == repo_name)
+        pr_q = pr_q.filter(GitHubEvent.repo_name == repo_name)
 
-    push_sha_map: dict[str, datetime] = {}
-    for sha, created_at in push_q.all():
-        if sha and created_at:
-            push_sha_map[sha] = created_at
+    push_time_by_sha: dict[str, datetime] = {}
+    push_times_by_branch: dict[tuple, list[datetime]] = defaultdict(list)
+    for repo, branch, sha, created_at in push_q.all():
+        if not created_at:
+            continue
+        created_at = _as_utc(created_at)
+        if sha:
+            push_time_by_sha[sha] = created_at
+        if branch:
+            push_times_by_branch[(repo, branch)].append(created_at)
+    for times in push_times_by_branch.values():
+        times.sort()
+
+    merged_by_branch: dict[tuple, list[tuple]] = defaultdict(list)
+    for repo, details_json in pr_q.all():
+        pr = (details_json or {}).get("pull_request") or {}
+        merge_sha = pr.get("merge_commit_sha")
+        head_ref = (pr.get("head") or {}).get("ref")
+        merged_at = _parse_github_time(pr.get("merged_at"))
+        if merge_sha and head_ref and merged_at:
+            merged_by_branch[(repo, head_ref)].append((merged_at, merge_sha, _parse_github_time(pr.get("created_at"))))
+
+    # A branch can be reused for later PRs, so only pushes since its previous merge count
+    first_commit_by_merge_sha: dict[str, datetime] = {}
+    for key, merges in merged_by_branch.items():
+        previous_merge = None
+        for merged_at, merge_sha, opened_at in sorted(merges, key=lambda m: m[0]):
+            pushes = [
+                t for t in push_times_by_branch.get(key, [])
+                if t <= merged_at and (previous_merge is None or t > previous_merge)
+            ]
+            first_commit = pushes[0] if pushes else opened_at
+            if first_commit:
+                first_commit_by_merge_sha[merge_sha] = first_commit
+            previous_merge = merged_at
 
     lt_by_day: dict[str, list[float]] = defaultdict(list)
     for r in deploy_rows:
-        if not r.commit_sha or not r.created_at:
+        if not r.commit_sha:
             continue
-        push_time = push_sha_map.get(r.commit_sha)
-        if push_time is None:
+        change_started = first_commit_by_merge_sha.get(r.commit_sha) or push_time_by_sha.get(r.commit_sha)
+        completed_at = _parse_github_time(((r.details_json or {}).get("workflow_run") or {}).get("updated_at"))
+        if change_started is None or completed_at is None:
             continue
-        updated_at_str = (r.details_json or {}).get("workflow_run", {}).get("updated_at")
-        if not updated_at_str:
-            continue
-        try:
-            completed_at = datetime.fromisoformat(updated_at_str.replace("Z", "+00:00"))
-            tz_push = push_time.replace(tzinfo=UTC) if push_time.tzinfo is None else push_time
-            lead_h = (completed_at - tz_push).total_seconds() / 3600
-            if lead_h >= 0:
-                lt_by_day[completed_at.strftime("%Y-%m-%d")].append(lead_h)
-        except (ValueError, AttributeError):
-            continue
+        lead_h = (completed_at - change_started).total_seconds() / 3600
+        if lead_h >= 0:
+            lt_by_day[completed_at.strftime("%Y-%m-%d")].append(lead_h)
 
     lt_trend = [{"date": d, "value": round(sum(ts) / len(ts), 1)} for d, ts in sorted(lt_by_day.items())]
     all_lt = [h for ts in lt_by_day.values() for h in ts]
@@ -532,7 +616,13 @@ def get_dora_metrics(
         return "low"
 
     return {
-        "deploy_frequency": {"value": round(deploy_per_day, 2), "rating": rate_deploy(deploy_per_day), "trend": deploy_trend},
+        "deploy_frequency": {
+            "value": round(deploy_per_day, 2),
+            "rating": rate_deploy(deploy_per_day),
+            "trend": deploy_trend,
+            "workflows": deploy_workflows,
+            "fallback": deploy_fallback,
+        },
         "change_failure_rate": {"value": round(cfr_pct, 1), "rating": rate_cfr(cfr_pct), "trend": cfr_trend},
         "mttr": {"value": avg_mttr, "rating": rate_hours(avg_mttr), "trend": mttr_trend},
         "lead_time": {"value": avg_lt, "rating": rate_hours(avg_lt), "trend": lt_trend},

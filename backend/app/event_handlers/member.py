@@ -9,7 +9,7 @@ def handle_member_event(payload: dict):
         "action": action,
         "repo_name": repo.get("full_name"),
         "actor": sender.get("login"),
-        "branch": repo.get("head_branch"),
+        "branch": None,
         "status": member.get("status"),
         "conclusion": member.get("conclusion"),
         "commit_sha": member.get("head_sha"),

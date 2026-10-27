@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import DateRangePicker from "./components/DateRangePicker";
 import SettingsView from "./components/SettingsView";
 import RecentWorkflowFailuresWidget from "./components/RecentWorkflowFailuresWidget";
@@ -13,7 +13,7 @@ import TopActorsChart from "./components/TopActorsChart";
 import LoginPage from "./components/LoginPage";
 import { useAuth } from "./hooks/useAuth";
 import { EventStreamProvider } from "./context/EventStreamContext";
-import { getGithubInstallUrl } from "./api";
+import { getGithubInstallUrl, getMe, type UserProfile } from "./api";
 import { useEvents, type EventTypeFilter } from "./hooks/useEvents";
 import { useFailedWorkflowRuns } from "./hooks/useFailedWorkflowRuns";
 import { useRepositories } from "./hooks/useRepositories";
@@ -102,8 +102,34 @@ function SettingsIcon() {
   );
 }
 
+function DemoBanner({ isDemoAccount }: { isDemoAccount: boolean }) {
+  return (
+    <div className="demo-banner" role="status">
+      <span className="demo-banner__tag">Demo</span>
+      <span className="demo-banner__text">
+        {isDemoAccount
+          ? "You're viewing sample data. Sign in with GitHub and install the app to see your own repositories."
+          : "You're viewing sample data because no repositories are connected yet. Install the GitHub App to see your own."}
+      </span>
+      {!isDemoAccount && (
+        <button
+          className="demo-banner__action"
+          onClick={() => { window.location.href = getGithubInstallUrl(); }}
+        >
+          Install GitHub App
+        </button>
+      )}
+    </div>
+  );
+}
+
 function Dashboard() {
   const { logout } = useAuth();
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+
+  useEffect(() => {
+    getMe().then(setProfile).catch(() => null);
+  }, []);
   const [activeView, setActiveView] = useState<ActiveView>("summary");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedRepoName, setSelectedRepoName] = useState("");
@@ -442,6 +468,8 @@ function Dashboard() {
             </button>
           </div>
         </header>
+
+        {profile?.viewing_demo_data && <DemoBanner isDemoAccount={profile.is_demo} />}
 
         {error && <p className="error">Error: {error}</p>}
 

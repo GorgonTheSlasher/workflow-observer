@@ -5,9 +5,11 @@ from sqlalchemy.orm import Session
 from app.config import settings
 from app.database import get_db
 from app.schemas import AuthCredentials
+from app.services.installation_services import is_viewing_demo_data
 from app.services.auth_services import (
     get_current_user,
     get_github_authorize_url,
+    login_demo,
     login_with_github,
     register_new_user,
     user_login,
@@ -27,6 +29,12 @@ def login_user(credentials: AuthCredentials, db: Session = Depends(get_db)):
     return {"access_token": token, "token_type": "bearer"}
 
 
+@router.post("/auth/demo")
+def demo_login(db: Session = Depends(get_db)):
+    token = login_demo(db=db)
+    return {"access_token": token, "token_type": "bearer"}
+
+
 @router.get("/auth/github/login")
 def github_login():
     return RedirectResponse(get_github_authorize_url())
@@ -43,5 +51,11 @@ def github_app_auth(
 
 
 @router.get("/auth/me")
-def get_me(current_user: dict = Depends(get_current_user)):
-    return current_user
+def get_me(
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return {
+        **current_user,
+        "viewing_demo_data": is_viewing_demo_data(current_user["id"], db),
+    }

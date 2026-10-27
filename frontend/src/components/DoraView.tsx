@@ -130,10 +130,16 @@ export default function DoraView({ data, isLoading }: DoraViewProps) {
 
   const { deploy_frequency: df, change_failure_rate: cfr, mttr, lead_time: lt } = data;
 
+  const deploySource = df.fallback
+    ? "No deploy workflow found for some repos, so all successful main/master runs are counted"
+    : df.workflows.length > 0
+      ? `Counting successful runs of ${df.workflows.join(", ")} on main/master`
+      : "Successful deploy workflow runs on main/master";
+
   const tiles: TileProps[] = [
     {
       name: "Deploy Frequency",
-      description: "Successful deployments to main/master per day",
+      description: `Deployments per day. ${deploySource}.`,
       value: df.value,
       displayValue: df.value != null ? (df.value < 1 ? df.value.toFixed(2) : df.value.toFixed(1)) : "—",
       unit: "/ day",
@@ -143,7 +149,7 @@ export default function DoraView({ data, isLoading }: DoraViewProps) {
     },
     {
       name: "Change Failure Rate",
-      description: "% of workflow runs ending in failure",
+      description: "% of deployments that failed",
       value: cfr.value,
       displayValue: cfr.value != null ? `${cfr.value.toFixed(1)}%` : "—",
       unit: "",
@@ -153,7 +159,7 @@ export default function DoraView({ data, isLoading }: DoraViewProps) {
     },
     {
       name: "Mean Time to Recovery",
-      description: "Avg time from workflow failure to next success on the same branch",
+      description: "Avg time from a failed deployment to the next successful one",
       value: mttr.value,
       displayValue: mttr.value != null ? formatHours(mttr.value) : "—",
       unit: mttr.value != null ? "avg" : "",
@@ -163,7 +169,7 @@ export default function DoraView({ data, isLoading }: DoraViewProps) {
     },
     {
       name: "Lead Time for Changes",
-      description: "Avg time from push to successful deployment on main/master",
+      description: "Avg time from a change's first commit to its successful deployment",
       value: lt.value,
       displayValue: lt.value != null ? formatHours(lt.value) : "—",
       unit: lt.value != null ? "avg" : "",
@@ -181,7 +187,7 @@ export default function DoraView({ data, isLoading }: DoraViewProps) {
 
       <div className="dora-charts">
         {/* Deploy Frequency */}
-        <ChartCard title="Deploy Frequency" subtitle="Successful deployments to main/master, by day">
+        <ChartCard title="Deploy Frequency" subtitle={`${deploySource}, by day`}>
           {df.trend.length === 0 ? (
             <p className="chart-empty">No deployment data on main/master.</p>
           ) : (
@@ -198,9 +204,9 @@ export default function DoraView({ data, isLoading }: DoraViewProps) {
         </ChartCard>
 
         {/* Change Failure Rate */}
-        <ChartCard title="Change Failure Rate" subtitle="% of workflow runs ending in failure, by day">
+        <ChartCard title="Change Failure Rate" subtitle="% of deployments that failed, by day">
           {cfr.trend.length === 0 ? (
-            <p className="chart-empty">No completed workflow run data.</p>
+            <p className="chart-empty">No deployments on main/master yet.</p>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={cfr.trend} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
@@ -215,9 +221,9 @@ export default function DoraView({ data, isLoading }: DoraViewProps) {
         </ChartCard>
 
         {/* MTTR */}
-        <ChartCard title="Mean Time to Recovery" subtitle="Hours from failure to next success, per incident">
+        <ChartCard title="Mean Time to Recovery" subtitle="Hours from a failed deployment to the next successful one">
           {mttr.trend.length === 0 ? (
-            <p className="chart-empty">No failure-to-recovery sequences found yet.</p>
+            <p className="chart-empty">No failed deployments in this range.</p>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={mttr.trend} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
@@ -232,9 +238,9 @@ export default function DoraView({ data, isLoading }: DoraViewProps) {
         </ChartCard>
 
         {/* Lead Time */}
-        <ChartCard title="Lead Time for Changes" subtitle="Hours from push to successful deployment, by day">
+        <ChartCard title="Lead Time for Changes" subtitle="Hours from first commit to successful deployment, by day">
           {lt.trend.length === 0 ? (
-            <p className="chart-empty">No push-to-deploy pairs found. Push and workflow SHAs must match.</p>
+            <p className="chart-empty">No deployments could be traced back to a push or merged PR.</p>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={lt.trend} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>

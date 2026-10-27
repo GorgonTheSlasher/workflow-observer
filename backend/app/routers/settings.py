@@ -10,7 +10,7 @@ from app.services.alert_rule_services import (
     toggle_rule,
     update_rule,
 )
-from app.services.auth_services import get_current_user
+from app.services.auth_services import get_current_non_demo_user, get_current_user
 
 router = APIRouter(prefix="/settings", tags=["settings"])
 
@@ -27,7 +27,7 @@ def list_alert_rules(
 def create_alert_rule(
     body: AlertRuleCreate,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_non_demo_user),
 ):
     return create_rule(current_user["id"], body, db)
 
@@ -37,7 +37,7 @@ def update_alert_rule(
     rule_id: int,
     body: AlertRuleUpdate,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_non_demo_user),
 ):
     return update_rule(rule_id, current_user["id"], body, db)
 
@@ -46,7 +46,7 @@ def update_alert_rule(
 def toggle_alert_rule(
     rule_id: int,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_non_demo_user),
 ):
     return toggle_rule(rule_id, current_user["id"], db)
 
@@ -55,6 +55,6 @@ def toggle_alert_rule(
 def delete_alert_rule(
     rule_id: int,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_non_demo_user),
 ):
     delete_rule(rule_id, current_user["id"], db)

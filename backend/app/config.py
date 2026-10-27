@@ -63,4 +63,8 @@ class Settings:
             "GITHUB_APP_REDIRECT_URI"
         )
 
+        self.DEMO_INSTALLATION_IDS = [
+            int(i) for i in os.getenv("DEMO_INSTALLATION_IDS", "").split(",") if i.strip()
+        ] # Comma-separated installation ids shown to users who have no installation of their own. Empty disables the demo.
+
 settings = Settings()

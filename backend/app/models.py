@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, JSON, Boolean
+from sqlalchemy import Column, Integer, String, DateTime, JSON, Boolean, false
 from datetime import datetime, UTC
 from app.database import Base
 
@@ -22,6 +22,10 @@ class GitHubEvent(Base):
     details_json = Column(JSON, nullable=True)
     installation_id = Column(Integer, nullable=True)
 
+    # X-GitHub-Delivery GUID. GitHub resends the same GUID on retries/redeliveries,
+    # so the unique index is what makes webhook processing idempotent.
+    delivery_id = Column(String, nullable=True, unique=True, index=True)
+
     created_at = Column(DateTime, default=lambda: datetime.now(UTC))
 
 class UserAccount(Base):
@@ -34,6 +38,9 @@ class UserAccount(Base):
     github_id = Column(Integer, unique=True, nullable=True)
     github_username = Column(String, nullable=True)
     is_active = Column(Boolean, default=True)
+
+    # The shared account behind the "Try the demo" button. Read-only for alert settings.
+    is_demo = Column(Boolean, default=False, nullable=False, server_default=false())
 
     created_at = Column(DateTime, default=lambda: datetime.now(UTC))
 

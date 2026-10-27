@@ -13,7 +13,7 @@ def handle_push_event(payload: dict):
         "status": payload.get("status"),
         "conclusion": payload.get("conclusion"),
         "commit_sha": payload.get("after"),
-        "html_url": repo.get("html_url"),
+        "html_url": (payload.get("head_commit") or {}).get("url") or payload.get("compare") or repo.get("html_url"),
 
         "details_json": payload
     }

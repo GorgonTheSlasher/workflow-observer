@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
-import { loginUser, registerUser } from "../api";
+import { loginDemo as loginDemoRequest, loginUser, registerUser } from "../api";
 import { clearToken, getToken, setToken, setUnauthorizedHandler } from "../auth";
 import { AuthContext } from "./auth-context";
 
@@ -41,12 +41,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsAuthenticated(true);
   }, []);
 
+  const loginDemo = useCallback(async () => {
+    const data = await loginDemoRequest();
+    setToken(data.access_token);
+    setIsAuthenticated(true);
+  }, []);
+
   const register = useCallback(async (email: string, password: string) => {
     await registerUser(email, password);
   }, []);
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, register, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, login, loginDemo, register, logout }}>
       {children}
     </AuthContext.Provider>
   );

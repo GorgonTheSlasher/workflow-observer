@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.alerts import format_test_alert, send_slack_alert
 from app.routers import auth, settings, stream, summary, webhooks
-from app.services.auth_services import get_current_user
+from app.services.auth_services import get_current_non_demo_user
 
 app = FastAPI(title="GitHub Workflow Observer")
 
@@ -32,6 +32,6 @@ def root():
 
 
 @app.post("/test-alert")
-def test_alert(current_user: dict = Depends(get_current_user)):
+def test_alert(current_user: dict = Depends(get_current_non_demo_user)):
     send_slack_alert(format_test_alert())
     return {"success": True}

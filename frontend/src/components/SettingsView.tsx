@@ -16,17 +16,7 @@ const RULE_TYPE_COLORS: Record<string, string> = {
   new_member: "#5b9bd5",
 };
 
-function AccountPanel() {
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    getMe()
-      .then(setProfile)
-      .catch(() => null)
-      .finally(() => setLoading(false));
-  }, []);
-
+function AccountPanel({ profile, loading }: { profile: UserProfile | null; loading: boolean }) {
   const initial = (profile?.github_username?.[0] ?? profile?.email?.[0] ?? "?").toUpperCase();
   const joinedDate = profile?.created_at
     ? new Date(profile.created_at).toLocaleDateString("en-US", { month: "long", year: "numeric" })
@@ -51,7 +41,13 @@ function AccountPanel() {
                   <span className="account-value">{profile.email}</span>
                 </div>
               )}
-              {profile?.github_username && (
+              {profile?.is_demo && (
+                <div className="account-row">
+                  <span className="account-label">Account</span>
+                  <span className="account-value">Shared demo account</span>
+                </div>
+              )}
+              {profile?.github_username && !profile.is_demo && (
                 <div className="account-row">
                   <span className="account-label">GitHub</span>
                   <a
@@ -76,7 +72,7 @@ function AccountPanel() {
   );
 }
 
-function AlertRulesPanel() {
+function AlertRulesPanel({ readOnly }: { readOnly: boolean }) {
   const { rules, isLoading, error, addRule, toggleRule, removeRule } = useAlertRules();
   const [repos, setRepos] = useState<string[]>([]);
   const [showForm, setShowForm] = useState(false);
@@ -156,7 +152,7 @@ function AlertRulesPanel() {
               Configure which events trigger Slack notifications and where they're sent.
             </p>
           </div>
-          {!showForm && (
+          {!showForm && !readOnly && (
             <button className="btn-add-rule" onClick={openForm}>
               + Add Rule
             </button>
@@ -165,6 +161,11 @@ function AlertRulesPanel() {
       </div>
 
       <div className="settings-panel__body">
+        {readOnly && (
+          <p className="settings-placeholder">
+            Alert rules can't be changed from the shared demo account. Sign in with GitHub to set up your own.
+          </p>
+        )}
         {showForm && (
           <form className="rule-form" onSubmit={handleSubmit}>
             <div className="rule-form__field">
@@ -283,10 +284,20 @@ function AlertRulesPanel() {
 }
 
 export default function SettingsView() {
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getMe()
+      .then(setProfile)
+      .catch(() => null)
+      .finally(() => setLoading(false));
+  }, []);
+
   return (
     <div className="settings-view">
-      <AccountPanel />
-      <AlertRulesPanel />
+      <AccountPanel profile={profile} loading={loading} />
+      <AlertRulesPanel readOnly={profile?.is_demo ?? false} />
     </div>
   );
 }

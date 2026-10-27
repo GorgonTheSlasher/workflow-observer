@@ -5,7 +5,7 @@ import { getGithubInstallUrl, getGithubLoginUrl } from "../api";
 type Tab = "login" | "register";
 
 export default function LoginPage() {
-  const { login, register } = useAuth();
+  const { login, loginDemo, register } = useAuth();
   const [tab, setTab] = useState<Tab>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -40,9 +40,37 @@ export default function LoginPage() {
     }
   }
 
+  async function handleDemo() {
+    setError(null);
+    setIsSubmitting(true);
+
+    try {
+      await loginDemo();
+    } catch (err) {
+      setError((err as Error).message);
+      setIsSubmitting(false);
+    }
+  }
+
   return (
     <div className="login-page">
       <div className="login-box">
+        <div className="login-demo">
+          <button
+            type="button"
+            className="login-demo__btn"
+            onClick={handleDemo}
+            disabled={isSubmitting}
+          >
+            Try the demo
+          </button>
+          <p className="login-demo__hint">No account needed. Explore a dashboard populated with sample repository data.</p>
+        </div>
+
+        <div className="login-divider">
+          <span>or</span>
+        </div>
+
         <div className="login-tabs">
           <button
             type="button"
