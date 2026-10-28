@@ -107,6 +107,8 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoComplete={tab === "login" ? "current-password" : "new-password"}
+              minLength={tab === "register" ? 8 : undefined}
+              maxLength={128}
               required
             />
           </label>

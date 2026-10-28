@@ -3,7 +3,12 @@ from app.config import settings
 from app.models import Installation, GitHubEvent
 
 
-def link_installation(installation_id: int, user_id: int, db: Session) -> Installation:
+def link_installation(
+    installation_id: int,
+    user_id: int,
+    db: Session,
+    account_login: str | None = None,
+) -> Installation:
 
     '''Finds or creates an Installation row for a given GitHub installation_id and attaches it to a user'''
 
@@ -19,6 +24,9 @@ def link_installation(installation_id: int, user_id: int, db: Session) -> Instal
         db.add(existing)
     else:
         existing.user_id = user_id
+
+    if account_login:
+        existing.account_login = account_login
 
     db.commit()
     db.refresh(existing)

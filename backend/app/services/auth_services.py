@@ -83,10 +83,11 @@ def get_github_authorize_url() -> str:
     }
     return f"{GITHUB_AUTHORIZE_URL}?{urlencode(params)}"
 
-def user_can_access_installation(github_access_token: str, installation_id: int) -> bool:
+def find_user_installation(github_access_token: str, installation_id: int) -> dict | None:
 
     '''The installation_id in the setup callback is a plain query param and can be forged.
-    Confirm it against the installations GitHub says this user can access before linking it.'''
+    Confirm it against the installations GitHub says this user can access before linking it.
+    Returns GitHub's installation object, or None if the user can't access it.'''
 
     url = f"{GITHUB_USER_INSTALLATIONS_URL}?per_page=100"
 
@@ -101,15 +102,15 @@ def user_can_access_installation(github_access_token: str, installation_id: int)
         )
 
         if not response.ok:
-            return False
+            return None
 
-        installations = response.json().get("installations", [])
-        if any(inst.get("id") == installation_id for inst in installations):
-            return True
+        for inst in response.json().get("installations", []):
+            if inst.get("id") == installation_id:
+                return inst
 
         url = response.links.get("next", {}).get("url")
 
-    return False
+    return None
 
 def login_with_github(
         code: str,
@@ -170,10 +171,16 @@ def login_with_github(
         raise HTTPException(status_code=401, detail="Account not active")
 
     if installation_id:
-        if not user_can_access_installation(github_access_token, installation_id):
+        installation = find_user_installation(github_access_token, installation_id)
+        if installation is None:
             raise HTTPException(status_code=403, detail="Installation does not belong to this user")
 
-        link_installation(installation_id=installation_id, user_id=existing.id, db=db)
+        link_installation(
+            installation_id=installation_id,
+            user_id=existing.id,
+            db=db,
+            account_login=(installation.get("account") or {}).get("login"),
+        )
 
     return _issue_jwt(existing.id)
 

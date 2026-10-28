@@ -4,8 +4,9 @@ import pytest
 from fastapi import HTTPException
 from pydantic import ValidationError
 
-from app.schemas import AlertRuleCreate, AlertRuleUpdate
-from app.services.auth_services import login_with_github, user_can_access_installation
+from app.config import Settings
+from app.schemas import AlertRuleCreate, AlertRuleUpdate, LoginCredentials, RegisterCredentials
+from app.services.auth_services import login_with_github, find_user_installation
 
 
 # ── Alert rule webhook URL (SSRF) ─────────────────────────────────────────────
@@ -51,19 +52,19 @@ def _response(json_body, ok=True, links=None):
     return response
 
 
-def test_user_can_access_installation_found():
+def test_find_user_installation_found():
     with patch("app.services.auth_services.requests.get") as mock_get:
-        mock_get.return_value = _response({"installations": [{"id": 1}, {"id": 42}]})
-        assert user_can_access_installation("token", 42) is True
+        mock_get.return_value = _response({"installations": [{"id": 1}, {"id": 42, "account": {"login": "acme"}}]})
+        assert find_user_installation("token", 42) == {"id": 42, "account": {"login": "acme"}}
 
 
-def test_user_can_access_installation_not_found():
+def test_find_user_installation_not_found():
     with patch("app.services.auth_services.requests.get") as mock_get:
         mock_get.return_value = _response({"installations": [{"id": 1}]})
-        assert user_can_access_installation("token", 42) is False
+        assert find_user_installation("token", 42) is None
 
 
-def test_user_can_access_installation_follows_pagination():
+def test_find_user_installation_follows_pagination():
     with patch("app.services.auth_services.requests.get") as mock_get:
         mock_get.side_effect = [
             _response(
@@ -72,14 +73,14 @@ def test_user_can_access_installation_follows_pagination():
             ),
             _response({"installations": [{"id": 42}]}),
         ]
-        assert user_can_access_installation("token", 42) is True
+        assert find_user_installation("token", 42) == {"id": 42}
         assert mock_get.call_count == 2
 
 
-def test_user_can_access_installation_api_error():
+def test_find_user_installation_api_error():
     with patch("app.services.auth_services.requests.get") as mock_get:
         mock_get.return_value = _response({}, ok=False)
-        assert user_can_access_installation("token", 42) is False
+        assert find_user_installation("token", 42) is None
 
 
 def test_login_with_github_rejects_forged_installation_id():
@@ -100,3 +101,44 @@ def test_login_with_github_rejects_forged_installation_id():
 
         assert exc.value.status_code == 403
         mock_link.assert_not_called()
+
+
+# ── Credentials ───────────────────────────────────────────────────────────────
+
+def test_register_normalizes_email():
+    creds = RegisterCredentials(email="  Dev@Example.COM ", password="long-enough")
+    assert creds.email == "dev@example.com"
+
+
+@pytest.mark.parametrize("email", ["not-an-email", "missing@tld", "@example.com", ""])
+def test_register_rejects_invalid_email(email):
+    with pytest.raises(ValidationError):
+        RegisterCredentials(email=email, password="long-enough")
+
+
+@pytest.mark.parametrize("password", ["", "short", "x" * 7, "x" * 129])
+def test_register_rejects_bad_password_length(password):
+    with pytest.raises(ValidationError):
+        RegisterCredentials(email="dev@example.com", password=password)
+
+
+def test_login_does_not_enforce_register_rules():
+    # Lets an account created before the rules existed still log in; a wrong one just gets 401
+    creds = LoginCredentials(email="Dev@Example.com", password="short")
+    assert creds.email == "dev@example.com"
+
+
+# ── Startup config check ──────────────────────────────────────────────────────
+
+@pytest.mark.parametrize("secret", [None, "", "too-short"])
+def test_settings_rejects_missing_or_weak_jwt_secret(secret):
+    config = Settings()
+    config.JWT_SECRET = secret
+    with pytest.raises(RuntimeError, match="JWT_SECRET"):
+        config.validate()
+
+
+def test_settings_accepts_strong_jwt_secret():
+    config = Settings()
+    config.JWT_SECRET = "x" * 32
+    config.validate()

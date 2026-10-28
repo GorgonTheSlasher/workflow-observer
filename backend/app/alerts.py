@@ -53,15 +53,6 @@ def _workflow_name(event_data: dict) -> str:
 
 # ── Condition checkers ────────────────────────────────────────────────────────
 
-def should_alert_on_event(event_type: str, event_data: dict) -> bool:
-    """Legacy single-check kept for backward compatibility with tests."""
-    return (
-        event_type == "workflow_run"
-        and event_data.get("status") == "completed"
-        and event_data.get("conclusion") == "failure"
-    )
-
-
 def _is_workflow_failure(event_type: str, event_data: dict) -> bool:
     return (
         event_type == "workflow_run"
@@ -359,9 +350,7 @@ def format_test_alert() -> dict:
 
 # ── Main entry point ──────────────────────────────────────────────────────────
 
-def _get_user_id_for_installation(installation_id: int | None, db: Session) -> int | None:
-    if installation_id is None:
-        return None
+def _get_user_id_for_installation(installation_id: int, db: Session) -> int | None:
     row = db.query(Installation).filter(
         Installation.github_installation_id == installation_id
     ).first()
@@ -374,7 +363,8 @@ def _legacy_alerts(
     saved_event: GitHubEvent,
     db: Session,
 ) -> list[tuple[dict, str | None]]:
-    """Fallback for non-App webhooks where no user/installation context exists."""
+    """Alerts for events from the repo-level /webhook endpoint, which carry no installation.
+    Those come from a repo the owner configured themselves, so they go to the global Slack URL."""
     alerts: list[tuple[dict, str | None]] = []
     if _is_workflow_failure(event_type, event_data):
         alerts.append((format_workflow_failure_alert(event_data), None))
@@ -398,12 +388,16 @@ def get_alerts_for_event(
     Returns (payload, webhook_url) pairs for every alert that should fire.
     webhook_url being None means the caller should use the global SLACK_WEBHOOK_URL.
     Consults Alert_Rules to gate by enabled status, repo scope, and rule type.
-    Falls back to legacy global-webhook behaviour when no installation user is found.
+    Events with no installation (repo-level webhooks) use the legacy global-webhook path.
     """
-    user_id = _get_user_id_for_installation(saved_event.installation_id, db)
-
-    if user_id is None:
+    if saved_event.installation_id is None:
         return _legacy_alerts(event_type, event_data, saved_event, db)
+
+    # An installation nobody has linked yet has no rules and no Slack URL of its own.
+    # Never fall back to the global URL here, or a stranger's repo events reach the owner's Slack.
+    user_id = _get_user_id_for_installation(saved_event.installation_id, db)
+    if user_id is None:
+        return []
 
     rules = (
         db.query(Alert_Rules)

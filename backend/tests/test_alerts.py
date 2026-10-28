@@ -5,20 +5,7 @@ from app.alerts import (
     _is_new_member,
     _is_workflow_failure,
     get_alerts_for_event,
-    should_alert_on_event,
 )
-
-
-# ── Legacy shim (backward compat) ────────────────────────────────────────────
-
-def test_alerts_on_failed_completed_workflow():
-    event_data = {"status": "completed", "conclusion": "failure"}
-    assert should_alert_on_event("workflow_run", event_data) is True
-
-
-def test_does_not_alert_on_successful_workflow():
-    event_data = {"status": "completed", "conclusion": "success"}
-    assert should_alert_on_event("workflow_run", event_data) is False
 
 
 # ── Condition checkers ────────────────────────────────────────────────────────
@@ -130,3 +117,11 @@ def test_no_installation_id_uses_legacy_global_path():
     payload, wh = results[0]
     assert "attachments" in payload
     assert wh is None
+
+
+@patch("app.alerts._get_user_id_for_installation", return_value=None)
+def test_unlinked_installation_sends_no_alerts(_):
+    """An App installation nobody has linked must not fall back to the owner's global Slack."""
+    event_data = {"status": "completed", "conclusion": "failure", "repo_name": "stranger/repo"}
+    results = get_alerts_for_event("workflow_run", event_data, _make_saved_event(installation_id=123), MagicMock())
+    assert results == []

@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.database import get_db
-from app.schemas import AuthCredentials
+from app.schemas import LoginCredentials, RegisterCredentials
 from app.services.installation_services import is_viewing_demo_data
 from app.services.auth_services import (
     get_current_user,
@@ -19,12 +19,12 @@ router = APIRouter(tags=["auth"])
 
 
 @router.post("/auth/register")
-def register_user(credentials: AuthCredentials, db: Session = Depends(get_db)):
+def register_user(credentials: RegisterCredentials, db: Session = Depends(get_db)):
     return register_new_user(email=credentials.email, password=credentials.password, db=db)
 
 
 @router.post("/auth/login")
-def login_user(credentials: AuthCredentials, db: Session = Depends(get_db)):
+def login_user(credentials: LoginCredentials, db: Session = Depends(get_db)):
     token = user_login(email=credentials.email, password=credentials.password, db=db)
     return {"access_token": token, "token_type": "bearer"}
 

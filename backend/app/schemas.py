@@ -1,12 +1,29 @@
 from datetime import datetime
 from urllib.parse import urlparse
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, EmailStr, Field, field_validator
+
+PASSWORD_MIN_LENGTH = 8
+PASSWORD_MAX_LENGTH = 128  # Argon2 has no input limit, but cap it so huge bodies can't tie up hashing
 
 
-class AuthCredentials(BaseModel):
+def _normalize_email(value: str) -> str:
+    return value.strip().lower()
+
+
+class LoginCredentials(BaseModel):
+    # Not validated beyond being present: a bad email or short password just fails the lookup with 401
     email: str
     password: str
+
+    _normalize = field_validator("email")(_normalize_email)
+
+
+class RegisterCredentials(BaseModel):
+    email: EmailStr
+    password: str = Field(min_length=PASSWORD_MIN_LENGTH, max_length=PASSWORD_MAX_LENGTH)
+
+    _normalize = field_validator("email", mode="before")(_normalize_email)
 
 
 # ── Alert Rules ───────────────────────────────────────────────────────────────

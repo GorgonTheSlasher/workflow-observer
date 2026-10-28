@@ -67,4 +67,15 @@ class Settings:
             int(i) for i in os.getenv("DEMO_INSTALLATION_IDS", "").split(",") if i.strip()
         ] # Comma-separated installation ids shown to users who have no installation of their own. Empty disables the demo.
 
+    def validate(self) -> None:
+        '''Fail at startup with a clear message instead of on the first login or request.
+        Not run at import, so tests and CI can import the app without a full environment.'''
+        if not self.JWT_SECRET:
+            raise RuntimeError("JWT_SECRET is not set. Add it to backend/.env or the host's environment.")
+        if len(self.JWT_SECRET.encode()) < 32:
+            raise RuntimeError(
+                "JWT_SECRET must be at least 32 bytes for HS256. "
+                "Generate one with: python -c \"import secrets; print(secrets.token_urlsafe(48))\""
+            )
+
 settings = Settings()

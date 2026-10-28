@@ -11,23 +11,6 @@ from app.services.event_services import get_event_by_delivery_id, verify_signatu
 from app.services.installation_services import delete_installation
 from app.broadcaster import broadcaster
 
-# debug function for payload info
-#=======================================================#
-
-def debug_payload(payload: dict):
-    import json
-
-    print("PAYLOAD KEYS:", payload.keys())
-
-    workflow_run = payload.get("workflow_run", {})
-    print("WORKFLOW_RUN KEYS:", workflow_run.keys())
-
-    print("=" * 80)
-    print(json.dumps(payload, indent=2))
-    print("=" * 80)
-
-#========================================================#
-
 def _duplicate_response(x_github_event: str, delivery_id: str) -> dict:
     # 2xx so GitHub treats the delivery as handled and stops retrying it
     return {
@@ -52,9 +35,6 @@ async def dispatch_github_webhook(
     verify_signature(body, x_hub_signature_256, secret)
 
     payload = json.loads(body)
-
-    # debug
-    # debug_payload(payload)
 
     installation_id = (payload.get("installation") or {}).get("id")
 

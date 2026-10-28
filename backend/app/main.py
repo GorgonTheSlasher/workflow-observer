@@ -1,11 +1,21 @@
+from contextlib import asynccontextmanager
+
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.alerts import format_test_alert, send_slack_alert
+from app.config import settings as app_settings
 from app.routers import auth, settings, stream, summary, webhooks
 from app.services.auth_services import get_current_non_demo_user
 
-app = FastAPI(title="GitHub Workflow Observer")
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    app_settings.validate()
+    yield
+
+
+app = FastAPI(title="GitHub Workflow Observer", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,

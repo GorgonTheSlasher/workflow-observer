@@ -5,12 +5,12 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 
-# Virtual Enviroments #
+# Virtual Environments #
 
 backend/.venv/
 .venv/
 
-# Datasbase #
+# Database #
 
 *.db
 *.sqlite3
@@ -24,7 +24,7 @@ frontend/.env.local
 
 # Frontend #
 
-frontend/nodes_modules/
+node_modules/
 
 
 # VSCode #
