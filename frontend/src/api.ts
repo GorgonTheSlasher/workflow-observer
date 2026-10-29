@@ -546,6 +546,17 @@ export async function getMe(): Promise<UserProfile> {
   return r.json();
 }
 
+// ── Live updates ───────────────────────────────────────────────────────────────
+
+// EventSource can't send headers, so the stream URL carries a 30 second ticket
+// instead of the login token, which would otherwise end up in server logs
+export async function getStreamUrl(): Promise<string> {
+  const r = await apiMutate(`${API_BASE_URL}/events/stream-ticket`, "POST");
+  if (!r.ok) throw new Error("Failed to get stream ticket");
+  const { ticket } = await r.json();
+  return `${API_BASE_URL}/events/stream?ticket=${encodeURIComponent(ticket)}`;
+}
+
 // ── Alert Rules ────────────────────────────────────────────────────────────────
 
 export type AlertRule = {

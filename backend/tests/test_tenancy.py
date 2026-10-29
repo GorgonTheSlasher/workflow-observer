@@ -1,3 +1,6 @@
+import time
+
+import jwt as pyjwt
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
@@ -121,3 +124,46 @@ def test_demo_account_is_read_only(client, monkeypatch):
         "/settings/alert-rules", headers=headers, json={"rule_type": "workflow_failure"}
     ).status_code == 403
     assert client.post("/test-alert", headers=headers).status_code == 403
+
+
+# ── Stream tickets ────────────────────────────────────────────────────────────
+
+def test_stream_ticket_requires_login(client):
+    assert client.post("/events/stream-ticket").status_code in (401, 403)
+
+
+def test_stream_ticket_is_short_lived_and_for_this_user(client, db_session):
+    headers = _make_user(db_session, email="me@example.com")
+    ticket = client.post("/events/stream-ticket", headers=headers).json()["ticket"]
+
+    payload = pyjwt.decode(ticket, settings.JWT_SECRET, algorithms=["HS256"])
+    me = client.get("/auth/me", headers=headers).json()
+    assert payload["sub"] == str(me["id"])
+    assert payload["typ"] == "stream"
+    assert payload["exp"] - time.time() <= 30
+
+
+def test_stream_ticket_cannot_be_used_as_login_token(client, db_session):
+    headers = _make_user(db_session, email="me@example.com")
+    ticket = client.post("/events/stream-ticket", headers=headers).json()["ticket"]
+
+    assert client.get("/auth/me", headers={"Authorization": f"Bearer {ticket}"}).status_code == 401
+
+
+def test_stream_rejects_login_token_in_url(client, db_session):
+    headers = _make_user(db_session, email="me@example.com")
+    access_token = headers["Authorization"].removeprefix("Bearer ")
+
+    assert client.get(f"/events/stream?ticket={access_token}").status_code == 401
+
+
+def test_stream_rejects_expired_ticket(client, db_session):
+    headers = _make_user(db_session, email="me@example.com")
+    user_id = client.get("/auth/me", headers=headers).json()["id"]
+    expired = pyjwt.encode(
+        {"sub": str(user_id), "typ": "stream", "exp": int(time.time()) - 1},
+        settings.JWT_SECRET,
+        algorithm="HS256",
+    )
+
+    assert client.get(f"/events/stream?ticket={expired}").status_code == 401

@@ -32,6 +32,39 @@ def _issue_jwt(user_id: int) -> str:
     )
 
 
+STREAM_TICKET_TYPE = "stream"
+STREAM_TICKET_TTL = timedelta(seconds=30)
+
+
+def issue_stream_ticket(user_id: int) -> str:
+
+    '''EventSource can't send an Authorization header, so the stream is opened with a ticket in
+    the URL. URLs end up in access logs, so the ticket only lasts long enough to connect and
+    only works on the stream endpoint, never as a login token.'''
+
+    return jwt.encode(
+        {
+            "sub": str(user_id),
+            "typ": STREAM_TICKET_TYPE,
+            "exp": datetime.now(UTC) + STREAM_TICKET_TTL,
+        },
+        settings.JWT_SECRET,
+        algorithm="HS256",
+    )
+
+
+def get_stream_ticket_user_id(ticket: str) -> int:
+    try:
+        payload = jwt.decode(ticket, settings.JWT_SECRET, algorithms=["HS256"])
+    except jwt.PyJWTError:
+        raise HTTPException(status_code=401, detail="Invalid stream ticket")
+
+    if payload.get("typ") != STREAM_TICKET_TYPE:
+        raise HTTPException(status_code=401, detail="Invalid stream ticket")
+
+    return int(payload["sub"])
+
+
 def register_new_user(
         email: str,
         password: str,
@@ -193,6 +226,10 @@ def get_current_user(
         payload = jwt.decode(credentials.credentials, settings.JWT_SECRET, algorithms=["HS256"])
 
     except jwt.PyJWTError:
+        raise HTTPException(status_code=401, detail="Could not validate credentials")
+
+    # A stream ticket leaks through URLs by design, so it must not work as a login token
+    if payload.get("typ") == STREAM_TICKET_TYPE:
         raise HTTPException(status_code=401, detail="Could not validate credentials")
 
     user_id = int(payload["sub"])

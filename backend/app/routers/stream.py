@@ -1,34 +1,34 @@
 import asyncio
 import json
 
-import jwt as pyjwt
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from sse_starlette.sse import EventSourceResponse
 
 from app.broadcaster import broadcaster
-from app.config import settings
 from app.database import SessionLocal
 from app.models import UserAccount
+from app.services.auth_services import get_current_user, get_stream_ticket_user_id, issue_stream_ticket
 
 router = APIRouter(tags=["stream"])
 
 
+@router.post("/events/stream-ticket")
+def stream_ticket(current_user: dict = Depends(get_current_user)):
+    return {"ticket": issue_stream_ticket(current_user["id"])}
+
+
 @router.get("/events/stream")
-async def event_stream(token: str):
+async def event_stream(ticket: str):
+    user_id = get_stream_ticket_user_id(ticket)
+
     db = SessionLocal()
     try:
-        try:
-            payload = pyjwt.decode(token, settings.JWT_SECRET, algorithms=["HS256"])
-        except pyjwt.PyJWTError:
-            raise HTTPException(status_code=401, detail="Invalid token")
-
-        user_id = int(payload["sub"])
         user = db.query(UserAccount).filter(
             UserAccount.id == user_id,
             UserAccount.is_active.is_(True),
         ).first()
         if not user:
-            raise HTTPException(status_code=401, detail="Invalid token")
+            raise HTTPException(status_code=401, detail="Invalid stream ticket")
     finally:
         db.close()
 
