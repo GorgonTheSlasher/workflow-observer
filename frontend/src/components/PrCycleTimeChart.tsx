@@ -8,17 +8,11 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import type { PrCycleTimeEntry } from "../api";
+import { CHART_THEME, SERIES } from "../theme";
 
 type PrCycleTimeChartProps = {
   data: PrCycleTimeEntry[];
   isLoading?: boolean;
-};
-
-const CHART_THEME = {
-  text:    "#D1E3DD",
-  grid:    "rgba(209, 227, 221, 0.1)",
-  tooltip: { background: "#32292F", border: "rgba(209, 227, 221, 0.15)" },
-  line:    "#a78bfa",
 };
 
 function formatXAxisDate(label: unknown): string {
@@ -82,9 +76,9 @@ export default function PrCycleTimeChart({
                     background: CHART_THEME.tooltip.background,
                     border: `1px solid ${CHART_THEME.tooltip.border}`,
                     borderRadius: 8,
-                    color: CHART_THEME.text,
+                    color: "var(--text)",
                   }}
-                  labelStyle={{ color: CHART_THEME.text }}
+                  labelStyle={{ color: "var(--text)" }}
                   formatter={(value, _name, props) => [
                     `${formatHours(Number(value))} (${props.payload.count} PR${props.payload.count !== 1 ? "s" : ""})`,
                     "Avg cycle time",
@@ -94,8 +88,8 @@ export default function PrCycleTimeChart({
                   type="monotone"
                   dataKey="avg_hours"
                   name="Avg cycle time"
-                  stroke={CHART_THEME.line}
-                  fill={CHART_THEME.line}
+                  stroke={SERIES[0]}
+                  fill={SERIES[0]}
                   fillOpacity={0.2}
                   strokeWidth={2}
                   dot={false}

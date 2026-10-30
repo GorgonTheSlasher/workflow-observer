@@ -10,25 +10,12 @@ import {
   type BarShapeProps,
 } from "recharts";
 import type { EventTypeBreakdownEntry } from "../api";
+import { CHART_THEME, EVENT_TYPE_COLOR, SERIES_OTHER } from "../theme";
 
 type EventTypeChartProps = {
   data: EventTypeBreakdownEntry[];
   isLoading?: boolean;
   onDrillDown?: (eventType: string) => void;
-};
-
-const EVENT_COLORS: Record<string, string> = {
-  workflow_run:  "#e05c6a",
-  push:          "#5b9bd5",
-  pull_request:  "#a78bfa",
-  issues:        "#34d399",
-  member:        "#fbbf24",
-};
-
-const CHART_THEME = {
-  text:    "#D1E3DD",
-  grid:    "rgba(209, 227, 221, 0.1)",
-  tooltip: { background: "#32292F", border: "rgba(209, 227, 221, 0.15)" },
 };
 
 function formatType(type: string): string {
@@ -76,12 +63,12 @@ export default function EventTypeChart({
                   tickLine={{ stroke: CHART_THEME.grid }}
                 />
                 <Tooltip
-                  cursor={{ fill: "rgba(209, 227, 221, 0.05)" }}
+                  cursor={{ fill: CHART_THEME.cursor }}
                   contentStyle={{
                     background: CHART_THEME.tooltip.background,
                     border: `1px solid ${CHART_THEME.tooltip.border}`,
                     borderRadius: 8,
-                    color: CHART_THEME.text,
+                    color: "var(--text)",
                   }}
                   formatter={(value) => [value, "Events"]}
                 />
@@ -93,7 +80,7 @@ export default function EventTypeChart({
                   shape={(props: BarShapeProps) => {
                     const eventType = props.payload?.event_type as string | undefined;
                     return (
-                      <Rectangle {...props} fill={EVENT_COLORS[eventType ?? ""] ?? "#8A93A3"} />
+                      <Rectangle {...props} fill={EVENT_TYPE_COLOR[eventType ?? ""] ?? SERIES_OTHER} />
                     );
                   }}
                 />

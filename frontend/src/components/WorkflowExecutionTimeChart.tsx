@@ -9,17 +9,11 @@ import {
   type BarShapeProps,
 } from "recharts";
 import type { WorkflowExecutionTimeEntry } from "../api";
+import { CHART_THEME, SERIES } from "../theme";
 
 type WorkflowExecutionTimeChartProps = {
   data: WorkflowExecutionTimeEntry[];
   isLoading?: boolean;
-};
-
-const CHART_THEME = {
-  text:    "#D1E3DD",
-  grid:    "rgba(209, 227, 221, 0.1)",
-  tooltip: { background: "#32292F", border: "rgba(209, 227, 221, 0.15)" },
-  bar:     "#00F6ED",
 };
 
 function formatMinutes(seconds: number): string {
@@ -81,12 +75,12 @@ export default function WorkflowExecutionTimeChart({
                   tickLine={false}
                 />
                 <Tooltip
-                  cursor={{ fill: "rgba(209, 227, 221, 0.05)" }}
+                  cursor={{ fill: CHART_THEME.cursor }}
                   contentStyle={{
                     background: CHART_THEME.tooltip.background,
                     border: `1px solid ${CHART_THEME.tooltip.border}`,
                     borderRadius: 8,
-                    color: CHART_THEME.text,
+                    color: "var(--text)",
                   }}
                   formatter={(value, _name, props) => [
                     `${value}m (${props.payload.run_count} runs)`,
@@ -96,7 +90,7 @@ export default function WorkflowExecutionTimeChart({
                 <Bar
                   dataKey="avg_minutes"
                   radius={[0, 4, 4, 0]}
-                  fill={CHART_THEME.bar}
+                  fill={SERIES[0]}
                   shape={(props: BarShapeProps) => (
                     <Rectangle {...props} fillOpacity={1 - props.index * 0.15} />
                   )}

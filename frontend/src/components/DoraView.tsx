@@ -10,6 +10,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import type { DoraMetrics, DoraRating } from "../api";
+import { CHART_THEME, SERIES, badgeStyle, tooltipStyle } from "../theme";
 
 type DoraViewProps = {
   data: DoraMetrics | null;
@@ -17,10 +18,10 @@ type DoraViewProps = {
 };
 
 const RATING_COLOR: Record<DoraRating, string> = {
-  elite:  "#00F6ED",
-  high:   "#22c55e",
-  medium: "#FFB800",
-  low:    "#ef4444",
+  elite:  "var(--success)",
+  high:   "var(--info)",
+  medium: "var(--warning)",
+  low:    "var(--danger)",
 };
 
 const RATING_LABEL: Record<DoraRating, string> = {
@@ -28,12 +29,6 @@ const RATING_LABEL: Record<DoraRating, string> = {
   high:   "High",
   medium: "Medium",
   low:    "Low",
-};
-
-const CHART_THEME = {
-  text:    "#D1E3DD",
-  grid:    "rgba(209, 227, 221, 0.1)",
-  tooltip: { bg: "#32292F", border: "rgba(209, 227, 221, 0.15)" },
 };
 
 function formatXAxis(label: unknown): string {
@@ -48,13 +43,6 @@ function formatHours(h: number): string {
   if (h < 24) return `${h.toFixed(1)}h`;
   return `${(h / 24).toFixed(1)}d`;
 }
-
-const tooltipStyle = {
-  background: CHART_THEME.tooltip.bg,
-  border: `1px solid ${CHART_THEME.tooltip.border}`,
-  borderRadius: 8,
-  color: CHART_THEME.text,
-};
 
 // ── DORA tile ─────────────────────────────────────────────────────────────────
 
@@ -77,13 +65,13 @@ function DoraTile({ name, description, displayValue, unit, rating, bands, direct
         <span className="dora-tile__name">{name}</span>
         <span
           className="dora-tile__badge"
-          style={{ background: `${color}22`, color, border: `1px solid ${color}55` }}
+          style={badgeStyle(color)}
         >
           {RATING_LABEL[rating]}
         </span>
       </div>
       <div className="dora-tile__value-row">
-        <span className="dora-tile__value" style={{ color }}>
+        <span className="dora-tile__value">
           {displayValue}
         </span>
         {unit && <span className="dora-tile__unit">{unit}</span>}
@@ -196,8 +184,8 @@ export default function DoraView({ data, isLoading }: DoraViewProps) {
                 <CartesianGrid strokeDasharray="3 3" stroke={CHART_THEME.grid} />
                 <XAxis dataKey="date" tickFormatter={formatXAxis} tick={{ fontSize: 12, fill: CHART_THEME.text }} axisLine={{ stroke: CHART_THEME.grid }} tickLine={{ stroke: CHART_THEME.grid }} minTickGap={50} />
                 <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: CHART_THEME.text }} axisLine={{ stroke: CHART_THEME.grid }} tickLine={{ stroke: CHART_THEME.grid }} />
-                <Tooltip labelFormatter={formatXAxis} contentStyle={tooltipStyle} labelStyle={{ color: CHART_THEME.text }} formatter={(v) => [v, "Deployments"]} />
-                <Bar dataKey="value" name="Deployments" fill="#00F6ED" radius={[3, 3, 0, 0]} />
+                <Tooltip labelFormatter={formatXAxis} contentStyle={tooltipStyle} labelStyle={{ color: "var(--text)" }} formatter={(v) => [v, "Deployments"]} />
+                <Bar dataKey="value" name="Deployments" fill={SERIES[0]} radius={[3, 3, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           )}
@@ -213,8 +201,8 @@ export default function DoraView({ data, isLoading }: DoraViewProps) {
                 <CartesianGrid strokeDasharray="3 3" stroke={CHART_THEME.grid} />
                 <XAxis dataKey="date" tickFormatter={formatXAxis} tick={{ fontSize: 12, fill: CHART_THEME.text }} axisLine={{ stroke: CHART_THEME.grid }} tickLine={{ stroke: CHART_THEME.grid }} minTickGap={50} />
                 <YAxis tickFormatter={(v) => `${v}%`} tick={{ fontSize: 12, fill: CHART_THEME.text }} axisLine={{ stroke: CHART_THEME.grid }} tickLine={{ stroke: CHART_THEME.grid }} domain={[0, 100]} />
-                <Tooltip labelFormatter={formatXAxis} contentStyle={tooltipStyle} labelStyle={{ color: CHART_THEME.text }} formatter={(v) => [`${v}%`, "Failure rate"]} />
-                <Area type="monotone" dataKey="value" name="Failure rate" stroke="#FFB800" fill="#FFB800" fillOpacity={0.2} strokeWidth={2} dot={false} />
+                <Tooltip labelFormatter={formatXAxis} contentStyle={tooltipStyle} labelStyle={{ color: "var(--text)" }} formatter={(v) => [`${v}%`, "Failure rate"]} />
+                <Area type="monotone" dataKey="value" name="Failure rate" stroke={SERIES[0]} fill={SERIES[0]} fillOpacity={0.2} strokeWidth={2} dot={false} />
               </AreaChart>
             </ResponsiveContainer>
           )}
@@ -230,8 +218,8 @@ export default function DoraView({ data, isLoading }: DoraViewProps) {
                 <CartesianGrid strokeDasharray="3 3" stroke={CHART_THEME.grid} />
                 <XAxis dataKey="date" tickFormatter={formatXAxis} tick={{ fontSize: 12, fill: CHART_THEME.text }} axisLine={{ stroke: CHART_THEME.grid }} tickLine={{ stroke: CHART_THEME.grid }} minTickGap={50} />
                 <YAxis tickFormatter={formatHours} tick={{ fontSize: 12, fill: CHART_THEME.text }} axisLine={{ stroke: CHART_THEME.grid }} tickLine={{ stroke: CHART_THEME.grid }} />
-                <Tooltip labelFormatter={formatXAxis} contentStyle={tooltipStyle} labelStyle={{ color: CHART_THEME.text }} formatter={(v) => [formatHours(Number(v)), "Avg recovery time"]} />
-                <Area type="monotone" dataKey="value" name="Avg recovery time" stroke="#a78bfa" fill="#a78bfa" fillOpacity={0.2} strokeWidth={2} dot={false} />
+                <Tooltip labelFormatter={formatXAxis} contentStyle={tooltipStyle} labelStyle={{ color: "var(--text)" }} formatter={(v) => [formatHours(Number(v)), "Avg recovery time"]} />
+                <Area type="monotone" dataKey="value" name="Avg recovery time" stroke={SERIES[0]} fill={SERIES[0]} fillOpacity={0.2} strokeWidth={2} dot={false} />
               </AreaChart>
             </ResponsiveContainer>
           )}
@@ -247,8 +235,8 @@ export default function DoraView({ data, isLoading }: DoraViewProps) {
                 <CartesianGrid strokeDasharray="3 3" stroke={CHART_THEME.grid} />
                 <XAxis dataKey="date" tickFormatter={formatXAxis} tick={{ fontSize: 12, fill: CHART_THEME.text }} axisLine={{ stroke: CHART_THEME.grid }} tickLine={{ stroke: CHART_THEME.grid }} minTickGap={50} />
                 <YAxis tickFormatter={formatHours} tick={{ fontSize: 12, fill: CHART_THEME.text }} axisLine={{ stroke: CHART_THEME.grid }} tickLine={{ stroke: CHART_THEME.grid }} />
-                <Tooltip labelFormatter={formatXAxis} contentStyle={tooltipStyle} labelStyle={{ color: CHART_THEME.text }} formatter={(v) => [formatHours(Number(v)), "Avg lead time"]} />
-                <Area type="monotone" dataKey="value" name="Avg lead time" stroke="#818cf8" fill="#818cf8" fillOpacity={0.2} strokeWidth={2} dot={false} />
+                <Tooltip labelFormatter={formatXAxis} contentStyle={tooltipStyle} labelStyle={{ color: "var(--text)" }} formatter={(v) => [formatHours(Number(v)), "Avg lead time"]} />
+                <Area type="monotone" dataKey="value" name="Avg lead time" stroke={SERIES[0]} fill={SERIES[0]} fillOpacity={0.2} strokeWidth={2} dot={false} />
               </AreaChart>
             </ResponsiveContainer>
           )}

@@ -10,10 +10,10 @@ const RULE_TYPE_LABELS: Record<string, string> = {
 };
 
 const RULE_TYPE_COLORS: Record<string, string> = {
-  workflow_failure: "#e53935",
-  workflow_recovery: "#00c851",
-  force_push: "#FFB800",
-  new_member: "#5b9bd5",
+  workflow_failure: "var(--danger)",
+  workflow_recovery: "var(--success)",
+  force_push: "var(--warning)",
+  new_member: "var(--info)",
 };
 
 function AccountPanel({ profile, loading }: { profile: UserProfile | null; loading: boolean }) {
@@ -239,7 +239,7 @@ function AlertRulesPanel({ readOnly }: { readOnly: boolean }) {
               <li key={rule.id} className={`rule-card${rule.enabled ? "" : " rule-card--disabled"}`}>
                 <span
                   className="rule-card__badge"
-                  style={{ background: RULE_TYPE_COLORS[rule.rule_type] ?? "#888" }}
+                  style={{ background: RULE_TYPE_COLORS[rule.rule_type] ?? "var(--text-muted)" }}
                 >
                   {RULE_TYPE_LABELS[rule.rule_type] ?? rule.rule_type}
                 </span>

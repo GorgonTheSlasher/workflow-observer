@@ -19,6 +19,7 @@ import type {
   IssueResolutionEntry,
   TopActorEntry,
 } from "../api";
+import { CHART_THEME, SERIES, tooltipStyle } from "../theme";
 
 type IssuesViewProps = {
   stats: IssueStats | null;
@@ -30,25 +31,12 @@ type IssuesViewProps = {
   onDrillDown?: (filters: { event_type?: string; actor?: string }) => void;
 };
 
-const CHART_THEME = {
-  text:    "#D1E3DD",
-  grid:    "rgba(209, 227, 221, 0.1)",
-  tooltip: { bg: "#32292F", border: "rgba(209, 227, 221, 0.15)" },
-};
-
 const COLOR = {
-  opened:     "#00F6ED",
-  closed:     "#22c55e",
-  label:      "#a78bfa",
-  resolution: "#FFB800",
-  reporter:   "#5b9bd5",
-};
-
-const tooltipStyle = {
-  background: CHART_THEME.tooltip.bg,
-  border: `1px solid ${CHART_THEME.tooltip.border}`,
-  borderRadius: 8,
-  color: CHART_THEME.text,
+  opened:     SERIES[0],
+  closed:     SERIES[1],
+  label:      SERIES[0],
+  resolution: SERIES[0],
+  reporter:   SERIES[0],
 };
 
 function formatXAxis(label: unknown): string {
@@ -159,7 +147,7 @@ export default function IssuesView({
                 <CartesianGrid strokeDasharray="3 3" stroke={CHART_THEME.grid} />
                 <XAxis dataKey="date" tickFormatter={formatXAxis} tick={{ fontSize: 12, fill: CHART_THEME.text }} axisLine={{ stroke: CHART_THEME.grid }} tickLine={{ stroke: CHART_THEME.grid }} minTickGap={50} />
                 <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: CHART_THEME.text }} axisLine={{ stroke: CHART_THEME.grid }} tickLine={{ stroke: CHART_THEME.grid }} />
-                <Tooltip labelFormatter={formatXAxis} contentStyle={tooltipStyle} labelStyle={{ color: CHART_THEME.text }} />
+                <Tooltip labelFormatter={formatXAxis} contentStyle={tooltipStyle} labelStyle={{ color: "var(--text)" }} />
                 <Legend wrapperStyle={{ fontSize: "0.75rem", color: CHART_THEME.text }} />
                 <Area type="monotone" dataKey="opened" name="Opened" stroke={COLOR.opened} fill={COLOR.opened} fillOpacity={0.15} strokeWidth={2} dot={false} />
                 <Area type="monotone" dataKey="closed" name="Closed" stroke={COLOR.closed} fill={COLOR.closed} fillOpacity={0.15} strokeWidth={2} dot={false} />
@@ -177,7 +165,7 @@ export default function IssuesView({
               <BarChart data={labels} layout="vertical" margin={{ top: 4, right: 24, left: 8, bottom: 4 }}>
                 <XAxis type="number" allowDecimals={false} tick={{ fill: CHART_THEME.text, fontSize: 11 }} axisLine={{ stroke: CHART_THEME.grid }} tickLine={{ stroke: CHART_THEME.grid }} />
                 <YAxis type="category" dataKey="label" width={labelYAxisWidth} tick={{ fill: CHART_THEME.text, fontSize: 12 }} axisLine={false} tickLine={false} />
-                <Tooltip cursor={{ fill: "rgba(209,227,221,0.05)" }} contentStyle={tooltipStyle} formatter={(v) => [v, "Issues"]} />
+                <Tooltip cursor={{ fill: CHART_THEME.cursor }} contentStyle={tooltipStyle} formatter={(v) => [v, "Issues"]} />
                 <Bar
                   dataKey="count"
                   radius={[0, 4, 4, 0]}
@@ -199,7 +187,7 @@ export default function IssuesView({
               <BarChart data={reporters} layout="vertical" margin={{ top: 4, right: 24, left: 8, bottom: 4 }}>
                 <XAxis type="number" allowDecimals={false} tick={{ fill: CHART_THEME.text, fontSize: 11 }} axisLine={{ stroke: CHART_THEME.grid }} tickLine={{ stroke: CHART_THEME.grid }} />
                 <YAxis type="category" dataKey="actor" width={reporterYAxisWidth} tick={{ fill: CHART_THEME.text, fontSize: 12 }} axisLine={false} tickLine={false} />
-                <Tooltip cursor={{ fill: "rgba(209,227,221,0.05)" }} contentStyle={tooltipStyle} formatter={(v) => [v, "Issues opened"]} />
+                <Tooltip cursor={{ fill: CHART_THEME.cursor }} contentStyle={tooltipStyle} formatter={(v) => [v, "Issues opened"]} />
                 <Bar
                   dataKey="count"
                   radius={[0, 4, 4, 0]}
@@ -224,7 +212,7 @@ export default function IssuesView({
                 <CartesianGrid strokeDasharray="3 3" stroke={CHART_THEME.grid} />
                 <XAxis dataKey="date" tickFormatter={formatXAxis} tick={{ fontSize: 12, fill: CHART_THEME.text }} axisLine={{ stroke: CHART_THEME.grid }} tickLine={{ stroke: CHART_THEME.grid }} minTickGap={50} />
                 <YAxis tickFormatter={formatHours} tick={{ fontSize: 12, fill: CHART_THEME.text }} axisLine={{ stroke: CHART_THEME.grid }} tickLine={{ stroke: CHART_THEME.grid }} />
-                <Tooltip labelFormatter={formatXAxis} contentStyle={tooltipStyle} labelStyle={{ color: CHART_THEME.text }} formatter={(v) => [formatHours(Number(v)), "Avg close time"]} />
+                <Tooltip labelFormatter={formatXAxis} contentStyle={tooltipStyle} labelStyle={{ color: "var(--text)" }} formatter={(v) => [formatHours(Number(v)), "Avg close time"]} />
                 <Area type="monotone" dataKey="avg_hours" name="Avg close time" stroke={COLOR.resolution} fill={COLOR.resolution} fillOpacity={0.2} strokeWidth={2} dot={false} />
               </AreaChart>
             </ResponsiveContainer>

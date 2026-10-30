@@ -10,18 +10,13 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import type { WorkflowRunTimelineEntry } from "../api";
+import { CHART_THEME, RUN_OUTCOME_COLOR } from "../theme";
 
 const SERIES = [
-  { key: "success", label: "Success", color: "#00F6ED" },
-  { key: "failure", label: "Failure", color: "#FFB800" },
-  { key: "other",   label: "Other",   color: "#8A93A3" },
+  { key: "success", label: "Success", color: RUN_OUTCOME_COLOR.success },
+  { key: "failure", label: "Failure", color: RUN_OUTCOME_COLOR.failure },
+  { key: "other",   label: "Other",   color: RUN_OUTCOME_COLOR.other },
 ] as const;
-
-const CHART_THEME = {
-  text:    "#D1E3DD",
-  grid:    "rgba(209, 227, 221, 0.1)",
-  tooltip: { background: "#32292F", border: "rgba(209, 227, 221, 0.15)" },
-};
 
 type SeriesKey = (typeof SERIES)[number]["key"];
 
@@ -100,9 +95,9 @@ export default function WorkflowRunTimelineChart({
                     background: CHART_THEME.tooltip.background,
                     border: `1px solid ${CHART_THEME.tooltip.border}`,
                     borderRadius: 8,
-                    color: CHART_THEME.text,
+                    color: "var(--text)",
                   }}
-                  labelStyle={{ color: CHART_THEME.text }}
+                  labelStyle={{ color: "var(--text)" }}
                 />
                 <Legend
                   onClick={(e) => toggleSeries(e.dataKey as SeriesKey)}

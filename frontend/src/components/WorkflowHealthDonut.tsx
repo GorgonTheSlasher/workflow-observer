@@ -6,6 +6,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { CHART_THEME, RUN_OUTCOME_COLOR } from "../theme";
 
 type WorkflowHealthDonutProps = {
   workflowRunBreakdown: { success: number; failure: number; other: number };
@@ -17,11 +18,6 @@ type BarPayloadEntry = {
   name?: string;
   value?: number | [number, number];
   fill?: string;
-};
-
-const CHART_THEME = {
-  text:    "#D1E3DD",
-  tooltip: { background: "#32292F", border: "rgba(209, 227, 221, 0.15)" },
 };
 
 function BarTooltip({
@@ -41,7 +37,7 @@ function BarTooltip({
       borderRadius: 8,
       padding: "8px 12px",
       fontSize: "0.8rem",
-      color: CHART_THEME.text,
+      color: "var(--text)",
       pointerEvents: "none",
     }}>
       {payload.map((entry) => {
@@ -122,24 +118,24 @@ export default function WorkflowHealthDonut({
                       />
                     )}
                   />
-                  <Bar dataKey="success" stackId="a" fill="#00F6ED" name="Success" />
-                  <Bar dataKey="failure" stackId="a" fill="#FFB800" name="Failure" />
-                  <Bar dataKey="other" stackId="a" fill="#8A93A3" name="Other" />
+                  <Bar dataKey="success" stackId="a" fill={RUN_OUTCOME_COLOR.success} name="Success" />
+                  <Bar dataKey="failure" stackId="a" fill={RUN_OUTCOME_COLOR.failure} name="Failure" />
+                  <Bar dataKey="other" stackId="a" fill={RUN_OUTCOME_COLOR.other} name="Other" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
 
             <div className="health-bar__legend">
               <span className="health-bar__legend-item">
-                <span className="health-bar__legend-swatch" style={{ background: "#00F6ED" }} />
+                <span className="health-bar__legend-swatch" style={{ background: RUN_OUTCOME_COLOR.success }} />
                 Success ({success})
               </span>
               <span className="health-bar__legend-item">
-                <span className="health-bar__legend-swatch" style={{ background: "#FFB800" }} />
+                <span className="health-bar__legend-swatch" style={{ background: RUN_OUTCOME_COLOR.failure }} />
                 Failure ({failure})
               </span>
               <span className="health-bar__legend-item">
-                <span className="health-bar__legend-swatch" style={{ background: "#8A93A3" }} />
+                <span className="health-bar__legend-swatch" style={{ background: RUN_OUTCOME_COLOR.other }} />
                 Other ({other})
                 <span className="health-bar__info-anchor">
                   ?

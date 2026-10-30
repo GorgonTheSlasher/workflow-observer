@@ -1,13 +1,6 @@
 import { useRecentEvents } from "../hooks/useRecentEvents";
 import { parseUtcDate } from "../utils/time";
-
-const EVENT_COLORS: Record<string, string> = {
-  workflow_run:  "#e05c6a",
-  push:          "#5b9bd5",
-  pull_request:  "#a78bfa",
-  issues:        "#34d399",
-  member:        "#fbbf24",
-};
+import { EVENT_TYPE_COLOR, SERIES_OTHER } from "../theme";
 
 function timeAgo(iso: string): string {
   const diff = Math.max(0, Math.floor((Date.now() - parseUtcDate(iso).getTime()) / 1000));
@@ -40,7 +33,7 @@ export default function RecentActivityFeed() {
             <div key={event.id} className="activity-feed__item">
               <span
                 className="activity-feed__dot"
-                style={{ background: EVENT_COLORS[event.event_type] ?? "#888" }}
+                style={{ background: EVENT_TYPE_COLOR[event.event_type] ?? SERIES_OTHER }}
               />
               <div className="activity-feed__body">
                 <span className="activity-feed__type">{formatType(event.event_type)}</span>

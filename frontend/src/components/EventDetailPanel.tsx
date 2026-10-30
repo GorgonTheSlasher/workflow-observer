@@ -1,19 +1,11 @@
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import type { GitHubEvent } from "../types";
+import { CONCLUSION_COLOR, badgeStyle } from "../theme";
 
 type Props = {
   event: GitHubEvent | null;
   onClose: () => void;
-};
-
-const CONCLUSION_COLOR: Record<string, string> = {
-  success:  "#22c55e",
-  failure:  "#ef4444",
-  cancelled:"#6b7280",
-  skipped:  "#6b7280",
-  timed_out:"#f97316",
-  neutral:  "#a78bfa",
 };
 
 const EVENT_TYPE_LABEL: Record<string, string> = {
@@ -60,7 +52,7 @@ function WorkflowRunDetail({ event }: { event: GitHubEvent }) {
   const updatedAt  = get<string>(event.details_json, "workflow_run", "updated_at");
   const duration   = startedAt && updatedAt ? formatDuration(startedAt, updatedAt) : null;
   const conclusion = event.conclusion ?? "";
-  const color      = CONCLUSION_COLOR[conclusion] ?? "#8A93A3";
+  const color      = CONCLUSION_COLOR[conclusion] ?? "var(--text-muted)";
 
   return (
     <div className="edp-content">
@@ -72,7 +64,7 @@ function WorkflowRunDetail({ event }: { event: GitHubEvent }) {
       </div>
       <div className="edp-row">
         <span className="edp-label">Conclusion</span>
-        <span className="edp-badge" style={{ background: `${color}22`, color, border: `1px solid ${color}55` }}>
+        <span className="edp-badge" style={badgeStyle(color)}>
           {conclusion || "—"}
         </span>
       </div>

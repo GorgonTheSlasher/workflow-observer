@@ -10,20 +10,15 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import type { TimelineEntry } from "../api";
+import { CHART_THEME, EVENT_TYPE_COLOR } from "../theme";
 
 const SERIES = [
-  { key: "workflow_run", label: "Workflow Runs", color: "#e05c6a" },
-  { key: "push",         label: "Pushes",        color: "#5b9bd5" },
-  { key: "pull_request", label: "Pull Requests",  color: "#a78bfa" },
-  { key: "issues",       label: "Issues",         color: "#34d399" },
-  { key: "member",       label: "Members",        color: "#fbbf24" },
+  { key: "workflow_run", label: "Workflow Runs", color: EVENT_TYPE_COLOR.workflow_run },
+  { key: "push",         label: "Pushes",        color: EVENT_TYPE_COLOR.push },
+  { key: "pull_request", label: "Pull Requests",  color: EVENT_TYPE_COLOR.pull_request },
+  { key: "issues",       label: "Issues",         color: EVENT_TYPE_COLOR.issues },
+  { key: "member",       label: "Members",        color: EVENT_TYPE_COLOR.member },
 ] as const;
-
-const CHART_THEME = {
-  text:    "#D1E3DD",
-  grid:    "rgba(209, 227, 221, 0.1)",
-  tooltip: { background: "#32292F", border: "rgba(209, 227, 221, 0.15)" },
-};
 
 type SeriesKey = (typeof SERIES)[number]["key"];
 
@@ -100,9 +95,9 @@ export default function TimelineChart({
                     background: CHART_THEME.tooltip.background,
                     border: `1px solid ${CHART_THEME.tooltip.border}`,
                     borderRadius: 8,
-                    color: CHART_THEME.text,
+                    color: "var(--text)",
                   }}
-                  labelStyle={{ color: CHART_THEME.text }}
+                  labelStyle={{ color: "var(--text)" }}
                 />
                 <Legend
                   onClick={(e) => toggleSeries(e.dataKey as SeriesKey)}

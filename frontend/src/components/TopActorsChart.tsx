@@ -9,18 +9,12 @@ import {
   type BarShapeProps,
 } from "recharts";
 import type { TopActorEntry } from "../api";
+import { CHART_THEME, SERIES } from "../theme";
 
 type TopActorsChartProps = {
   data: TopActorEntry[];
   isLoading?: boolean;
   onDrillDown?: (actor: string) => void;
-};
-
-const CHART_THEME = {
-  text:    "#D1E3DD",
-  grid:    "rgba(209, 227, 221, 0.1)",
-  tooltip: { background: "#32292F", border: "rgba(209, 227, 221, 0.15)" },
-  bar:     "#FFB800",
 };
 
 export default function TopActorsChart({
@@ -72,19 +66,19 @@ export default function TopActorsChart({
                   tickLine={false}
                 />
                 <Tooltip
-                  cursor={{ fill: "rgba(209, 227, 221, 0.05)" }}
+                  cursor={{ fill: CHART_THEME.cursor }}
                   contentStyle={{
                     background: CHART_THEME.tooltip.background,
                     border: `1px solid ${CHART_THEME.tooltip.border}`,
                     borderRadius: 8,
-                    color: CHART_THEME.text,
+                    color: "var(--text)",
                   }}
                   formatter={(value) => [value, "Events"]}
                 />
                 <Bar
                   dataKey="count"
                   radius={[0, 4, 4, 0]}
-                  fill={CHART_THEME.bar}
+                  fill={SERIES[0]}
                   style={onDrillDown ? { cursor: "pointer" } : undefined}
                   onClick={onDrillDown ? (d) => onDrillDown((d as unknown as { actor: string }).actor) : undefined}
                   shape={(props: BarShapeProps) => (
