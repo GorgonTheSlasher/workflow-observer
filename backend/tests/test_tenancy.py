@@ -7,6 +7,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
+from app.cache import analytics_cache
 from app.config import settings
 from app.database import Base, get_db
 from app.main import app
@@ -22,6 +23,7 @@ DEMO_INSTALLATION = 333
 def db_session(monkeypatch):
     monkeypatch.setattr(settings, "JWT_SECRET", "test-secret-that-is-at-least-32-bytes-long")
     monkeypatch.setattr(settings, "DEMO_INSTALLATION_IDS", [])
+    analytics_cache.clear()  # each test builds a fresh DB with the same installation ids
 
     engine = create_engine(
         "sqlite://",
@@ -167,3 +169,40 @@ def test_stream_rejects_expired_ticket(client, db_session):
     )
 
     assert client.get(f"/events/stream?ticket={expired}").status_code == 401
+
+
+# ── Analytics cache ───────────────────────────────────────────────────────────
+
+def _add_push(db_session, installation_id, repo):
+    db_session.add(GitHubEvent(event_type="push", repo_name=repo, actor="x", installation_id=installation_id))
+    db_session.commit()
+
+
+def test_repeat_requests_are_served_from_cache_until_invalidated(client, db_session):
+    headers = _make_user(db_session, installation_id=MY_INSTALLATION, email="me@example.com")
+    assert _repos(client, headers) == ["me/my-repo"]
+
+    _add_push(db_session, MY_INSTALLATION, "me/second-repo")
+    assert _repos(client, headers) == ["me/my-repo"]  # cached
+
+    analytics_cache.invalidate_installation(MY_INSTALLATION)  # what a new webhook does
+    assert _repos(client, headers) == ["me/my-repo", "me/second-repo"]
+
+
+def test_cache_is_not_shared_between_tenants(client, db_session):
+    mine = _make_user(db_session, installation_id=MY_INSTALLATION, email="me@example.com")
+    theirs = _make_user(db_session, installation_id=OTHER_TENANT_INSTALLATION, email="them@example.com")
+
+    assert _repos(client, mine) == ["me/my-repo"]
+    assert _repos(client, theirs) == ["someone-else/private-repo"]
+
+
+def test_cache_key_includes_query_params(client, db_session):
+    headers = _make_user(db_session, installation_id=MY_INSTALLATION, email="me@example.com")
+    _add_push(db_session, MY_INSTALLATION, "me/second-repo")
+
+    all_repos = client.get("/summary/top-actors", headers=headers).json()
+    one_repo = client.get("/summary/top-actors?repo_name=me/second-repo", headers=headers).json()
+
+    assert all_repos == [{"actor": "x", "count": 2}]
+    assert one_repo == [{"actor": "x", "count": 1}]

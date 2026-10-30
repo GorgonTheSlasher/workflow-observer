@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from starlette.concurrency import run_in_threadpool
 
 from app.alerts import get_alerts_for_event, send_slack_alert
+from app.cache import analytics_cache
 from app.event_handlers import EVENT_HANDLERS
 from app.services.event_services import get_event_by_delivery_id, verify_signature, save_event
 from app.services.installation_services import delete_installation
@@ -41,6 +42,7 @@ async def dispatch_github_webhook(
     # DB calls are synchronous, so run them in the threadpool instead of blocking the event loop
     if x_github_event == "installation" and payload.get("action") == "deleted":
         await run_in_threadpool(delete_installation, installation_id, db)
+        analytics_cache.invalidate_installation(installation_id)
         return {"success": True, "event": "installation", "action": "deleted"}
 
     handler = EVENT_HANDLERS.get(x_github_event)
@@ -71,6 +73,9 @@ async def dispatch_github_webhook(
         # Lost a race with a concurrent copy of the same delivery; the unique index caught it
         db.rollback()
         return _duplicate_response(x_github_event, x_github_delivery)
+
+    # Dashboards refetch when this event is broadcast below, so they must not get cached results
+    analytics_cache.invalidate_installation(installation_id)
 
     alerts = await run_in_threadpool(get_alerts_for_event, x_github_event, event_data, saved_event, db)
 

@@ -3,6 +3,7 @@ from datetime import UTC, datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+from app.cache import cached_for_tenant
 from app.database import get_db
 from app.models import GitHubEvent
 from app.services.analytic_services import (
@@ -42,6 +43,7 @@ def _parse_end_date(s: str | None) -> datetime | None:
 
 
 @router.get("")
+@cached_for_tenant
 def summarize_db(
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
@@ -77,6 +79,7 @@ def summarize_db(
 
 
 @router.get("/repositories")
+@cached_for_tenant
 def get_repositories(
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
@@ -125,6 +128,7 @@ def get_events(
 
 
 @router.get("/events/workflow-runs")
+@cached_for_tenant
 def get_workflow_runs(
     repo_name: str | None = None,
     result: str | None = None,
@@ -205,6 +209,7 @@ def get_recent_events(
 
 
 @router.get("/events/by-type")
+@cached_for_tenant
 def get_event_type_breakdown_summary(
     repo_name: str | None = None,
     event_type: str | None = None,
@@ -226,6 +231,7 @@ def get_event_type_breakdown_summary(
 
 
 @router.get("/top-actors")
+@cached_for_tenant
 def get_top_actors_summary(
     repo_name: str | None = None,
     limit: int = 5,
@@ -249,6 +255,7 @@ def get_top_actors_summary(
 
 
 @router.get("/timeline")
+@cached_for_tenant
 def get_event_timeline(
     repo_name: str | None = None,
     start_date: str | None = None,
@@ -266,6 +273,7 @@ def get_event_timeline(
 
 
 @router.get("/workflow-failures-by-name")
+@cached_for_tenant
 def get_workflow_failures_by_name_summary(
     repo_name: str | None = None,
     start_date: str | None = None,
@@ -283,6 +291,7 @@ def get_workflow_failures_by_name_summary(
 
 
 @router.get("/workflow-failures-by-branch")
+@cached_for_tenant
 def get_workflow_failures_by_branch_summary(
     repo_name: str | None = None,
     start_date: str | None = None,
@@ -300,6 +309,7 @@ def get_workflow_failures_by_branch_summary(
 
 
 @router.get("/pr-cycle-times")
+@cached_for_tenant
 def get_pr_cycle_times_summary(
     repo_name: str | None = None,
     start_date: str | None = None,
@@ -317,6 +327,7 @@ def get_pr_cycle_times_summary(
 
 
 @router.get("/dora")
+@cached_for_tenant
 def get_dora_metrics_summary(
     repo_name: str | None = None,
     start_date: str | None = None,
@@ -334,6 +345,7 @@ def get_dora_metrics_summary(
 
 
 @router.get("/workflow-execution-times")
+@cached_for_tenant
 def get_workflow_execution_times_summary(
     repo_name: str | None = None,
     start_date: str | None = None,
@@ -351,6 +363,7 @@ def get_workflow_execution_times_summary(
 
 
 @router.get("/workflow-runs/timeline")
+@cached_for_tenant
 def get_workflow_run_timeline_summary(
     repo_name: str | None = None,
     start_date: str | None = None,
@@ -368,6 +381,7 @@ def get_workflow_run_timeline_summary(
 
 
 @router.get("/issues/stats")
+@cached_for_tenant
 def get_issue_stats_summary(
     repo_name: str | None = None,
     start_date: str | None = None,
@@ -385,6 +399,7 @@ def get_issue_stats_summary(
 
 
 @router.get("/issues/activity")
+@cached_for_tenant
 def get_issue_activity_summary(
     repo_name: str | None = None,
     start_date: str | None = None,
@@ -402,6 +417,7 @@ def get_issue_activity_summary(
 
 
 @router.get("/issues/labels")
+@cached_for_tenant
 def get_issue_labels_summary(
     repo_name: str | None = None,
     start_date: str | None = None,
@@ -419,6 +435,7 @@ def get_issue_labels_summary(
 
 
 @router.get("/issues/resolution-trend")
+@cached_for_tenant
 def get_issue_resolution_trend_summary(
     repo_name: str | None = None,
     start_date: str | None = None,
@@ -436,6 +453,7 @@ def get_issue_resolution_trend_summary(
 
 
 @router.get("/issues/reporters")
+@cached_for_tenant
 def get_issue_reporters_summary(
     repo_name: str | None = None,
     start_date: str | None = None,

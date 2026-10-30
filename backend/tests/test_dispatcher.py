@@ -191,3 +191,22 @@ async def test_dispatch_queues_slack_alerts_instead_of_sending_inline(monkeypatc
 
     await background_tasks()
     assert sent == ["https://hooks.slack.com/services/x"]
+
+
+@pytest.mark.anyio
+async def test_dispatch_invalidates_cached_analytics_for_the_installation(monkeypatch, no_signature_check):
+    invalidated = []
+    monkeypatch.setattr("app.event_dispatcher.save_event", lambda **kwargs: FakeSavedEvent())
+    monkeypatch.setattr("app.event_dispatcher.get_alerts_for_event", lambda *args: [])
+    monkeypatch.setattr("app.event_dispatcher.analytics_cache.invalidate_installation", invalidated.append)
+
+    await dispatch_github_webhook(
+        request=FakeRequest({**PUSH_PAYLOAD, "installation": {"id": 999}}),
+        x_github_event="push",
+        x_hub_signature_256="fake-signature",
+        db=None,
+        secret="test-secret",
+        background_tasks=BackgroundTasks(),
+    )
+
+    assert invalidated == [999]
