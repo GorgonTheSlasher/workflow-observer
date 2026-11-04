@@ -1,19 +1,14 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { getMe, type UserProfile } from "./api";
 import AppHeader from "./components/AppHeader";
 import DemoBanner from "./components/DemoBanner";
 import ErrorMessage from "./components/ErrorMessage";
 import LoginPage from "./components/LoginPage";
-import SettingsView from "./components/SettingsView";
+import ServerWakeNotice from "./components/ServerWakeNotice";
 import Sidebar from "./components/Sidebar";
 import { EventStreamProvider } from "./context/EventStreamContext";
 import { useAuth } from "./hooks/useAuth";
 import { useRepositories } from "./hooks/useRepositories";
-import DoraPage from "./views/DoraPage";
-import EventsPage from "./views/EventsPage";
-import IssuesPage from "./views/IssuesPage";
-import SummaryPage from "./views/SummaryPage";
-import WorkflowsPage from "./views/WorkflowsPage";
 import {
   EMPTY_EVENT_FILTERS,
   type ActiveView,
@@ -22,6 +17,14 @@ import {
   type EventFilters,
 } from "./views/filters";
 import "./App.css";
+
+// Each tab, and the charting library behind it, is downloaded the first time it's opened
+const SummaryPage = lazy(() => import("./views/SummaryPage"));
+const EventsPage = lazy(() => import("./views/EventsPage"));
+const WorkflowsPage = lazy(() => import("./views/WorkflowsPage"));
+const DoraPage = lazy(() => import("./views/DoraPage"));
+const IssuesPage = lazy(() => import("./views/IssuesPage"));
+const SettingsView = lazy(() => import("./components/SettingsView"));
 
 function Dashboard() {
   const { logout } = useAuth();
@@ -100,7 +103,9 @@ function Dashboard() {
 
         <ErrorMessage error={repositoriesError} />
 
-        {renderView()}
+        <Suspense fallback={<div className="chart-card chart-card--loading">Loading…</div>}>
+          {renderView()}
+        </Suspense>
       </main>
     </div>
   );
@@ -109,14 +114,17 @@ function Dashboard() {
 function App() {
   const { isAuthenticated } = useAuth();
 
-  if (!isAuthenticated) {
-    return <LoginPage />;
-  }
-
   return (
-    <EventStreamProvider>
-      <Dashboard />
-    </EventStreamProvider>
+    <>
+      <ServerWakeNotice />
+      {isAuthenticated ? (
+        <EventStreamProvider>
+          <Dashboard />
+        </EventStreamProvider>
+      ) : (
+        <LoginPage />
+      )}
+    </>
   );
 }
 

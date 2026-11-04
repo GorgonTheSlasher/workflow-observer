@@ -142,3 +142,59 @@ def test_settings_accepts_strong_jwt_secret():
     config = Settings()
     config.JWT_SECRET = "x" * 32
     config.validate()
+
+
+# ── GitHub login codes ────────────────────────────────────────────────────────
+
+@pytest.fixture
+def jwt_secret(monkeypatch):
+    from app.config import settings
+    monkeypatch.setattr(settings, "JWT_SECRET", "test-secret-that-is-at-least-32-bytes-long")
+
+
+def test_login_code_exchanges_once_for_a_token(jwt_secret):
+    import jwt as pyjwt
+    from app.config import settings
+    from app.services.auth_services import exchange_login_code, issue_login_code
+
+    code = issue_login_code(7)
+    token = exchange_login_code(code)
+
+    assert pyjwt.decode(token, settings.JWT_SECRET, algorithms=["HS256"])["sub"] == "7"
+    with pytest.raises(HTTPException) as exc:
+        exchange_login_code(code)
+    assert exc.value.status_code == 401
+
+
+def test_login_code_expires(jwt_secret, monkeypatch):
+    from app.services import auth_services
+
+    now = [1000.0]
+    monkeypatch.setattr(auth_services.time, "monotonic", lambda: now[0])
+    code = auth_services.issue_login_code(7)
+    now[0] += auth_services.LOGIN_CODE_TTL_SECONDS + 1
+
+    with pytest.raises(HTTPException) as exc:
+        auth_services.exchange_login_code(code)
+    assert exc.value.status_code == 401
+
+
+def test_unknown_login_code_is_rejected(jwt_secret):
+    from app.services.auth_services import exchange_login_code
+
+    with pytest.raises(HTTPException) as exc:
+        exchange_login_code("made-up")
+    assert exc.value.status_code == 401
+
+
+def test_github_callback_redirects_with_code_not_token(jwt_secret):
+    from fastapi.testclient import TestClient
+    from app.main import app
+
+    with patch("app.routers.auth.login_with_github", return_value="one-time-code"):
+        response = TestClient(app).get("/github-app/auth?code=gh-code", follow_redirects=False)
+
+    assert response.status_code in (302, 307)
+    location = response.headers["location"]
+    assert location.endswith("/?login_code=one-time-code")
+    assert "token=" not in location

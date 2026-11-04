@@ -64,5 +64,8 @@ jobs:
       - name: Run ESLint
         run: npm run lint
 
+      - name: Run frontend tests
+        run: npm test
+
       - name: TypeScript check and build
         run: npm run build

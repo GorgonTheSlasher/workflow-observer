@@ -1,3 +1,7 @@
+import secrets
+import threading
+import time
+
 import jwt
 import requests
 from urllib.parse import urlencode
@@ -51,6 +55,41 @@ def issue_stream_ticket(user_id: int) -> str:
         settings.JWT_SECRET,
         algorithm="HS256",
     )
+
+
+LOGIN_CODE_TTL_SECONDS = 60
+_login_codes: dict[str, tuple[int, float]] = {}
+_login_codes_lock = threading.Lock()
+
+
+def issue_login_code(user_id: int) -> str:
+
+    '''The GitHub login ends with a redirect to the frontend, and anything in that URL lands
+    in logs and browser history. So the redirect carries a random one-time code instead of
+    the login token, and the frontend swaps it for the token with a POST.
+
+    Kept in memory, like the stream broadcaster, so this assumes a single process.'''
+
+    code = secrets.token_urlsafe(32)
+    now = time.monotonic()
+    with _login_codes_lock:
+        for stale in [c for c, (_, expires_at) in _login_codes.items() if expires_at < now]:
+            del _login_codes[stale]
+        _login_codes[code] = (user_id, now + LOGIN_CODE_TTL_SECONDS)
+    return code
+
+
+def exchange_login_code(code: str) -> str:
+
+    '''Swaps a login code for a login token. Each code works once, and only briefly.'''
+
+    with _login_codes_lock:
+        entry = _login_codes.pop(code, None)
+
+    if entry is None or entry[1] < time.monotonic():
+        raise HTTPException(status_code=401, detail="Login code is invalid or expired")
+
+    return _issue_jwt(entry[0])
 
 
 def get_stream_ticket_user_id(ticket: str) -> int:
@@ -215,7 +254,7 @@ def login_with_github(
             account_login=(installation.get("account") or {}).get("login"),
         )
 
-    return _issue_jwt(existing.id)
+    return issue_login_code(existing.id)
 
 def get_current_user(
         credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),

@@ -1,15 +1,5 @@
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  Rectangle,
-  type BarShapeProps,
-} from "recharts";
 import type { WorkflowFailuresByBranchEntry } from "../api";
-import { CHART_THEME } from "../theme";
+import RankedFailuresChart from "./RankedFailuresChart";
 
 type WorkflowFailuresByBranchChartProps = {
   data: WorkflowFailuresByBranchEntry[];
@@ -17,80 +7,14 @@ type WorkflowFailuresByBranchChartProps = {
   onDrillDown?: (branch: string) => void;
 };
 
-export default function WorkflowFailuresByBranchChart({
-  data,
-  isLoading = false,
-  onDrillDown,
-}: WorkflowFailuresByBranchChartProps) {
-  const yAxisWidth = data.length
-    ? Math.min(Math.max(...data.map((d) => d.branch.length)) * 7 + 16, 220)
-    : 100;
-
-  if (isLoading) {
-    return (
-      <section>
-        <div className="chart-card chart-card--loading">Loading workflow failures...</div>
-      </section>
-    );
-  }
-
+export default function WorkflowFailuresByBranchChart({ data, isLoading, onDrillDown }: WorkflowFailuresByBranchChartProps) {
   return (
-    <section>
-      <article className="chart-card">
-        <div className="chart-card__header">
-          <h2>Failures by Branch</h2>
-        </div>
-
-        {data.length === 0 ? (
-          <p className="chart-empty">No workflow failures found.</p>
-        ) : (
-          <div className="chart-body">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={data}
-                layout="vertical"
-                margin={{ top: 4, right: 24, left: 8, bottom: 4 }}
-              >
-                <XAxis
-                  type="number"
-                  allowDecimals={false}
-                  tick={{ fill: CHART_THEME.text, fontSize: 11 }}
-                  axisLine={{ stroke: CHART_THEME.grid }}
-                  tickLine={{ stroke: CHART_THEME.grid }}
-                />
-                <YAxis
-                  type="category"
-                  dataKey="branch"
-                  width={yAxisWidth}
-                  tick={{ fill: CHART_THEME.text, fontSize: 12 }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <Tooltip
-                  cursor={{ fill: CHART_THEME.cursor }}
-                  contentStyle={{
-                    background: CHART_THEME.tooltip.background,
-                    border: `1px solid ${CHART_THEME.tooltip.border}`,
-                    borderRadius: 8,
-                    color: "var(--text)",
-                  }}
-                  formatter={(value) => [value, "Failures"]}
-                />
-                <Bar
-                  dataKey="count"
-                  radius={[0, 4, 4, 0]}
-                  fill={"var(--danger)"}
-                  style={onDrillDown ? { cursor: "pointer" } : undefined}
-                  onClick={onDrillDown ? (d) => onDrillDown((d as unknown as { branch: string }).branch) : undefined}
-                  shape={(props: BarShapeProps) => (
-                    <Rectangle {...props} fillOpacity={1 - props.index * 0.15} />
-                  )}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        )}
-      </article>
-    </section>
+    <RankedFailuresChart
+      title="Failures by Branch"
+      noun="branches"
+      rows={data.map((d) => ({ label: d.branch, count: d.count }))}
+      isLoading={isLoading}
+      onDrillDown={onDrillDown}
+    />
   );
 }

@@ -79,7 +79,7 @@ async def dispatch_github_webhook(
 
     alerts = await run_in_threadpool(get_alerts_for_event, x_github_event, event_data, saved_event, db)
 
-    await broadcaster.publish({"event_type": x_github_event})
+    await broadcaster.publish({"event_type": x_github_event}, installation_id)
 
     # Slack calls run after the response is sent, so a slow Slack can't push
     # us past GitHub's 10 second delivery timeout

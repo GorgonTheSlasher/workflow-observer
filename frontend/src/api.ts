@@ -35,6 +35,16 @@ async function readErrorDetail(response: Response, fallback: string): Promise<st
   return detail ?? fallback;
 }
 
+// Unauthenticated health check, used to detect and wait out a cold start
+export async function pingServer(): Promise<boolean> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/`, { cache: "no-store" });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
 export function getGithubLoginUrl(): string {
   return `${API_BASE_URL}/auth/github/login`;
 }
@@ -59,6 +69,21 @@ export async function loginUser(email: string, password: string): Promise<AuthRe
 
   if (!response.ok) {
     throw new Error(await readErrorDetail(response, "Login failed"));
+  }
+
+  return response.json();
+}
+
+// The GitHub login redirect carries a one-time code rather than the token itself
+export async function exchangeLoginCode(code: string): Promise<AuthResponse> {
+  const response = await fetch(`${API_BASE_URL}/auth/github/exchange`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ code }),
+  });
+
+  if (!response.ok) {
+    throw new Error(await readErrorDetail(response, "GitHub sign-in failed"));
   }
 
   return response.json();

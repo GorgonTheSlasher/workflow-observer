@@ -4,9 +4,10 @@ from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.database import get_db
-from app.schemas import LoginCredentials, RegisterCredentials
+from app.schemas import LoginCodeExchange, LoginCredentials, RegisterCredentials
 from app.services.installation_services import is_viewing_demo_data
 from app.services.auth_services import (
+    exchange_login_code,
     get_current_user,
     get_github_authorize_url,
     login_demo,
@@ -46,8 +47,13 @@ def github_app_auth(
     installation_id: int | None = None,
     db: Session = Depends(get_db),
 ):
-    token = login_with_github(code=code, db=db, installation_id=installation_id)
-    return RedirectResponse(f"{settings.FRONTEND_BASE_URL}/?token={token}")
+    login_code = login_with_github(code=code, db=db, installation_id=installation_id)
+    return RedirectResponse(f"{settings.FRONTEND_BASE_URL}/?login_code={login_code}")
+
+
+@router.post("/auth/github/exchange")
+def exchange_github_login_code(body: LoginCodeExchange):
+    return {"access_token": exchange_login_code(body.code), "token_type": "bearer"}
 
 
 @router.get("/auth/me")

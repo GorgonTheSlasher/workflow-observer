@@ -170,7 +170,7 @@ export default function IssuesView({
                   dataKey="count"
                   radius={[0, 4, 4, 0]}
                   shape={(props: BarShapeProps) => (
-                    <Rectangle {...props} fill={COLOR.label} fillOpacity={1 - props.index * 0.08} />
+                    <Rectangle {...props} fill={COLOR.label} />
                   )}
                 />
               </BarChart>
@@ -194,7 +194,7 @@ export default function IssuesView({
                   style={onDrillDown ? { cursor: "pointer" } : undefined}
                   onClick={onDrillDown ? (d) => onDrillDown({ event_type: "issues", actor: (d as unknown as { actor: string }).actor }) : undefined}
                   shape={(props: BarShapeProps) => (
-                    <Rectangle {...props} fill={COLOR.reporter} fillOpacity={1 - props.index * 0.1} />
+                    <Rectangle {...props} fill={COLOR.reporter} />
                   )}
                 />
               </BarChart>

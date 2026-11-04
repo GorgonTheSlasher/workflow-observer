@@ -82,7 +82,7 @@ export default function TopActorsChart({
                   style={onDrillDown ? { cursor: "pointer" } : undefined}
                   onClick={onDrillDown ? (d) => onDrillDown((d as unknown as { actor: string }).actor) : undefined}
                   shape={(props: BarShapeProps) => (
-                    <Rectangle {...props} fillOpacity={1 - props.index * 0.15} />
+                    <Rectangle {...props} />
                   )}
                 />
               </BarChart>

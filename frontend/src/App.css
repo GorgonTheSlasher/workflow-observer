@@ -2115,3 +2115,47 @@ button:disabled {
   background: var(--overlay-hover);
   color: var(--text-secondary);
 }
+
+/* ── Server wake notice ─────────────────────────────────────────────────── */
+
+.wake-notice {
+  position: fixed;
+  top: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  max-width: calc(100vw - 2rem);
+  padding: 0.65rem 1rem;
+  border: 1px solid var(--accent-border);
+  border-radius: 8px;
+  background: var(--surface-2);
+  box-shadow: var(--shadow-md);
+  color: var(--text-secondary);
+  font-size: var(--fs-sm);
+}
+
+.wake-notice__elapsed {
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.wake-notice__spinner {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--accent-muted);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: wake-spin 0.8s linear infinite;
+}
+
+@keyframes wake-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wake-notice__spinner { animation: none; }
+}

@@ -1,7 +1,7 @@
 from datetime import datetime
 from urllib.parse import urlparse
 
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 PASSWORD_MIN_LENGTH = 8
 PASSWORD_MAX_LENGTH = 128  # Argon2 has no input limit, but cap it so huge bodies can't tie up hashing
@@ -17,6 +17,10 @@ class LoginCredentials(BaseModel):
     password: str
 
     _normalize = field_validator("email")(_normalize_email)
+
+
+class LoginCodeExchange(BaseModel):
+    code: str = Field(min_length=1, max_length=256)
 
 
 class RegisterCredentials(BaseModel):
@@ -80,5 +84,4 @@ class AlertRuleResponse(BaseModel):
     created_at: datetime
     updated_at: datetime | None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

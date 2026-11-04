@@ -5,7 +5,7 @@ import { getGithubInstallUrl, getGithubLoginUrl } from "../api";
 type Tab = "login" | "register";
 
 export default function LoginPage() {
-  const { login, loginDemo, register } = useAuth();
+  const { login, loginDemo, register, isCompletingGithubLogin, githubLoginError } = useAuth();
   const [tab, setTab] = useState<Tab>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -55,6 +55,11 @@ export default function LoginPage() {
   return (
     <div className="login-page">
       <div className="login-box">
+        {isCompletingGithubLogin && (
+          <p className="login-form__notice" role="status">Finishing GitHub sign-in…</p>
+        )}
+        {githubLoginError && <p className="error" role="alert">{githubLoginError}</p>}
+
         <div className="login-demo">
           <button
             type="button"

@@ -92,7 +92,7 @@ export default function WorkflowExecutionTimeChart({
                   radius={[0, 4, 4, 0]}
                   fill={SERIES[0]}
                   shape={(props: BarShapeProps) => (
-                    <Rectangle {...props} fillOpacity={1 - props.index * 0.15} />
+                    <Rectangle {...props} />
                   )}
                 />
               </BarChart>
