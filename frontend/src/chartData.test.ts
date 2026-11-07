@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { topWithOther, truncateLabel } from "./chartData";
+import { formatMinutes, topWithOther, truncateLabel } from "./chartData";
 
 const rows = (counts: number[]) => counts.map((count, i) => ({ label: `branch-${i}`, count }));
 
@@ -39,5 +39,21 @@ describe("truncateLabel", () => {
     const result = truncateLabel("feature/a-very-long-branch-name", 12);
     expect(result).toBe("feature/a-v…");
     expect(result).toHaveLength(12);
+  });
+});
+
+describe("formatMinutes", () => {
+  it("shows short durations in seconds", () => {
+    expect(formatMinutes(0)).toBe("0s");
+    expect(formatMinutes(0.75)).toBe("45s");
+  });
+
+  it("takes minutes, not seconds", () => {
+    expect(formatMinutes(4)).toBe("4m");
+    expect(formatMinutes(2.5)).toBe("2.5m");
+  });
+
+  it("rounds long durations to whole minutes", () => {
+    expect(formatMinutes(12.4)).toBe("12m");
   });
 });

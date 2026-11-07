@@ -24,3 +24,9 @@ export function topWithOther(rows: RankedRow[], limit: number, noun: string): Ra
 export function truncateLabel(label: string, max = 24): string {
   return label.length > max ? `${label.slice(0, max - 1)}…` : label;
 }
+
+export function formatMinutes(minutes: number): string {
+  if (minutes < 1) return `${Math.round(minutes * 60)}s`;
+  if (minutes >= 10) return `${Math.round(minutes)}m`;
+  return `${Number(minutes.toFixed(1))}m`;
+}

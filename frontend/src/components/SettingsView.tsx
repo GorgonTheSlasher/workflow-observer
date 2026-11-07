@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { getMe, getRepositories, type UserProfile, type AlertRuleCreate } from "../api";
 import { useAlertRules } from "../hooks/useAlertRules";
+import { parseUtcDate } from "../utils/time";
 
 const RULE_TYPE_LABELS: Record<string, string> = {
   workflow_failure: "Workflow Failure",
@@ -19,7 +20,7 @@ const RULE_TYPE_COLORS: Record<string, string> = {
 function AccountPanel({ profile, loading }: { profile: UserProfile | null; loading: boolean }) {
   const initial = (profile?.github_username?.[0] ?? profile?.email?.[0] ?? "?").toUpperCase();
   const joinedDate = profile?.created_at
-    ? new Date(profile.created_at).toLocaleDateString("en-US", { month: "long", year: "numeric" })
+    ? parseUtcDate(profile.created_at).toLocaleDateString("en-US", { month: "long", year: "numeric" })
     : "—";
 
   return (

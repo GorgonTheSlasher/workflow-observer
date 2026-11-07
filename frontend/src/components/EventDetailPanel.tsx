@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import type { GitHubEvent } from "../types";
+import { parseUtcDate } from "../utils/time";
 import { CONCLUSION_COLOR, badgeStyle } from "../theme";
 
 type Props = {
@@ -17,7 +18,7 @@ const EVENT_TYPE_LABEL: Record<string, string> = {
 };
 
 function formatRelative(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime();
+  const diff = Date.now() - parseUtcDate(iso).getTime();
   const m = Math.floor(diff / 60000);
   if (m < 1)  return "just now";
   if (m < 60) return `${m}m ago`;
@@ -27,7 +28,7 @@ function formatRelative(iso: string): string {
 }
 
 function formatDuration(startIso: string, endIso: string): string {
-  const secs = Math.max(0, Math.round((new Date(endIso).getTime() - new Date(startIso).getTime()) / 1000));
+  const secs = Math.max(0, Math.round((parseUtcDate(endIso).getTime() - parseUtcDate(startIso).getTime()) / 1000));
   if (secs < 60)  return `${secs}s`;
   const m = Math.floor(secs / 60);
   const s = secs % 60;

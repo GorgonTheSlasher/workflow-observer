@@ -13,7 +13,7 @@ from app.services.installation_services import delete_installation
 from app.broadcaster import broadcaster
 
 def _duplicate_response(x_github_event: str, delivery_id: str) -> dict:
-    # 2xx so GitHub treats the delivery as handled and stops retrying it
+    # 2xx so the delivery shows as successful in GitHub's delivery log
     return {
         "success": True,
         "event": x_github_event,
@@ -53,8 +53,8 @@ async def dispatch_github_webhook(
             "message": f"No handler for event: {x_github_event}"
         }
 
-    # GitHub retries failed/timed-out deliveries and allows manual redelivery,
-    # both reusing the same X-GitHub-Delivery GUID. Skip ones already processed.
+    # GitHub doesn't redeliver automatically, but redeliveries (from the UI or API) and
+    # proxies can repeat a delivery with the same X-GitHub-Delivery GUID. Skip ones already processed.
     if x_github_delivery and await run_in_threadpool(get_event_by_delivery_id, db, x_github_delivery):
         return _duplicate_response(x_github_event, x_github_delivery)
 

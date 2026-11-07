@@ -9,17 +9,13 @@ import {
   type BarShapeProps,
 } from "recharts";
 import type { WorkflowExecutionTimeEntry } from "../api";
+import { formatMinutes } from "../chartData";
 import { CHART_THEME, SERIES } from "../theme";
 
 type WorkflowExecutionTimeChartProps = {
   data: WorkflowExecutionTimeEntry[];
   isLoading?: boolean;
 };
-
-function formatMinutes(seconds: number): string {
-  const m = seconds / 60;
-  return m >= 10 ? `${Math.round(m)}m` : `${m.toFixed(1)}m`;
-}
 
 export default function WorkflowExecutionTimeChart({
   data,
@@ -39,7 +35,7 @@ export default function WorkflowExecutionTimeChart({
 
   const chartData = data.map((d) => ({
     ...d,
-    avg_minutes: Math.round((d.avg_seconds / 60) * 10) / 10,
+    avg_minutes: d.avg_seconds / 60,
   }));
 
   return (
@@ -83,7 +79,7 @@ export default function WorkflowExecutionTimeChart({
                     color: "var(--text)",
                   }}
                   formatter={(value, _name, props) => [
-                    `${value}m (${props.payload.run_count} runs)`,
+                    `${formatMinutes(Number(value))} (${props.payload.run_count} runs)`,
                     "Avg duration",
                   ]}
                 />
