@@ -325,29 +325,6 @@ def format_new_member_alert(event_data: dict) -> dict:
     }
 
 
-def format_test_alert() -> dict:
-    return {
-        "attachments": [
-            {
-                "color": "#00c851",
-                "blocks": [
-                    {
-                        "type": "section",
-                        "text": {
-                            "type": "mrkdwn",
-                            "text": ":white_check_mark: *Workflow Observer is connected!*\nYour Slack alerts are configured correctly. You'll receive notifications here when monitored events are detected.",
-                        },
-                    },
-                    {
-                        "type": "context",
-                        "elements": [{"type": "mrkdwn", "text": _slack_timestamp()}],
-                    },
-                ],
-            }
-        ]
-    }
-
-
 # ── Main entry point ──────────────────────────────────────────────────────────
 
 def _get_user_id_for_installation(installation_id: int, db: Session) -> int | None:
@@ -386,7 +363,7 @@ def get_alerts_for_event(
 ) -> list[tuple[dict, str | None]]:
     """
     Returns (payload, webhook_url) pairs for every alert that should fire.
-    webhook_url being None means the caller should use the global SLACK_WEBHOOK_URL.
+    webhook_url is None only on the legacy path, meaning the global SLACK_WEBHOOK_URL.
     Consults Alert_Rules to gate by enabled status, repo scope, and rule type.
     Events with no installation (repo-level webhooks) use the legacy global-webhook path.
     """
@@ -414,6 +391,10 @@ def get_alerts_for_event(
 
     for rule in rules:
         if rule.repo_filter and rule.repo_filter != repo_name:
+            continue
+        # Rules saved before a URL was required have none. They must not fall back to the
+        # global webhook, which belongs to whoever runs the server.
+        if not rule.webhook_url:
             continue
 
         payload: dict | None = None

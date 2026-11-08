@@ -37,14 +37,17 @@ VALID_RULE_TYPES = {"workflow_failure", "workflow_recovery", "force_push", "new_
 SLACK_WEBHOOK_HOST = "hooks.slack.com"
 
 
-def validate_slack_webhook_url(url: str | None) -> str | None:
+def validate_slack_webhook_url(url: str | None) -> str:
     '''The server POSTs to this URL, so only Slack incoming webhooks are allowed.
-    Anything else would let a user make the backend send requests to arbitrary hosts (SSRF).'''
+    Anything else would let a user make the backend send requests to arbitrary hosts (SSRF).
+
+    Every rule needs its own URL. There is no fallback to the server's global Slack webhook,
+    or anyone who installs the App could route their alerts into the owner's Slack.'''
     if url is None:
-        return None
+        raise ValueError("webhook_url is required")
     url = url.strip()
     if not url:
-        raise ValueError("webhook_url cannot be blank; omit it to use the global webhook")
+        raise ValueError("webhook_url is required")
     parsed = urlparse(url)
     if parsed.scheme != "https" or parsed.hostname != SLACK_WEBHOOK_HOST or parsed.port is not None:
         raise ValueError(f"webhook_url must be a Slack incoming webhook (https://{SLACK_WEBHOOK_HOST}/...)")
@@ -54,7 +57,7 @@ def validate_slack_webhook_url(url: str | None) -> str | None:
 class AlertRuleCreate(BaseModel):
     rule_type: str
     repo_filter: str | None = None  # None = match all repos
-    webhook_url: str | None = None  # None = use global SLACK_WEBHOOK_URL
+    webhook_url: str
     enabled: bool = True
 
     _check_webhook_url = field_validator("webhook_url")(validate_slack_webhook_url)
@@ -68,7 +71,7 @@ class AlertRuleCreate(BaseModel):
 
 class AlertRuleUpdate(BaseModel):
     repo_filter: str | None = None
-    webhook_url: str | None = None
+    webhook_url: str | None = None  # optional to send, but can't be set to null
     enabled: bool | None = None
 
     _check_webhook_url = field_validator("webhook_url")(validate_slack_webhook_url)
@@ -79,7 +82,7 @@ class AlertRuleResponse(BaseModel):
     user_id: int
     rule_type: str
     repo_filter: str | None
-    webhook_url: str | None
+    webhook_url: str | None  # null only on rules created before URLs were required
     enabled: bool
     created_at: datetime
     updated_at: datetime | None

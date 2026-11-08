@@ -1942,6 +1942,11 @@ button:disabled {
   flex-shrink: 0;
 }
 
+.rule-card__webhook--missing {
+  color: var(--warning);
+  border-color: color-mix(in srgb, var(--warning) 40%, transparent);
+}
+
 .rule-card__actions {
   display: flex;
   align-items: center;

@@ -9,15 +9,13 @@ A GitHub App that turns webhook events into a live dashboard of repository activ
 
 ![Summary dashboard showing event totals, recent activity, top actors, workflow health and event timelines](docs/screenshots/summary.png)
 
-I built this to learn GitHub's event ecosystem by working with it directly: webhook delivery behavior, GitHub App installation and authorization, and the shape of real event payloads.
+I built this to learn GitHub's event ecosystem by working with it directly, focusing on webhook delivery behavior, GitHub App installation and authorization, and the shape of real event payloads.
 
 ## What it does
 
-- **Ingests GitHub webhooks** for pushes, pull requests, issues, workflow runs and repository membership, verifying and deduplicating every delivery.
-- **Shows live dashboards** of activity, workflow failures and durations, PR cycle time and issues, filterable by repo and date. Clicking a chart opens the matching events, and any event can be expanded down to its raw payload.
-- **Calculates the four DORA metrics** from those events, with the definitions spelled out [below](#how-the-dora-metrics-are-calculated).
-- **Sends Slack alerts** for workflow failures, recoveries (with downtime), force pushes to main and new repository members, configurable per rule and per repo.
-- **Keeps each installation's data separate,** with a read-only demo tenant for visitors.
+Workflow Observer receives GitHub webhooks for pushes, pull requests, issues, workflow runs and repository membership, checking every delivery's signature and filtering out duplicates. It turns them into live dashboards of activity, workflow failures and durations, PR cycle time and issues, filterable by repo and date. Clicking a chart opens the matching events, and any event can be expanded down to its raw payload.
+
+From the same events it calculates the four DORA metrics, with the definitions spelled out [below](#how-the-dora-metrics-are-calculated), and sends Slack alerts for workflow failures, recoveries (with downtime), force pushes to main and new repository members. Alerts are configured per rule and per repo. Each installation's data is kept separate, and visitors get a read-only demo.
 
 | DORA metrics | Workflow runs |
 |---|---|
@@ -60,11 +58,11 @@ Most of what I learned is in how GitHub delivers webhooks and what a receiver ha
 
 **Tenant isolation.** Every analytics query filters on the installations the current user can see, and that list is always applied, so an empty list shows nothing rather than everything. The cache key and the live-update stream are scoped the same way. Tests confirm one tenant can't see another's data.
 
-**Tokens stay out of URLs.** URLs end up in logs and browser history, and two parts of the app needed one:
-- `EventSource` can't send an `Authorization` header, so the stream opens with a 30-second ticket that works only on that endpoint and is rejected as a login token.
-- The GitHub sign-in redirect carries a one-time code that expires in 60 seconds, which the frontend swaps for a token with a POST.
+**The whole payload is saved.** Most analytics only need a few fields, but keeping the full payload means any detail can be examined later without re-ingesting anything. That has been very useful for debugging and for seeing exactly what GitHub sent.
 
-**The webhook URL for alert rules is restricted.** Users supply their own Slack URLs, which would otherwise let them make the server send requests anywhere. Only `https://hooks.slack.com` is accepted, and redirects aren't followed.
+**Tokens stay out of URLs.** URLs end up in logs and browser history, and two parts of the app needed one. `EventSource` can't send an `Authorization` header, so the live-update stream opens with a 30-second ticket that works only on that endpoint and is rejected as a login token. The GitHub sign-in redirect carries a one-time code that expires in 60 seconds, which the frontend swaps for a token with a POST.
+
+**Alerts only go where their owner sends them.** Every alert rule needs its own Slack URL, and only `https://hooks.slack.com` URLs are accepted, with redirects not followed. Without that, a user could make the server send requests anywhere, or route their alerts into the Slack of whoever runs the server.
 
 **A read-only demo.** "Try the demo" signs visitors into a shared account with no setup. That account can read the demo tenant but can't change settings or send Slack messages. The sample data comes from [a seed script](backend/scripts/seed_demo.py) that simulates a team's work (branches, CI, PRs, deploys, failures and fixes) and sends GitHub-shaped payloads through the real handlers. Links in sample events don't lead to real commits.
 
@@ -86,13 +84,50 @@ GitHub events don't say what counts as a deployment, so these definitions are ch
 
 A few problems from building this, and how I worked through them:
 
-**"Failed to fetch" after refreshing a few times, with nothing in the logs.** A 401 looked likely, but a 401 is a readable response and the app would have logged me out, so this was something else. The Network tab showed requests stuck pending and finishing much later. Every page load sent 20+ requests, including for tabs that weren't open, and a refresh doesn't stop work already running on the server, so requests queued up on a very small instance. I couldn't reproduce it on my faster local machine, which pointed at the production CPU limit. Loading only the visible tab and caching aggregates resolved the symptom. I didn't capture the exact response behind the error itself, so that part of the explanation is inferred.
+<details>
+<summary><b>"Failed to fetch" after refreshing a few times, with nothing in the logs</b></summary>
 
-**A login token in the production logs.** While looking into a 401, I noticed the access log contained a working session token, because the live-update connection passed it in the query string. The 401 was harmless, but the logging wasn't, and that led to the stream tickets above.
+<br>
 
-**Deploy frequency about 3x too high.** Counting every successful run on `main` also counted CI and lint runs as deployments. That's why deployments are now identified by workflow name, per repo.
+A 401 looked likely, but a 401 is a readable response and the app would have logged me out, so this was something else. The Network tab showed requests stuck pending and finishing much later. Every page load sent 20+ requests, including for tabs that weren't open, and a refresh doesn't stop work already running on the server, so requests queued up on a very small instance. I couldn't reproduce it on my faster local machine, which pointed at the production CPU limit. Loading only the visible tab and caching aggregates resolved the symptom. I was able to replicate the error by reloading the page in quick succession. Most of the time a pending request would eventually be fufilled but some would time out and error out.
 
-**The same event showing "just now" and "6h ago".** Timestamps are stored in UTC without a timezone marker. One component parsed them as local time, which put events in the future for anyone west of UTC.
+</details>
+
+<details>
+<summary><b>A login token in the production logs</b></summary>
+
+<br>
+
+While looking into a 401, I noticed the access log contained a working session token, because the live-update connection passed it in the query string. The 401 was harmless, but the logging wasn't, and that led me to implement the stream tickets above.
+
+</details>
+
+<details>
+<summary><b>Deploy frequency about 3x too high</b></summary>
+
+<br>
+
+Counting every successful run on `main` also counted CI and lint runs as deployments. That's why deployments are now identified by workflow name, per repo.
+
+</details>
+
+<details>
+<summary><b>The same event showing "just now" and "6h ago"</b></summary>
+
+<br>
+
+Timestamps are stored in UTC without a timezone marker. One component parsed them as local time, which put events in the future for anyone west of UTC.
+
+</details>
+
+<details>
+<summary><b>Finding the right fields in event payloads</b></summary>
+
+<br>
+
+While first building the event handlers, I spent quite a while examining payloads for the field names I needed. Since I was looking for specific information from each event type, there was a lot of trial and error in finding which data point was actually relevant to what I was looking for. Just one example of this was figuring out that push events don't have a top level url. So I had to use the link from head_commit.url.
+
+</details>
 
 ## Running it locally
 
@@ -134,24 +169,28 @@ CI runs all of these on every push to `main` and every pull request.
 
 ### Connecting a real GitHub App
 
-To receive live events, [register a GitHub App](https://docs.github.com/en/apps/creating-github-apps/registering-a-github-app/registering-a-github-app) and put its credentials in `backend/.env`:
+To receive live events, [register a GitHub App](https://docs.github.com/en/apps/creating-github-apps/registering-a-github-app/registering-a-github-app), put its credentials in `backend/.env`, and configure it like this:
 
-- **Webhook URL:** `https://<your-backend>/webhook/github-app`, with a webhook secret. Locally, use a tunnel such as `smee` or `ngrok`.
-- **Callback URL:** `https://<your-backend>/github-app/auth`, with **Request user authorization (OAuth) during installation** enabled.
-- **Events:** Push, Pull request, Issues, Member and Workflow run, plus the read permissions GitHub asks for with each.
-- Set `GITHUB_APP_SLUG` in `frontend/src/api.ts` to your App's name.
+| App setting | Value |
+|---|---|
+| Webhook URL | `https://<your-backend>/webhook/github-app`, with a webhook secret. Locally, use a tunnel such as `smee` or `ngrok` |
+| Callback URL | `https://<your-backend>/github-app/auth`, with **Request user authorization (OAuth) during installation** enabled |
+| Events | Push, Pull request, Issues, Member and Workflow run, plus the read permissions GitHub asks for with each |
+| App name | Set `GITHUB_APP_SLUG` in `frontend/src/api.ts` to match |
 
 For deployment, run the backend as a **single process**: the live-update broadcaster, the cache and the login codes all live in memory. Run `alembic upgrade head` against the production database before deploying a schema change.
 
 ## Known limitations
 
-These are deliberate trade-offs for a project this size, and what I'd change first at real scale:
+These are deliberate trade-offs for a project this size:
 
-- **One process only.** Moving the broadcaster, cache and login codes to Redis would allow more than one worker.
-- **Aggregates are computed in Python from raw events** on each cache miss. Heavier use would call for pre-computed rollups or more of the work in SQL.
-- **Events can be missed while the free-tier host sleeps,** because a cold start takes longer than GitHub's 10-second limit. A paid instance, or a job that redelivers failures through GitHub's API, would close that gap.
-- **No rate limiting** on the login and registration endpoints.
-- **The login token lives in `localStorage`,** which is simple but readable by any script on the page. An `HttpOnly` cookie would be safer.
+| Limitation | What I'd change at real scale |
+|---|---|
+| Runs as one process, because the broadcaster, cache and login codes live in memory | Move them to Redis so it can run more than one worker |
+| Aggregates are computed in Python from raw events on each cache miss | Pre-compute rollups, or do more of the work in SQL |
+| Events can be missed while the free-tier host sleeps, because a cold start takes longer than GitHub's 10-second limit | Use an always-on instance, or a job that redelivers failed deliveries through GitHub's API |
+| No rate limiting on the login and registration endpoints | Add per-IP rate limits |
+| The login token lives in `localStorage`, which is simple but readable by any script on the page | Use an `HttpOnly` cookie |
 
 ## License
 

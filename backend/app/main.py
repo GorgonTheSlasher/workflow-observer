@@ -1,12 +1,10 @@
 from contextlib import asynccontextmanager
 
-from fastapi import Depends, FastAPI
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.alerts import format_test_alert, send_slack_alert
 from app.config import settings as app_settings
 from app.routers import auth, settings, stream, summary, webhooks
-from app.services.auth_services import get_current_non_demo_user
 
 
 @asynccontextmanager
@@ -40,8 +38,3 @@ app.include_router(stream.router)
 def root():
     return {"status": "ok"}
 
-
-@app.post("/test-alert")
-def test_alert(current_user: dict = Depends(get_current_non_demo_user)):
-    send_slack_alert(format_test_alert())
-    return {"success": True}

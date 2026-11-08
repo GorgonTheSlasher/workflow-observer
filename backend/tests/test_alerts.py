@@ -32,7 +32,7 @@ def test_is_new_member():
 
 # ── get_alerts_for_event helpers ──────────────────────────────────────────────
 
-def _make_rule(rule_type, repo_filter=None, webhook_url=None):
+def _make_rule(rule_type, repo_filter=None, webhook_url="https://hooks.slack.com/services/T/B/X"):
     rule = MagicMock()
     rule.rule_type = rule_type
     rule.repo_filter = repo_filter
@@ -64,7 +64,7 @@ def test_failure_rule_fires_for_matching_event(_):
     assert len(results) == 1
     payload, wh = results[0]
     assert "attachments" in payload
-    assert wh is None
+    assert wh == "https://hooks.slack.com/services/T/B/X"
 
 
 @patch("app.alerts._get_user_id_for_installation", return_value=42)
@@ -124,4 +124,13 @@ def test_unlinked_installation_sends_no_alerts(_):
     """An App installation nobody has linked must not fall back to the owner's global Slack."""
     event_data = {"status": "completed", "conclusion": "failure", "repo_name": "stranger/repo"}
     results = get_alerts_for_event("workflow_run", event_data, _make_saved_event(installation_id=123), MagicMock())
+    assert results == []
+
+
+@patch("app.alerts._get_user_id_for_installation", return_value=42)
+def test_rule_without_webhook_url_never_uses_global_slack(_):
+    """Rules saved before URLs were required must not fall back to the server owner's Slack."""
+    rule = _make_rule("workflow_failure", webhook_url=None)
+    event_data = {"status": "completed", "conclusion": "failure", "repo_name": "org/repo"}
+    results = get_alerts_for_event("workflow_run", event_data, _make_saved_event(99), _make_db([rule]))
     assert results == []

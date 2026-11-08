@@ -37,7 +37,7 @@ def update_rule(rule_id: int, user_id: int, data: AlertRuleUpdate, db: Session) 
     if "repo_filter" in data.model_fields_set:
         rule.repo_filter = data.repo_filter  # null clears back to "all repos"
     if "webhook_url" in data.model_fields_set:
-        rule.webhook_url = data.webhook_url  # null clears back to global webhook
+        rule.webhook_url = data.webhook_url
 
     db.commit()
     db.refresh(rule)

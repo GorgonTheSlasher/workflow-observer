@@ -123,9 +123,10 @@ def test_demo_account_is_read_only(client, monkeypatch):
 
     assert client.get("/settings/alert-rules", headers=headers).status_code == 200
     assert client.post(
-        "/settings/alert-rules", headers=headers, json={"rule_type": "workflow_failure"}
+        "/settings/alert-rules",
+        headers=headers,
+        json={"rule_type": "workflow_failure", "webhook_url": "https://hooks.slack.com/services/T/B/X"},
     ).status_code == 403
-    assert client.post("/test-alert", headers=headers).status_code == 403
 
 
 # ── Stream tickets ────────────────────────────────────────────────────────────

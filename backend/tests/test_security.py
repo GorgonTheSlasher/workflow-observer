@@ -16,8 +16,11 @@ def test_accepts_slack_webhook_url():
     assert rule.webhook_url == "https://hooks.slack.com/services/T/B/X"
 
 
-def test_webhook_url_is_optional():
-    assert AlertRuleCreate(rule_type="workflow_failure").webhook_url is None
+def test_webhook_url_is_required():
+    with pytest.raises(ValidationError):
+        AlertRuleCreate(rule_type="workflow_failure")
+    with pytest.raises(ValidationError):
+        AlertRuleCreate(rule_type="workflow_failure", webhook_url=None)
 
 
 @pytest.mark.parametrize("url", [
@@ -36,10 +39,14 @@ def test_rejects_non_slack_webhook_urls(url):
         AlertRuleUpdate(webhook_url=url)
 
 
-def test_update_can_clear_webhook_url():
-    update = AlertRuleUpdate(webhook_url=None)
-    assert "webhook_url" in update.model_fields_set
-    assert update.webhook_url is None
+def test_update_cannot_clear_webhook_url():
+    with pytest.raises(ValidationError):
+        AlertRuleUpdate(webhook_url=None)
+
+
+def test_update_can_leave_webhook_url_unchanged():
+    update = AlertRuleUpdate(enabled=False)
+    assert "webhook_url" not in update.model_fields_set
 
 
 # ── Installation ownership check ──────────────────────────────────────────────

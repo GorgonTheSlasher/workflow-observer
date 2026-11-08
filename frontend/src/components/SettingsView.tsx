@@ -119,7 +119,7 @@ function AlertRulesPanel({ readOnly }: { readOnly: boolean }) {
     const data: AlertRuleCreate = {
       rule_type: formRuleType,
       repo_filter: formRepoFilter || null,
-      webhook_url: formWebhookUrl.trim() || null,
+      webhook_url: formWebhookUrl.trim(),
     };
     try {
       await addRule(data);
@@ -198,11 +198,14 @@ function AlertRulesPanel({ readOnly }: { readOnly: boolean }) {
             </div>
             <div className="rule-form__field">
               <label className="rule-form__label">
-                Slack Webhook URL <span className="rule-form__opt">(optional — uses global webhook if blank)</span>
+                Slack Webhook URL
               </label>
               <input
                 className="rule-form__input"
                 type="url"
+                required
+                pattern="https://hooks\.slack\.com/.+"
+                title="A Slack incoming webhook URL, starting with https://hooks.slack.com/"
                 placeholder="https://hooks.slack.com/services/…"
                 value={formWebhookUrl}
                 onChange={(e) => setFormWebhookUrl(e.target.value)}
@@ -247,9 +250,12 @@ function AlertRulesPanel({ readOnly }: { readOnly: boolean }) {
                 <span className="rule-card__scope">
                   {rule.repo_filter ?? "All repositories"}
                 </span>
-                {rule.webhook_url && (
-                  <span className="rule-card__webhook" title={rule.webhook_url}>
-                    custom channel
+                {!rule.webhook_url && (
+                  <span
+                    className="rule-card__webhook rule-card__webhook--missing"
+                    title="This rule was created before a Slack URL was required, so it won't send. Delete it and add it again with a URL."
+                  >
+                    no Slack URL, not sending
                   </span>
                 )}
                 <div className="rule-card__actions">
